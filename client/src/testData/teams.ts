@@ -7,3 +7,5 @@ export const teams: Array<Team> = [
     {name: "ОГВ", value: "ogv" },
 ]
 
+export type TeamNames = typeof teams[number]["value"]
+

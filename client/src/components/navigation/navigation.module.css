@@ -1,0 +1,12 @@
+.selectBar {
+    padding: 5px;
+    border: 10px;
+    left: 10%;
+    margin-left: 15px;
+    border-radius: 10px;
+}
+
+nav{
+    display: flex;
+    justify-content: left;
+}

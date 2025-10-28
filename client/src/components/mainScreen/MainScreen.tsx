@@ -1,5 +1,5 @@
 import styles from "./MainScreen.module.css"
-import Navigation from "../navigation/navigation.jsx";
+import Navigation from "../navigation/Navigation.tsx";
 import MonthLineChart from "../lineChart/monthLineChart.jsx";
 import {useState} from "react";
 
@@ -9,8 +9,8 @@ function Main() {
             <header>
                 <h1 className={styles.siteTitle}>Статистика</h1>
             </header>
-            <Navigation team={team} onChange={setTeam} />
-            <MonthLineChart team={team}/>
+            <Navigation onChange={setTeam} />
+            <MonthLineChart teamName={team} />
         </>
     )
 }

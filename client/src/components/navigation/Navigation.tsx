@@ -4,7 +4,7 @@ import type {NavigationProps} from "../../types/navigation.ts";
 
 function Navigation (props: NavigationProps){
 
-    const {onChange } = props
+    const { onChange } = props
 
     const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         onChange(event.target.value)
