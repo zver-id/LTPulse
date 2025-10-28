@@ -2,3 +2,5 @@
 Server/.idea/
 Server/WebAPI/bin/
 Server/WebAPI/obj/
+
+Server/CommonModels/obj/
