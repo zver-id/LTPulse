@@ -1,4 +1,6 @@
-﻿namespace CommonModels;
+﻿using System.Collections.Generic;
+
+namespace CommonModels;
 
 /// <summary>
 /// Команда.
@@ -14,4 +16,9 @@ public class Team
   /// Имя команды.
   /// </summary>
   public string Name { get; set; }
+  
+  /// <summary>
+  /// Участники команды.
+  /// </summary>
+  public List<Employee> Employees { get; set; }
 }
