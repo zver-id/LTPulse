@@ -46,4 +46,9 @@ public class Ticket
   /// Время в работе.
   /// </summary>
   public float TimeInWork { get; set; }
+  
+  /// <summary>
+  /// Гиперссылка.
+  /// </summary>
+  public string Hyperlink { get; set; }
 }
