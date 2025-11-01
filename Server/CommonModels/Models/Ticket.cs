@@ -1,54 +1,55 @@
 using System;
+using CommonModels.Interfaces;
 
-namespace CommonModels;
+namespace CommonModels.Models;
 
 /// <summary>
 /// Обращение.
 /// </summary>
-public class Ticket
+public class Ticket : IHasId
 {
   /// <summary>
   /// ID.
   /// </summary>
-  public int Id { get; set; }
+  public virtual int Id { get; set; }
   
   /// <summary>
   /// Наименование.
   /// </summary>
-  public string Name { get; set; }
+  public virtual string Name { get; set; }
   
   /// <summary>
   /// Организация.
   /// </summary>
-  public string Organization { get; set; }
+  public virtual string Organization { get; set; }
   
   /// <summary>
   /// Ответственный сотрудник.
   /// </summary>
-  public string Employee { get; set; }
+  public virtual string Employee { get; set; }
   
   /// <summary>
   /// Приоритет.
   /// </summary>
-  public Priority Priority { get; set; }
+  public virtual Priority Priority { get; set; }
   
   /// <summary>
   /// Дата поступления.
   /// </summary>
-  public DateOnly IncomingDate { get; set; }
+  public virtual DateTime IncomingDate { get; set; }
   
   /// <summary>
   /// Состояние.
   /// </summary>
-  public TicketState State { get; set; }
+  public virtual TicketState State { get; set; }
   
   /// <summary>
   /// Время в работе.
   /// </summary>
-  public float TimeInWork { get; set; }
+  public virtual float TimeInWork { get; set; }
   
   /// <summary>
   /// Гиперссылка.
   /// </summary>
-  public string Hyperlink { get; set; }
+  public virtual string Hyperlink { get; set; }
 }

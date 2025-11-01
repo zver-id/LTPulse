@@ -1,6 +1,7 @@
 
 Server/.idea/
-Server/WebAPI/bin/
-Server/WebAPI/obj/
 
-Server/CommonModels/obj/
+**bin/
+**obj/
+
+Server/LTPulse.sln.DotSettings.user
