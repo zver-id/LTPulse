@@ -1,5 +1,6 @@
 ﻿using CommonModels;
 using CommonModels.Models;
+using DBCore;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
 using FluentNHibernate.Automapping;
@@ -33,7 +34,7 @@ public static class NhibernateHelper
     AutoMap.AssemblyOf<Ticket>(new StoreConfiguration())
       //.Conventions.AddFromAssemblyOf<IdConvention>()
       //.Conventions.AddFromAssemblyOf<NHibernateInitializer>()
-      .UseOverridesFromAssemblyOf<Ticket>();
+      .UseOverridesFromAssemblyOf<DBReposytory>();
 
   private static ISessionFactory CreateSessionFactory()
   {
