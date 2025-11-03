@@ -1,32 +1,34 @@
-namespace CommonModels;
+using CommonModels.Interfaces;
+
+namespace CommonModels.Models;
 
 /// <summary>
 /// Сотрудник.
 /// </summary>
-public class Employee
+public class Employee : IHasId
 {
   /// <summary>
   /// ID.
   /// </summary>
-  public int Id { get; set; }
+  public virtual int Id { get; set; }
   
   /// <summary>
   /// Имя и фамилия.
   /// </summary>
-  public string Name { get; set; }
+  public virtual string Name { get; set; }
   
   /// <summary>
   /// Табельный номер.
   /// </summary>
-  public int PersonnelNumber { get; set; }
+  public virtual int PersonnelNumber { get; set; }
   
   /// <summary>
   /// Номер карточки в ТехКАС.
   /// </summary>
-  public int TechKASNumber { get; set; }
+  public virtual int TechKASNumber { get; set; }
   
   /// <summary>
   /// Команда.
   /// </summary>
-  public Team Team { get; set; }
+  public virtual Team Team { get; set; }
 }

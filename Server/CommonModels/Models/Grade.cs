@@ -1,29 +1,29 @@
-using System.Security;
+using CommonModels.Interfaces;
 
-namespace CommonModels;
+namespace CommonModels.Models;
 
 /// <summary>
 /// Оценка обращения.
 /// </summary>
-public class Grade
+public class Grade : IHasId
 {
   /// <summary>
   /// ID.
   /// </summary>
-  public int Id { get; set; }
+  public virtual int Id { get; set; }
   
   /// <summary>
   /// Текст оценки.
   /// </summary>
-  public string Text { get; set; }
+  public virtual string Text { get; set; }
   
   /// <summary>
   /// Результат.
   /// </summary>
-  public int Score { get; set; }
+  public virtual int Score { get; set; }
   
   /// <summary>
   /// Обращение по которому поступила оценка.
   /// </summary>
-  public Ticket Ticket { get; set; }
+  public virtual Ticket Ticket { get; set; }
 }

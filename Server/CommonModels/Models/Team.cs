@@ -1,24 +1,25 @@
 ﻿using System.Collections.Generic;
+using CommonModels.Interfaces;
 
-namespace CommonModels;
+namespace CommonModels.Models;
 
 /// <summary>
 /// Команда.
 /// </summary>
-public class Team
+public class Team : IHasId
 {
   /// <summary>
   /// ID команды.
   /// </summary>
-  public int Id { get; set; }
+  public virtual int Id { get; set; }
   
   /// <summary>
   /// Имя команды.
   /// </summary>
-  public string Name { get; set; }
+  public virtual string Name { get; set; }
   
   /// <summary>
   /// Участники команды.
   /// </summary>
-  public List<Employee> Employees { get; set; }
+  public virtual IList<Employee> Employees { get; set; }
 }
