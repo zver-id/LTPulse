@@ -1,6 +1,9 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using WebAPI.Mappings;
 
 namespace WebAPI;
 
@@ -16,8 +19,17 @@ public class Program
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-
+        
+        ILoggerFactory loggerFactory = LoggerFactory.Create(logBuilder => logBuilder.AddJsonConsole());
         builder.Services.AddControllers();
+        var mappingConfig = new MapperConfiguration(
+            cfg =>
+            {
+                cfg.AddProfile<ObjectToDTO>();
+            },
+            loggerFactory);
+        var mapper = mappingConfig.CreateMapper();
+        builder.Services.AddSingleton(mapper);
 
         var app = builder.Build();
 
