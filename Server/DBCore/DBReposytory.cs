@@ -1,13 +1,15 @@
-﻿using CollectionLibrary.Nhibernate.Infrastructure;
+﻿using System.Linq.Expressions;
+using CollectionLibrary.Nhibernate.Infrastructure;
 using CommonModels.Interfaces;
 using NHibernate;
 using NHibernate.Criterion;
 using NHibernate.Infrastructure;
+using NHibernate.Linq;
 
 namespace DBCore;
 
 public class DBReposytory
-{ 
+{
   /// <summary>
   /// Добавление в базу данных нового объекта
   /// </summary>
@@ -77,6 +79,22 @@ public class DBReposytory
       ICriteria criteria = session.CreateCriteria(typeof(T));
       criteria.Add(Restrictions.Eq(fieldName, value));
       return (T)criteria.UniqueResult();
+    }
+  }
+
+  /// <summary>
+  /// Вернуть список сущностей по условию.
+  /// </summary>
+  /// <param name="predicate">Условие в виде предиката.</param>
+  /// <typeparam name="T">Класс объекта.</typeparam>
+  /// <returns>Список сущностей, удовлетворяющих критерию.</returns>
+  public List<T> GetByPredicate<T>(Expression<Func<T, bool>> predicate) where T : class
+  {
+    using (var session = NhibernateHelper.OpenSession())
+    {
+      return session.Query<T>()
+        .Where(predicate)
+        .ToList();
     }
   }
 

@@ -9,6 +9,7 @@ public class MetricOverride : IAutoMappingOverride<Metric>
   public void Override(AutoMapping<Metric> mapping)
   {
     //TODO нужно добавить в индекс столбцы команды и метрики возможно будет быстрее
-    mapping.Map(x => x.Date).Index("Ix_MetricDate");
+    mapping.Map(x => x.Date)
+      .Index("Ix_MetricDate");
   }
 }
