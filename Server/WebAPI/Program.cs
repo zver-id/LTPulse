@@ -1,3 +1,4 @@
+using Application;
 using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,9 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         
+        
+        
+        
         ILoggerFactory loggerFactory = LoggerFactory.Create(logBuilder => logBuilder.AddJsonConsole());
         builder.Services.AddControllers();
         var mappingConfig = new MapperConfiguration(
@@ -30,6 +34,19 @@ public class Program
             loggerFactory);
         var mapper = mappingConfig.CreateMapper();
         builder.Services.AddSingleton(mapper);
+        
+        var corsPolicyName = "CorsPolicy";
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(name: corsPolicyName,
+                policyBuilder =>
+                {
+                    policyBuilder.AllowAnyOrigin();
+                    policyBuilder.AllowAnyMethod();
+                    policyBuilder.AllowAnyHeader();
+                });
+        });
+        
 
         var app = builder.Build();
 
@@ -39,10 +56,12 @@ public class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
-
+        app.UseCors(corsPolicyName);
         app.UseHttpsRedirection();
-
+        
+        app.UseRouting();
         app.UseAuthorization();
+        app.MapControllers();
 
         app.Run();
     }
