@@ -5,3 +5,5 @@ Server/.idea/
 **obj/
 
 Server/LTPulse.sln.DotSettings.user
+
+Server/DBCore/settings.json
