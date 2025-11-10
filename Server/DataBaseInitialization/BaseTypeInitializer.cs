@@ -10,16 +10,17 @@ public class BaseTypeInitializer
   
   public void TryAddTypes(List<IHasId> types)
   {
-    try
+    foreach (var item in types)
     {
-      foreach (var item in types)
+      try
+      {
         this.dbRepository.Add(item);
-      Console.WriteLine("Success");
-    }
-    catch (NHibernate.Exceptions.GenericADOException ex)
-    {
-      Console.WriteLine(ex.Message);
-      Console.WriteLine(ex.StackTrace);
+        Console.WriteLine($"Объект {nameof(item)} с {item.Id} добавлен");
+      }
+      catch (NHibernate.Exceptions.GenericADOException ex)
+      {
+        Console.WriteLine($"Объект {nameof(item)} с {item.Id} пропущен");
+      }
     }
   }
   
@@ -54,10 +55,10 @@ public class BaseTypeInitializer
   {
     List<IHasId> teams =
     [
-      new Team {Name = "Aurora"},
-      new Team {Name = "Atlas"},
-      new Team {Name = "Beta"},
-      new Team {Name = "OGV"},
+      new Team {Name = "Аврора"},
+      new Team {Name = "Атлас"},
+      new Team {Name = "Бета"},
+      new Team {Name = "ОГВ"},
       new Team {Name = "Sokongan"},
       new Team {Name = "Sierra Dogs"},
     ];
