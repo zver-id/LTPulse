@@ -16,4 +16,18 @@ public class MetricType : IHasId
   /// Наименование метрики.
   /// </summary>
   public virtual string Name { get; set; }
+
+  /// <summary>
+  /// Конструктор.
+  /// </summary>
+  /// <param name="name">Имя.</param>
+  public MetricType(string name)
+  {
+    this.Name = name;
+  }
+  
+  /// <summary>
+  /// Конструктор.
+  /// </summary>
+  public MetricType() { }
 }

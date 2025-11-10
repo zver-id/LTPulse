@@ -8,12 +8,12 @@ using NHibernate.Linq;
 
 namespace DBCore;
 
-public class DBReposytory
+public class DBRepository
 {
   /// <summary>
   /// Добавление в базу данных нового объекта
   /// </summary>
-  /// <param name="item">Добавяемый объект</param>
+  /// <param name="item">Добавляемый объект</param>
   public void Add(IHasId item)
   {
     try
