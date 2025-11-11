@@ -1,16 +1,17 @@
 ﻿using CommonModels.Models;
 using DBCore;
 
-namespace XLStoDBConverter;
+namespace DataBaseInitialization;
 
 class Program
 {
   static void Main(string[] args)
   {
-    //var metrics = ExcelParser.ParseExcelToDictionaries("Aurora.xlsx", "tables");
+    var metrics = ExcelParser.ParseExcelToDictionaries("Aurora.xlsx", "tables");
     //Console.WriteLine(metrics);
     var baseInitializer = new BaseTypeInitializer(new DBRepository());
-    baseInitializer.AddMetricTypes();
     baseInitializer.AddTeams();
+    baseInitializer.AddMetricTypes();
+    baseInitializer.AddTeamMetricsFromExcel("Aurora.xlsx", "tables", "Аврора");
   }
 }
