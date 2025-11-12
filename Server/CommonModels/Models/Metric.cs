@@ -16,7 +16,7 @@ public class Metric : IHasId
   /// <summary>
   /// Дата метрики.
   /// </summary>
-  public virtual DateTime Date { get; set; }
+  public virtual string Date { get; set; }
   
   /// <summary>
   /// Команда, которой принадлежит метрика.

@@ -34,7 +34,7 @@ public static class NhibernateHelper
     AutoMap.AssemblyOf<Ticket>(new StoreConfiguration())
       //.Conventions.AddFromAssemblyOf<IdConvention>()
       //.Conventions.AddFromAssemblyOf<NHibernateInitializer>()
-      .UseOverridesFromAssemblyOf<DBReposytory>();
+      .UseOverridesFromAssemblyOf<DBRepository>();
 
   private static ISessionFactory CreateSessionFactory()
   {

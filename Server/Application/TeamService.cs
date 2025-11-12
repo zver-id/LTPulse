@@ -11,7 +11,7 @@ public class TeamService
   /// <summary>
   /// Репозиторий.
   /// </summary>
-  private readonly DBReposytory repository;
+  private readonly DBRepository repository;
   
   /// <summary>
   /// Получить список всех команд.
@@ -31,6 +31,6 @@ public class TeamService
   /// </summary>
   public TeamService()
   {
-    this.repository = new DBReposytory();
+    this.repository = new DBRepository();
   }
 }
