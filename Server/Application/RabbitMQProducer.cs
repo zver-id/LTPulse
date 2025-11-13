@@ -18,7 +18,7 @@ public class RabbitMQProducer
   /// <summary>
   /// Канал.
   /// </summary>
-  private IChannel channel { get; set;}
+  public IChannel channel { get; private set;}
   
   /// <summary>
   /// Очередь получения сообщений.

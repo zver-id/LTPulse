@@ -9,3 +9,5 @@ Server/LTPulse.sln.DotSettings.user
 Server/DBCore/settings.json
 
 Server/Common/settings.json
+
+Server/TechKasConnectService/settings.json
