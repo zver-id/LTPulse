@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using AutoMapper;
-using CommonModels.Models;
+using Common.Models;
 using WebAPI.DTO;
 
 namespace WebAPI.Mappings;

@@ -1,13 +1,25 @@
-﻿using System.Reflection;
+﻿using System;
+using System.IO;
+using System.Reflection;
 using Newtonsoft.Json;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
-namespace NHibernate.Infrastructure;
+namespace Common;
 
 public static class Settings
 {
+  /// <summary>
+  /// Строка подключения к базе данных.
+  /// </summary>
   public static readonly string DatabaseConnectionString;
+  
+  /// <summary>
+  /// Строка подключения RabbitMQ.
+  /// </summary>
+  public static readonly string RabbitMQConnectionString;
 
+  /// <summary>
+  /// Конструктор.
+  /// </summary>
   static Settings()
   {
     var settingsJson = File.ReadAllText("settings.json");

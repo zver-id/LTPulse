@@ -1,4 +1,4 @@
-namespace CommonModels;
+namespace Common;
 
 /// <summary>
 /// Жизненная стадия обращения.

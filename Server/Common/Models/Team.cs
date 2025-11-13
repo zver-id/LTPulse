@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using CommonModels.Interfaces;
+using Common.Interfaces;
 
-namespace CommonModels.Models;
+namespace Common.Models;
 
 /// <summary>
 /// Команда.

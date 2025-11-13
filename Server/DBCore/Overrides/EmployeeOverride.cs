@@ -1,4 +1,4 @@
-using CommonModels.Models;
+using Common.Models;
 using FluentNHibernate.Automapping;
 using FluentNHibernate.Automapping.Alterations;
 

@@ -31,11 +31,6 @@ public class RabbitMQProducer
   private string responseQueueName = "response_queue";
   
   /// <summary>
-  /// Хост для подключения.
-  /// </summary>
-  private string hostName;
-  
-  /// <summary>
   /// Отправить сообщение.
   /// </summary>
   /// <param name="obj">Объект для отправки.</param>
@@ -58,25 +53,27 @@ public class RabbitMQProducer
       arguments: null);
 
     var body = Encoding.UTF8.GetBytes(message);
-    
+    var publishProperties = new BasicProperties();
+    publishProperties.Persistent = true;
     await channel.BasicPublishAsync(
-      $"Ex",
+      $"",
       routingKey: this.requestQueueName,
-      mandatory:false,
-      basicProperties: new BasicProperties(),
+      mandatory:true,
+      basicProperties: publishProperties,
       body: body);
   }
-  
+
   /// <summary>
   /// Создать экземпляр. 
   /// </summary>
-  /// <param name="hostName">Хост подключения.</param>
+  /// <param name="uriString">Строка подключения.</param>
   /// <returns>Экземпляр подключения.</returns>
-  public static async Task<RabbitMQProducer> CreateAsync(string hostName)
+  public static async Task<RabbitMQProducer> CreateAsync
+    (string uriString)
   {
     var instance = new RabbitMQProducer();
-    instance.hostName = hostName;
-    var factory = new ConnectionFactory() { HostName = hostName };;
+    var factory = new ConnectionFactory();
+    factory.Uri = new Uri(uriString);
     instance.connection = await factory.CreateConnectionAsync();
     instance.channel = await instance.connection.CreateChannelAsync();
     return instance;

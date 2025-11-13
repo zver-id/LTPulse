@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Application;
 using AutoMapper;
-using CommonModels.Models;
+using Common.Models;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.DTO;
 

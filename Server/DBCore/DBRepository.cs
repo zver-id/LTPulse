@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 using CollectionLibrary.Nhibernate.Infrastructure;
-using CommonModels.Interfaces;
+using Common.Interfaces;
 using NHibernate;
 using NHibernate.Criterion;
 using NHibernate.Infrastructure;

@@ -1,4 +1,4 @@
-using CommonModels.Models;
+using Common.Models;
 
 namespace DBCore.Tests;
 

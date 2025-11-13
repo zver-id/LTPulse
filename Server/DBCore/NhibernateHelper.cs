@@ -1,11 +1,12 @@
-﻿using CommonModels;
-using CommonModels.Models;
+﻿using Common;
+using Common.Models;
 using DBCore;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
 using FluentNHibernate.Automapping;
 using NHibernate.Cfg;
 using NHibernate.Tool.hbm2ddl;
+using Settings = Common.Settings;
 
 namespace NHibernate.Infrastructure;
 

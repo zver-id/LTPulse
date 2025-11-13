@@ -1,4 +1,4 @@
-namespace CommonModels;
+namespace Common;
 
 public enum Priority
 {

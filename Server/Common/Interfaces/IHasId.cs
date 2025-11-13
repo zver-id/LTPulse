@@ -1,4 +1,4 @@
-namespace CommonModels.Interfaces;
+namespace Common.Interfaces;
 
 /// <summary>
 /// Объект, имеющий ID.

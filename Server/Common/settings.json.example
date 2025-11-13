@@ -1,0 +1,4 @@
+﻿{
+  "DatabaseConnectionString":"Host=example.com;Port=5432;Database=TreasureCollector;Username=user;Password=Qwerty123",
+  "RabbitMQConnectionString": "amqp://userName:password@hostName:5672/virtualHost"
+}
