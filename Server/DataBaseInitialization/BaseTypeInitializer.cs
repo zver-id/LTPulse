@@ -1,5 +1,5 @@
-using CommonModels.Interfaces;
-using CommonModels.Models;
+using Common.Interfaces;
+using Common.Models;
 using DBCore;
 
 namespace DataBaseInitialization;
