@@ -24,13 +24,12 @@ public class MetricsController : ControllerBase
   private readonly MetricsService metricsService;
 
   [HttpGet]
-  public async Task<ActionResult<List<MetricDTO>>> Get(int teamId, int dayCount)
+  public async Task<ActionResult<List<Dictionary<string, object>>>> Get(int teamId, int dayCount)
   {
     var team = await this.teamService.GetTeamById(teamId);
     if (team == null)
       return this.BadRequest("Team not found"); 
-    List<Metric> metrics = await this.metricsService.GetMetrics(team, dayCount);
-    List<MetricDTO> response = mapper.Map<List<MetricDTO>>(metrics);
+    List<Dictionary<string, object>> response = await this.metricsService.GetMetrics(team, dayCount);
     return this.Ok(response);
   }
 
