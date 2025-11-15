@@ -6,13 +6,8 @@ namespace Application;
 /// <summary>
 /// Сервис команд.
 /// </summary>
-public class TeamService
+public class TeamService : GenericService
 {
-  /// <summary>
-  /// Репозиторий.
-  /// </summary>
-  private readonly DBRepository repository;
-  
   /// <summary>
   /// Получить список всех команд.
   /// </summary>
@@ -25,12 +20,13 @@ public class TeamService
       }
     );
   }
-  
-  /// <summary>
-  /// Конструктор.
-  /// </summary>
-  public TeamService()
+
+  public Task<Team> GetTeamById(int id)
   {
-    this.repository = new DBRepository();
+    return Task.Run(() =>
+      {
+        return this.repository.GetById<Team>(id);
+      }
+    );
   }
 }

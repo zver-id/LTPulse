@@ -8,8 +8,13 @@ using NHibernate.Linq;
 
 namespace DBCore;
 
-public class DBRepository
+public class DBRepository : IDisposable
 {
+  /// <summary>
+  /// Сессия репозитория.
+  /// </summary>
+  private ISession Session { get;set; }
+  
   /// <summary>
   /// Добавление в базу данных нового объекта
   /// </summary>
@@ -25,14 +30,12 @@ public class DBRepository
       //TODO нужно понять как это обработать
       throw ex;
     }
-    using (var session = NhibernateHelper.OpenSession())
+    using (ITransaction  transaction = this.Session.BeginTransaction())
     {
-      using (ITransaction  transaction = session.BeginTransaction())
-      {
-        session.Save(item);
-        transaction.Commit();
-      }
+      this.Session.Save(item);
+      transaction.Commit();
     }
+
   }
   /// <summary>
   /// Обновить свойства объекта в базе данных
@@ -42,14 +45,10 @@ public class DBRepository
   {
     if (IsExist(item))
       return;
-    
-    using (var session = NhibernateHelper.OpenSession() )
+    using (ITransaction  transaction = this.Session.BeginTransaction())
     {
-      using (ITransaction  transaction = session.BeginTransaction())
-      {
-        session.Update(item);
-        transaction.Commit();
-      }
+      this.Session.Update(item);
+      transaction.Commit();
     }
   }
   /// <summary>
@@ -60,10 +59,7 @@ public class DBRepository
   /// <returns></returns>
   public T GetById<T>(int id)
   {
-    using (var session = NhibernateHelper.OpenSession() )
-    {
-       return session.Get<T>(id);
-    }
+    return this.Session.Get<T>(id);
   }
   /// <summary>
   /// Получить объект по свойству и его значению
@@ -74,12 +70,9 @@ public class DBRepository
   /// <returns></returns>
   public T Get<T>(string fieldName, object value)
   {
-    using (var session = NhibernateHelper.OpenSession() )
-    {
-      ICriteria criteria = session.CreateCriteria(typeof(T));
-      criteria.Add(Restrictions.Eq(fieldName, value));
-      return (T)criteria.UniqueResult();
-    }
+    ICriteria criteria = this.Session.CreateCriteria(typeof(T));
+    criteria.Add(Restrictions.Eq(fieldName, value));
+    return (T)criteria.UniqueResult();
   }
 
   /// <summary>
@@ -90,12 +83,9 @@ public class DBRepository
   /// <returns>Список сущностей, удовлетворяющих критерию.</returns>
   public List<T> GetByPredicate<T>(Expression<Func<T, bool>> predicate) where T : class
   {
-    using (var session = NhibernateHelper.OpenSession())
-    {
-      return session.Query<T>()
+    return this.Session.Query<T>()
         .Where(predicate)
         .ToList();
-    }
   }
 
   /// <summary>
@@ -119,5 +109,51 @@ public class DBRepository
         $"Элемент типа {typeOfItem} c параметром {property.Name} и значением {property.GetValue(item)} уже существует");
     }
     return false;
-  } 
+  }
+
+  #region IDisposable
+  
+  public void Dispose()
+  {
+    if (this.Session != null)
+    { 
+      try
+      {
+        if (this.Session.IsOpen)
+        {
+          var transaction = this.Session.GetCurrentTransaction();
+          if (transaction?.IsActive == true)
+            transaction.Rollback();
+          Session.Close();
+        }
+      }
+      finally
+      {
+        this.Session.Dispose(); 
+        this.Session = null;
+      }
+    }
+    GC.SuppressFinalize(this);
+  }
+  #endregion
+  
+  #region Конструкторы
+  
+  /// <summary>
+  /// Конструктор.
+  /// </summary>
+  public DBRepository()
+  {
+    this.Session = NhibernateHelper.OpenSession();
+  }
+
+  /// <summary>
+  /// Деструктор.
+  /// </summary>
+  ~DBRepository()
+  {
+    this.Dispose();
+  }
+  #endregion
+
 }

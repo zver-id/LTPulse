@@ -1,3 +1,4 @@
+using System.Globalization;
 using CommonModels.Interfaces;
 using CommonModels.Models;
 using DBCore;
@@ -89,7 +90,7 @@ public class BaseTypeInitializer
         }
         var metricToSave = new Metric
         {
-          Date = dayMetric.Key,
+          Date = DateTime.ParseExact(dayMetric.Key, "dd.MM.yyyy", CultureInfo.InvariantCulture),
           Team = team,
           MetricType = metricType,
           Value = metric.Value
