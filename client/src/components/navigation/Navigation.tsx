@@ -8,7 +8,7 @@ function Navigation (props: NavigationProps){
     const {data} = useGetAllTeamsQuery()
 
     const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        onChange(event.target.value)
+        onChange(Number(event.target.value))
     }
 
     return(
@@ -20,8 +20,8 @@ function Navigation (props: NavigationProps){
                     onChange={handleChange}>
                 {data?.map((team) =>
                     <option
-                        value={team.value}
-                        key={team.value}>
+                        value={team.id}
+                        key={team.id}>
                         {team.name}
                     </option> )}
             </select>

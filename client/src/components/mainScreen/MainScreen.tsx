@@ -4,13 +4,14 @@ import MonthLineChart from "../lineChart/monthLineChart.jsx";
 import {useState} from "react";
 
 function Main() {
-    const [team, setTeam] = useState("line")
+    const [team, setTeam] = useState(1)
+    const [dayCount, setDayCount] = useState(30)
     return (<>
             <header>
                 <h1 className={styles.siteTitle}>Статистика</h1>
             </header>
             <Navigation onChange={setTeam} />
-            <MonthLineChart teamName={team} />
+            <MonthLineChart teamId={team} dayCount={dayCount} />
         </>
     )
 }
