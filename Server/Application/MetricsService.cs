@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using CommonModels.Models;
 
 namespace Application;
@@ -14,14 +15,12 @@ public class MetricsService : GenericService
   /// <param name="team">Команда.</param>
   /// <param name="daysCount">Количество дней за которые нужно получить данне.</param>
   /// <returns>Список метрик.</returns>
-  public Task<List<Dictionary<string, object>>> GetMetrics(Team team, int daysCount)
+  public Task<List<Dictionary<string, object>>> GetMetrics(Expression<Func<Metric, bool>> filter)
   {
-    DateTime beginDate = DateTime.Now - TimeSpan.FromDays(daysCount);
+    
     return Task.Run(() =>
     {
-      List<Metric> metrics = this.repository.GetByPredicate<Metric>(x => (
-        (x.Date > beginDate) &&
-        (x.Team.Equals(team))) );
+      List<Metric> metrics = this.repository.GetByPredicate<Metric>(filter);
       var result = new List<Dictionary<string, object>>();
 
       
@@ -39,4 +38,5 @@ public class MetricsService : GenericService
       return result;
     });
   }
+  
 }

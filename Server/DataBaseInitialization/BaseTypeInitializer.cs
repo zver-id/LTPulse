@@ -20,29 +20,47 @@ public class BaseTypeInitializer
   /// </summary>
   public void AddMetricTypes()
   {
+    Dictionary<string, MetricGroup> metricGroups = new Dictionary<string, MetricGroup>
+    {
+      ["Month"] = new MetricGroup { Name = "Month" },
+      ["Older3Week"] = new MetricGroup { Name = "Older3Week" },
+      ["Snowball"] = new MetricGroup { Name = "Snowball" },
+      ["Tail"] = new MetricGroup { Name = "Tail" },
+      ["ColorZones"] = new MetricGroup { Name = "ColorZones" },
+      ["ColorZonesPriority"] = new MetricGroup { Name = "ColorZonesPriority" },
+      ["NegativeGrades"] = new MetricGroup { Name = "NegativeGrades" },
+      ["ExternalMessages"] = new MetricGroup { Name = "ExternalMessages" },
+      ["IncomingTypes"] = new MetricGroup { Name = "IncomingTypes" },
+      ["IncomingTotal"] = new MetricGroup { Name = "IncomingTotal" },
+      ["SpentForRequests"] = new MetricGroup { Name = "SpentForRequests" }
+    };
+    
     List<IHasId> metricTypes =
     [
-      new MetricType("OlderThanTwoWeeks"),
-      new MetricType("OlderThanThreeWeeks"),
-      new MetricType("OlderFourTwoWeeks"),
-      new MetricType("TotalInProgress"),
-      new MetricType("NotClosed"),
-      new MetricType("ExternalMessages"),
-      new MetricType("GreenZone"),
-      new MetricType("SandyZone"),
-      new MetricType("YellowZone"),
-      new MetricType("RedZone"),
-      new MetricType("NegativeGrades"),
-      new MetricType("WorkedNegativeGrades"),
-      new MetricType("IncomingIncidents"),
-      new MetricType("IncomingConsultations"),
-      new MetricType("IncomingRequests"),
-      new MetricType("IncomingProblems"),
-      new MetricType("IncomingTotal"),
-      new MetricType("SpentOnRequests")
+      new MetricType{ Name = "Старше 2 недель", MetricGroup = metricGroups["Older3Week"] },
+      new MetricType{Name = "Старше 3 недель",  MetricGroup = metricGroups["Older3Week"] }, 
+      new MetricType{Name = "Старше 4 недель",   MetricGroup = metricGroups["Snowball"] },
+      new MetricType{Name = "Всего в работе", MetricGroup = metricGroups["Month"] },
+      new MetricType{Name = "Хвост", MetricGroup = metricGroups["Tail"] },
+      new MetricType{Name = "Внешние сообщения",  MetricGroup = metricGroups["ExternalMessages"] },
+      new MetricType{Name = "0-8", MetricGroup = metricGroups["ColorZones"] },
+      new MetricType{Name = "8-16",  MetricGroup = metricGroups["ColorZones"] },
+      new MetricType{Name = "16-24",  MetricGroup = metricGroups["ColorZones"] },
+      new MetricType{Name = ">24",  MetricGroup = metricGroups["ColorZones"] },
+      new MetricType{Name = "Поступившие", MetricGroup = metricGroups["NegativeGrades"] },
+      new MetricType{Name = "Проработанные",  MetricGroup = metricGroups["NegativeGrades"] },
+      new MetricType{Name = "Инциденты",   MetricGroup = metricGroups["IncomingTypes"] },
+      new MetricType{Name = "Консультации", MetricGroup = metricGroups["IncomingTypes"] },
+      new MetricType{Name = "Запросы", MetricGroup = metricGroups["IncomingTypes"] },
+      new MetricType{Name = "Проблемы", MetricGroup = metricGroups["IncomingTypes"] },
+      new MetricType{Name = "Поступило всего", MetricGroup = metricGroups["IncomingTypes"] },
+      new MetricType{Name = "Затрачено в часах", MetricGroup = metricGroups["SpentForRequests"] }
     ];
 
+    List<IHasId> groups = metricGroups.Values.Cast<IHasId>().ToList();
+    this.TryAddTypes(groups);
     this.TryAddTypes(metricTypes);
+    
   }
 
   /// <summary>
@@ -85,12 +103,23 @@ public class BaseTypeInitializer
         var metricType = this.dbRepository.GetByPredicate<MetricType>(x => x.Name == metric.Key).FirstOrDefault();
         if (metricType == null)
         {
-          metricType = new MetricType { Name = metric.Key };
+          var metricGroup = this.dbRepository.GetByPredicate<MetricGroup>(x => x.Name == "Month").FirstOrDefault();
+          metricType = new MetricType { Name = metric.Key,  MetricGroup = metricGroup! };
           this.dbRepository.Add(metricType);
+        }
+
+        DateTime date;
+        try
+        {
+          date = DateTime.ParseExact(dayMetric.Key, "dd.MM.yyyy", CultureInfo.InvariantCulture);
+        }
+        catch (FormatException)
+        {
+          date = DateTime.ParseExact(dayMetric.Key, "d.MM.yyyy", CultureInfo.InvariantCulture);
         }
         var metricToSave = new Metric
         {
-          Date = DateTime.ParseExact(dayMetric.Key, "dd.MM.yyyy", CultureInfo.InvariantCulture),
+          Date = date,
           Team = team,
           MetricType = metricType,
           Value = metric.Value

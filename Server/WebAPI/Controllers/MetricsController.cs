@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Application;
@@ -21,6 +22,10 @@ public class MetricsController : ControllerBase
   /// Сервис команд.
   /// </summary>
   private readonly TeamService teamService;
+  
+  /// <summary>
+  /// Сервис метрик.
+  /// </summary>
   private readonly MetricsService metricsService;
 
   [HttpGet]
@@ -28,8 +33,28 @@ public class MetricsController : ControllerBase
   {
     var team = await this.teamService.GetTeamById(teamId);
     if (team == null)
-      return this.BadRequest("Team not found"); 
-    List<Dictionary<string, object>> response = await this.metricsService.GetMetrics(team, dayCount);
+      return this.BadRequest("Team not found");
+    DateTime beginDate = DateTime.Now - TimeSpan.FromDays(dayCount);
+    List<Dictionary<string, object>> response = await this.metricsService.GetMetrics(
+      x => (
+      (x.Date > beginDate) &&
+      (x.Team.Equals(team))));
+    return this.Ok(response);
+  }
+
+  [HttpGet("filtered")]
+  public async Task<ActionResult<List<Dictionary<string, object>>>> GetFiltered(int teamId, int dayCount,
+    string filterSing)
+  {
+    var team = await this.teamService.GetTeamById(teamId);
+    if (team == null)
+      return this.BadRequest("Team not found");
+    DateTime beginDate = DateTime.Now - TimeSpan.FromDays(dayCount);
+    List<Dictionary<string, object>> response = await this.metricsService.GetMetrics(
+      x => (
+        (x.Date > beginDate) &&
+        (x.Team.Equals(team)) &&
+        (x.MetricType.MetricGroup.Name.ToLower().Equals(filterSing.ToLower()))));
     return this.Ok(response);
   }
 
