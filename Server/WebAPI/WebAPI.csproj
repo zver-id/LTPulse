@@ -17,4 +17,10 @@
       <ProjectReference Include="..\CommonModels\CommonModels.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Update="settings.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>

@@ -1,3 +1,4 @@
 export interface LineChartProps{
-    teamName: string;
+    teamId: number;
+    dayCount: number;
 }

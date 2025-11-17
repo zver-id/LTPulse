@@ -27,6 +27,11 @@ public class MetricType : IHasId
   }
   
   /// <summary>
+  /// Группа метрики.
+  /// </summary>
+  public virtual MetricGroup MetricGroup { get; set; }
+  
+  /// <summary>
   /// Конструктор.
   /// </summary>
   public MetricType() { }
