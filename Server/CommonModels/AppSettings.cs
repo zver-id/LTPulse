@@ -1,18 +1,20 @@
-﻿using System.Reflection;
+﻿using System;
+using System.IO;
+using System.Reflection;
 using Newtonsoft.Json;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
-namespace NHibernate.Infrastructure;
+namespace CommonModels;
 
-public static class Settings
+public static class AppSettings
 {
   public static readonly string DatabaseConnectionString;
+  public static readonly string RabbitMQConnectionString;
 
-  static Settings()
+  static AppSettings()
   {
     var settingsJson = File.ReadAllText("settings.json");
     dynamic settings = JsonConvert.DeserializeObject(settingsJson)!;
-    var type = typeof(Settings);
+    var type = typeof(AppSettings);
     foreach (var setting in settings)
     {
       var fieldName = setting.Name;

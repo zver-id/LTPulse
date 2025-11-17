@@ -18,7 +18,7 @@ public class RabbitMQClient
   /// <summary>
   /// Канал.
   /// </summary>
-  private IChannel channel { get; set;}
+  public IChannel channel { get; private set;}
   
   /// <summary>
   /// Очередь получения сообщений.
@@ -29,11 +29,6 @@ public class RabbitMQClient
   /// Очередь для отправки сообщений.
   /// </summary>
   private string responseQueueName = "response_queue";
-  
-  /// <summary>
-  /// Хост для подключения.
-  /// </summary>
-  private string hostName;
   
   /// <summary>
   /// Отправить сообщение.
@@ -75,7 +70,6 @@ public class RabbitMQClient
   public static async Task<RabbitMQClient> CreateAsync(string hostName)
   {
     var instance = new RabbitMQClient();
-    instance.hostName = hostName;
     var factory = new ConnectionFactory() { HostName = hostName };;
     instance.connection = await factory.CreateConnectionAsync();
     instance.channel = await instance.connection.CreateChannelAsync();

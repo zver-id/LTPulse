@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataBaseInitialization", "DataBaseInitialization\DataBaseInitialization.csproj", "{855349A5-36EE-4405-A58A-E1895F09DC44}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechKasConnector", "TechKasConnector\TechKasConnector.csproj", "{A4124372-F31B-4040-8080-53226A8967B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{855349A5-36EE-4405-A58A-E1895F09DC44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{855349A5-36EE-4405-A58A-E1895F09DC44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{855349A5-36EE-4405-A58A-E1895F09DC44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4124372-F31B-4040-8080-53226A8967B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4124372-F31B-4040-8080-53226A8967B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4124372-F31B-4040-8080-53226A8967B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4124372-F31B-4040-8080-53226A8967B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1E74AAFD-8CE4-4705-B4D9-CC1E07ADD3AA} = {8D821767-5020-4CB9-AA71-A50656CDD120}
