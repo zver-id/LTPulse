@@ -1,6 +1,5 @@
 import {CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis, Text } from "recharts";
 import type {LineChartProps} from "../../types/monthLineChart.ts";
-
 import { useGetFilteredMetricsQuery } from "../../storage/services/metrics-api.ts"
 import getAllLines from "../../helpers/getAllLines.ts"
 
