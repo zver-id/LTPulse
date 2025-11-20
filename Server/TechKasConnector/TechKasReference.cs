@@ -34,9 +34,9 @@ public class TechKasReference
   {
     string filterString;
     if (comparosonType)
-      filterString = this.GetReferenceQuery(attributeValues, attributeType);
+      filterString = this.GetReferenceQueryEqual(attributeValues, attributeType);
     else
-      filterString = this.GetReferenceQuery(attributeValues, attributeType);
+      filterString = this.GetReferenceQueryNotEqual(attributeValues, attributeType);
     int referenceFilter = this.Reference.AddWhere(filterString);
     return referenceFilter;
   }
@@ -49,12 +49,12 @@ public class TechKasReference
   
   
   /// <summary>
-  /// Получить запрос для ограничения параметров.
+  /// Получить запрос для ограничения параметров в случае если нужно проверить параметры на эквивалентность.
   /// </summary>
   /// <param name="attributes">Список параметров.</param>
   /// <param name="attributeType">Тип параметра.</param>
   /// <returns>Текст запроса.</returns>
-  private string GetReferenceQuery(List<string> attributes, string attributeType)
+  private string GetReferenceQueryEqual(List<string> attributes, string attributeType)
   {
     var query = new StringBuilder();
     foreach (var attribute in attributes)
@@ -76,11 +76,34 @@ public class TechKasReference
   }
 
   /// <summary>
+  /// Получить запрос для ограничения параметров в случае если нужно проверить параметры на неравенство.
+  /// </summary>
+  /// <param name="attributes">Список параметров. Будет принят только первый.</param>
+  /// <param name="attributeType">Тип параметра.</param>
+  /// <returns>Текст запроса.</returns>
+  private string GetReferenceQueryNotEqual(List<string> attributes, string attributeType)
+  {
+    return $"{this.Reference.TableName}.{this.Reference.Requisites(attributeType).FieldName} <> {attributes[0]}";
+  }
+
+  /// <summary>
+  /// Отфильтровать автоматически решенные обращения.
+  /// </summary>
+  private void DisableAutoSolved()
+  {
+    var autoSolvedString = $"({this.Reference.TableName}.{this.Reference.Requisites("ДаНет5").FieldName} = 'Н'" +
+                        $" or {this.Reference.TableName}.{this.Reference.Requisites("ДаНет5").FieldName} is Null)";
+    this.Reference.AddWhere(autoSolvedString);
+  }
+
+  /// <summary>
   /// Конструктор.
   /// </summary>
   /// <param name="referenceName">Имя справочника.</param>
-  public TechKasReference(string referenceName)
+  public TechKasReference(string referenceName, bool disableAutoSolved = true)
   {
     this.Reference = GetReference(referenceName);
+    if (disableAutoSolved)
+      this.DisableAutoSolved();
   }
 }
