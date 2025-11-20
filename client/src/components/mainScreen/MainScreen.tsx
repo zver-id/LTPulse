@@ -7,7 +7,7 @@ import type {zonesColor} from "../../types/zones-chart-props.ts";
 
 function Main() {
     const [team, setTeam] = useState(1)
-    const [dayCount, setDayCount] = useState(200)
+    const [dayCount, setDayCount] = useState(14)
 
     const colors = ['#3CB44B', '#F5DEB3', '#FFD700', '#E6194B'];
     const zoneColorSimple: zonesColor[] = [ {name: '0-8', color: colors[0]},
@@ -18,7 +18,7 @@ function Main() {
     return (<>
             <header>
                 <h1 className={styles.siteTitle}>Статистика</h1>
-                <Navigation onChange={setTeam} />
+                <Navigation onChangeTeam={setTeam} days={dayCount} onChangeDays={setDayCount} />
             </header>
 
             <MonthLineChart teamId={team} dayCount={dayCount} filter={"month"} />
