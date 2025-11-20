@@ -8,10 +8,10 @@ import {
     Area
 } from 'recharts';
 
-import type {LineChartProps} from "../../types/monthLineChart.ts";
+import type {ZonesChartProps} from "../../types/zones-chart-props.ts";
 import { useGetFilteredMetricsQuery } from "../../storage/services/metrics-api.ts"
 
-function ZonesChart ({teamId, dayCount, filter} :LineChartProps) {
+function ZonesChart ({teamId, dayCount, filter, zoneColor} :ZonesChartProps) {
 
     const { data, isLoading, isError }
         = useGetFilteredMetricsQuery({teamId: teamId, dayCount: dayCount, filter: filter});
@@ -22,8 +22,6 @@ function ZonesChart ({teamId, dayCount, filter} :LineChartProps) {
     if (isError) {
        return <h1>Error...</h1>;
     }
-
-    const colors = ['#3CB44B', '#F5DEB3', '#FFD700', '#E6194B'];
 
     return (
         <AreaChart
@@ -55,49 +53,22 @@ function ZonesChart ({teamId, dayCount, filter} :LineChartProps) {
                 <XAxis dataKey="day" orientation="top" />
                 <YAxis width="auto" domain={[0,1]} />
                 <Tooltip />
-                <Area key={'0-8'}
-                      dataKey="0-8"
-                      type="monotone"
-                      stroke={colors[0]}
-                      fill={colors[0]}
-                      stackId="1" />
-                <Area key={'8-16'}
-                      dataKey="8-16"
-                      type="monotone"
-                      stroke={colors[1]}
-                      fill={colors[1]}
-                      stackId="1" />
-                <Area key={'16-24'}
-                      dataKey="16-24"
-                      type="monotone"
-                      stroke={colors[2]}
-                      fill={colors[2]}
-                      stackId="1" />
-                <Area key={'>24'}
-                      dataKey=">24"
-                      type="monotone"
-                      stroke={colors[3]}
-                      fill={colors[3]}
-                      stackId="1" />
+                {zoneColor?.map((zone) => (
+                    <Area
+                        key={zone.name}
+                        dataKey={zone.name}
+                        type="monotone"
+                        stroke={zone.color}
+                        fill={zone.color}
+                        stackId="1"
+                    />
+                ))}
                 <Legend
                     layout="vertical"
                     verticalAlign="middle"
                     align="right"
                     wrapperStyle={{ paddingLeft: 10 }}
                 />
-
-                {/*}
-                {allLines?.map((line, index) => (
-                    <Area
-                        key={line}
-                        dataKey={line}
-                        type="monotone"
-                        stroke={colors[index % colors.length]}
-                        fill={colors[index % colors.length]}
-                        stackId="1"
-                    />
-                ))}
-                */}
             </g>
         </AreaChart>
 
