@@ -7,3 +7,5 @@ Server/.idea/
 Server/LTPulse.sln.DotSettings.user
 
 Server/DBCore/settings.json
+
+*.xlsx
