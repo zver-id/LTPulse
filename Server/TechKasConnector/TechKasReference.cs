@@ -9,27 +9,16 @@ namespace TechKasConnector;
 /// </summary>
 public class TechKasReference : IEnumerable
 {
+  #region Поля и свойства
+
   /// <summary>
   /// Справочник. Основное свойство доступа к данным.
   /// </summary>
   private dynamic Reference { get; set; }
   
-  /// <summary>
-  /// Получить справочник TeхКас по имени.
-  /// </summary>
-  /// <param name="referenceName">Имя справочника.</param>
-  /// <returns>Спрвочник ТехКас</returns>
-  /// <exception cref="Exception">Возникает, если ТехКас не установлен.</exception>
-  private static dynamic GetReference(string referenceName)
-  {
-    CoInitialize(IntPtr.Zero);
-    Type? loginPointType = Type.GetTypeFromProgID("SBLogon.LoginPoint");
-    if (loginPointType == null)
-      throw new Exception("Login Point not found");
-    dynamic loginPoint = Activator.CreateInstance(loginPointType);
-    var app = loginPoint.GetApplication("systemcode=TEHKASNPO");
-    return app.ReferencesFactory.ReferenceFactory(referenceName).GetComponent();
-  }
+  #endregion
+
+  #region Методы
 
   /// <summary>
   /// Добавить фильтр к справочнику.
@@ -46,7 +35,7 @@ public class TechKasReference : IEnumerable
       $" {comparisonOperator} '{attributeValue}'");
     return referenceFilter;
   }
-
+  
   /// <summary>
   /// Добавить ограничение из списка парамтеров.
   /// </summary>
@@ -93,33 +82,43 @@ public class TechKasReference : IEnumerable
     this.Reference.Open();
     this.Reference.First();
   }
-
-  [DllImport("ole32.dll")]
-  private static extern int CoInitialize(IntPtr pvReserved);
-
-  [DllImport("ole32.dll")]
-  private static extern void CoUninitialize();
-
+  
+  /// <summary>
+  /// Получить справочник TeхКас по имени.
+  /// </summary>
+  /// <param name="referenceName">Имя справочника.</param>
+  /// <returns>Спрвочник ТехКас</returns>
+  /// <exception cref="Exception">Возникает, если ТехКас не установлен.</exception>
+  private static dynamic GetReference(string referenceName)
+  {
+    CoInitialize(IntPtr.Zero);
+    Type? loginPointType = Type.GetTypeFromProgID("SBLogon.LoginPoint");
+    if (loginPointType == null)
+      throw new Exception("Login Point not found");
+    dynamic loginPoint = Activator.CreateInstance(loginPointType);
+    var app = loginPoint.GetApplication("systemcode=TEHKASNPO");
+    return app.ReferencesFactory.ReferenceFactory(referenceName).GetComponent();
+  }
+  
   /// <summary>
   /// Отфильтровать автоматически решенные обращения.
   /// </summary>
   private void DisableAutoSolved()
   {
     var autoSolvedString = $"({this.Reference.TableName}.{this.Reference.Requisites("ДаНет5").FieldName} = 'Н'" +
-                        $" or {this.Reference.TableName}.{this.Reference.Requisites("ДаНет5").FieldName} is Null)";
+                           $" or {this.Reference.TableName}.{this.Reference.Requisites("ДаНет5").FieldName} is Null)";
     this.Reference.AddWhere(autoSolvedString);
   }
 
-  /// <summary>
-  /// Конструктор.
-  /// </summary>
-  /// <param name="referenceName">Имя справочника.</param>
-  public TechKasReference(string referenceName, bool disableAutoSolved = true)
-  {
-    this.Reference = GetReference(referenceName);
-    if (disableAutoSolved)
-      this.DisableAutoSolved();
-  }
+  [DllImport("ole32.dll")]
+  private static extern int CoInitialize(IntPtr pvReserved);
+
+  [DllImport("ole32.dll")]
+  private static extern void CoUninitialize();
+  
+  #endregion
+
+  #region IEnumerable
 
   public IEnumerator GetEnumerator()
   {
@@ -130,4 +129,22 @@ public class TechKasReference : IEnumerable
       this.NextRecord();
     }
   }
+  
+  #endregion
+  
+  #region Конструкторы
+  /// <summary>
+  /// Конструктор.
+  /// </summary>
+  /// <param name="referenceName">Имя справочника.</param>
+  public TechKasReference(string referenceName, bool disableAutoSolved = true)
+  {
+    this.Reference = GetReference(referenceName);
+    if (disableAutoSolved)
+      this.DisableAutoSolved();
+  }
+  
+  #endregion
+
+
 }
