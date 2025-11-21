@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace TechKasConnector;
@@ -6,12 +7,12 @@ namespace TechKasConnector;
 /// <summary>
 /// Справочник ТехКас.
 /// </summary>
-public class TechKasReference
+public class TechKasReference : IEnumerable
 {
   /// <summary>
   /// Справочник. Основное свойство доступа к данным.
   /// </summary>
-  public dynamic Reference { get; private set; }
+  private dynamic Reference { get; set; }
   
   /// <summary>
   /// Получить справочник TeхКас по имени.
@@ -30,31 +31,29 @@ public class TechKasReference
     return app.ReferencesFactory.ReferenceFactory(referenceName).GetComponent();
   }
 
-  public int SetFilter(string attributeType, List<string> attributeValues, bool comparosonType = true)
+  /// <summary>
+  /// Добавить фильтр к справочнику.
+  /// </summary>
+  /// <param name="attributeType">Тип атрибута, по которому ставим фильтр.</param>
+  /// <param name="attributeValue">Значение атрибута.</param>
+  /// <param name="comparosonType">Тип сравнения (сортировать по этому значению, исключить значение)</param>
+  /// <returns>ИД фильтра.</returns>
+  public int SetFilter(string attributeType, string attributeValue, bool comparisonType = true)
   {
-    string filterString;
-    if (comparosonType)
-      filterString = this.GetReferenceQueryEqual(attributeValues, attributeType);
-    else
-      filterString = this.GetReferenceQueryNotEqual(attributeValues, attributeType);
-    int referenceFilter = this.Reference.AddWhere(filterString);
+    string comparisonOperator = comparisonType ? "=" : "<>";
+    int referenceFilter = this.Reference.AddWhere(
+      $"{this.Reference.TableName}.{this.Reference.Requisites(attributeType).FieldName}" +
+      $" {comparisonOperator} '{attributeValue}'");
     return referenceFilter;
   }
 
-  [DllImport("ole32.dll")]
-  private static extern int CoInitialize(IntPtr pvReserved);
-
-  [DllImport("ole32.dll")]
-  private static extern void CoUninitialize();
-  
-  
   /// <summary>
-  /// Получить запрос для ограничения параметров в случае если нужно проверить параметры на эквивалентность.
+  /// Добавить ограничение из списка парамтеров.
   /// </summary>
-  /// <param name="attributes">Список параметров.</param>
-  /// <param name="attributeType">Тип параметра.</param>
-  /// <returns>Текст запроса.</returns>
-  private string GetReferenceQueryEqual(List<string> attributes, string attributeType)
+  /// <param name="attributeType"></param>
+  /// <param name="attributes"></param>
+  /// <returns></returns>
+  public int SetFilter(string attributeType, List<string> attributes)
   {
     var query = new StringBuilder();
     foreach (var attribute in attributes)
@@ -62,29 +61,44 @@ public class TechKasReference
       if (query.Length == 0)
       {
         query.Append($"({this.Reference.TableName}" +
-                     $".{this.Reference.Requisites(attributeType).FieldName} = '{attribute}')");
+                     $".{this.Reference.Requisites(attributeType).FieldName} = '{attribute}'");
       }
       else
       {
         query.Append($" or {this.Reference.TableName}" +
-                     $".{this.Reference.Requisites(attributeType).FieldName} = '{attribute}')");
+                     $".{this.Reference.Requisites(attributeType).FieldName} = '{attribute}'");
         if (attributes.Count == attributes.IndexOf(attribute) + 1)
           query.Append(')');
       }
     }
-    return query.ToString();
+    int filterID = this.Reference.AddWhere(query.ToString());
+    return filterID;
   }
 
   /// <summary>
-  /// Получить запрос для ограничения параметров в случае если нужно проверить параметры на неравенство.
+  /// Переключает справочник на следующую запись.
   /// </summary>
-  /// <param name="attributes">Список параметров. Будет принят только первый.</param>
-  /// <param name="attributeType">Тип параметра.</param>
-  /// <returns>Текст запроса.</returns>
-  private string GetReferenceQueryNotEqual(List<string> attributes, string attributeType)
+  public void NextRecord()
   {
-    return $"{this.Reference.TableName}.{this.Reference.Requisites(attributeType).FieldName} <> {attributes[0]}";
+    this.Reference.Cancel();
+    this.Reference.CloseRecord();
+    this.Reference.Next();
   }
+
+  /// <summary>
+  /// Открыть справочник.
+  /// </summary>
+  public void OpenReference()
+  {
+    this.Reference.Open();
+    this.Reference.First();
+  }
+
+  [DllImport("ole32.dll")]
+  private static extern int CoInitialize(IntPtr pvReserved);
+
+  [DllImport("ole32.dll")]
+  private static extern void CoUninitialize();
 
   /// <summary>
   /// Отфильтровать автоматически решенные обращения.
@@ -105,5 +119,15 @@ public class TechKasReference
     this.Reference = GetReference(referenceName);
     if (disableAutoSolved)
       this.DisableAutoSolved();
+  }
+
+  public IEnumerator GetEnumerator()
+  {
+    this.OpenReference();
+    while (!this.Reference.EOF)
+    {
+      yield return this.Reference;
+      this.NextRecord();
+    }
   }
 }
