@@ -1,3 +1,5 @@
 export type NavigationProps = {
-    onChange: (teams: number) => void;
+    onChangeTeam: (teams: number) => void;
+    days: number;
+    onChangeDays: (days: number) => void;
 }

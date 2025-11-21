@@ -4,11 +4,15 @@ import { useGetAllTeamsQuery } from "../../storage/services/teams-api.ts"
 
 function Navigation (props: NavigationProps){
 
-    const { onChange } = props
+    const { onChangeDays, days, onChangeTeam } = props
     const {data} = useGetAllTeamsQuery()
 
-    const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        onChange(Number(event.target.value))
+    const handleChangeTeam = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        onChangeTeam(Number(event.target.value))
+    }
+
+    const handleChangeDays = (event: React.ChangeEvent<HTMLInputElement>) => {
+        onChangeDays(Number(event.target.value))
     }
 
     return(
@@ -17,7 +21,7 @@ function Navigation (props: NavigationProps){
             <select className={styles.selectBar}
                     id={"teamSelection"}
                     name={"teams"}
-                    onChange={handleChange}>
+                    onChange={handleChangeTeam}>
                 {data?.map((team) =>
                     <option
                         value={team.id}
@@ -25,6 +29,13 @@ function Navigation (props: NavigationProps){
                         {team.name}
                     </option> )}
             </select>
+            <input
+                type="text"
+                value={days}
+                onChange={handleChangeDays}
+                placeholder="Количество дней"
+                className="input-style" // добавьте свои стили
+            />
         </nav>
     )
 }
