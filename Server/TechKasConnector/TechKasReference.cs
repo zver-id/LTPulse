@@ -12,6 +12,20 @@ public class TechKasReference : IEnumerable
   #region Поля и свойства
 
   /// <summary>
+  /// Количество записей в справочнике.
+  /// </summary>
+  public int Count
+  {
+    get
+    {
+      this.Reference.Open();
+      int count = this.Reference.RecordCount;
+      this.Reference.Close();
+      return count;
+    }
+  }
+
+  /// <summary>
   /// Справочник. Основное свойство доступа к данным.
   /// </summary>
   private dynamic Reference { get; set; }
@@ -65,6 +79,15 @@ public class TechKasReference : IEnumerable
   }
 
   /// <summary>
+  /// Удалить фильтр справочника.
+  /// </summary>
+  /// <param name="filterId">Id фильтра.</param>
+  public void DeleteFilter(int filterId)
+  {
+    this.Reference.DelWhere(filterId);
+  }
+
+  /// <summary>
   /// Переключает справочник на следующую запись.
   /// </summary>
   public void NextRecord()
@@ -81,6 +104,14 @@ public class TechKasReference : IEnumerable
   {
     this.Reference.Open();
     this.Reference.First();
+  }
+
+  /// <summary>
+  /// Закрыть справочник.
+  /// </summary>
+  public void CloseReference()
+  {
+    this.Reference.Close();
   }
   
   /// <summary>
