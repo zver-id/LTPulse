@@ -66,7 +66,11 @@ public class MetricCalculator
     return result;
   }
 
-  public Dictionary<string, int> GetCountTicketInProgressByMonth(string type)
+  /// <summary>
+  /// Количество обращений в работе по месяцам создания.
+  /// </summary>
+  /// <returns>Количество обращений в работе по месяцам создания.</returns>
+  public Dictionary<string, int> GetCountTicketInProgressByMonth()
   {
     var result = new Dictionary<string, int>();
     int statusFilterId = this.tickets.SetFilter(TechKasRequisites.TicketStatus, "Р");
@@ -83,7 +87,19 @@ public class MetricCalculator
       else
         result[month]++;
     }
+    this.tickets.DeleteFilter(statusFilterId);
     return result;
+  }
+
+  public int GetSnowballTicketsCount(int daysAgo, bool activeOnly = false)
+  {
+    int ticketStatusFilter;
+    if (activeOnly)
+      ticketStatusFilter = this.tickets.SetFilter(TechKasRequisites.TicketStatus, "Р");
+    else
+      ticketStatusFilter = this.tickets.SetFilter(TechKasRequisites.TicketStatus,
+        new List<string>() { "Р", "К", "И", "П" });
+    return 0;
   }
 
   /// <summary>
