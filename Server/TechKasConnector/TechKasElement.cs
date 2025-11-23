@@ -9,7 +9,7 @@ public class TechKasElement
     switch (mode)
     {
       case RequisitesMode.AsString:
-        return this.Element.Requisite(requisite).AsString;
+        return this.Element.Requisites(requisite).AsString;
     }
     return string.Empty;
   }

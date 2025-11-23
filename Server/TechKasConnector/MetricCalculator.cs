@@ -70,26 +70,18 @@ public class MetricCalculator
   {
     var result = new Dictionary<string, int>();
     int statusFilterId = this.tickets.SetFilter(TechKasRequisites.TicketStatus, "Р");
-    Dictionary<string, string> months = new Dictionary<string, string>
-    {
-      { "01", "Январь" },
-      { "02", "Февраль" },
-      { "03", "Март" },
-      { "04", "Апрель" },
-      { "05", "Май" },
-      { "06", "Июнь" },
-      { "07", "Июль" },
-      { "08", "Август" },
-      { "09", "Сентябрь" },
-      { "10", "Октябрь" },
-      { "11", "Ноябрь" },
-      { "12", "Декабрь" }
-    };
+    
     foreach (TechKasElement ticket in this.tickets)
     {
-      string dateOfCreate = ticket.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString);
-      DateTime date = DateTime.ParseExact(dateOfCreate, "dd.MM.yyyy", CultureInfo.InvariantCulture);
-      string monthOfCreate = date.Month.ToString();
+      DateTime dateOfCreate = DateTime.ParseExact(
+        ticket.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString),
+        "dd.MM.yyyy", CultureInfo.InvariantCulture);
+      string monthName = dateOfCreate.ToString("MMMM", new CultureInfo("ru-RU"));
+      string month = $"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(monthName)} {dateOfCreate.Year}";
+      if (!result.ContainsKey(month))
+        result.Add(month, 1);
+      else
+        result[month]++;
     }
     return result;
   }
