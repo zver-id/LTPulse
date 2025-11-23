@@ -7,8 +7,10 @@ namespace TechKasConnector;
 /// <summary>
 /// Справочник ТехКас.
 /// </summary>
-public class TechKasReference : IEnumerable
+public class TechKasReference : IEnumerable<TechKasElement>
 {
+  private IEnumerable<TechKasElement> enumerableImplementation;
+
   #region Поля и свойства
 
   /// <summary>
@@ -151,14 +153,19 @@ public class TechKasReference : IEnumerable
 
   #region IEnumerable
 
-  public IEnumerator GetEnumerator()
+  public IEnumerator<TechKasElement> GetEnumerator()
   {
     this.OpenReference();
     while (!this.Reference.EOF)
     {
-      yield return this.Reference;
+      yield return new TechKasElement(this.Reference);
       this.NextRecord();
     }
+  }
+  
+  IEnumerator IEnumerable.GetEnumerator()
+  {
+    return this.GetEnumerator();
   }
   
   #endregion
@@ -176,6 +183,4 @@ public class TechKasReference : IEnumerable
   }
   
   #endregion
-
-
 }
