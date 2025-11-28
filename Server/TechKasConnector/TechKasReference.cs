@@ -43,9 +43,8 @@ public class TechKasReference : IEnumerable<TechKasElement>
   /// <param name="attributeValue">Значение атрибута.</param>
   /// <param name="comparosonType">Тип сравнения (сортировать по этому значению, исключить значение)</param>
   /// <returns>ИД фильтра.</returns>
-  public int SetFilter(string attributeType, string attributeValue, bool comparisonType = true)
+  public int SetFilter(string attributeType, string attributeValue, string comparisonOperator = "=")
   {
-    string comparisonOperator = comparisonType ? "=" : "<>";
     int referenceFilter = this.Reference.AddWhere(
       $"{this.Reference.TableName}.{this.Reference.Requisites(attributeType).FieldName}" +
       $" {comparisonOperator} '{attributeValue}'");

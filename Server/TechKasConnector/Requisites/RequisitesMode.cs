@@ -1,4 +1,4 @@
-namespace TechKasConnector;
+namespace TechKasConnector.Requisites;
 
 /// <summary>
 /// Варианты возврата реквизита.

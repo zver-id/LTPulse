@@ -1,4 +1,4 @@
-namespace TechKasConnector;
+namespace TechKasConnector.Requisites;
 
 /// <summary>
 /// Реквизиты справочников в ТехКас.
@@ -9,4 +9,5 @@ public static class TechKasRequisites
   public static readonly string TicketType = "ТипОбращения";
   public static readonly string OpenDate = "ДатОткр";
   public static readonly string TicketStatus = "СостОбращения";
+  public static readonly string SupportArea = "ОбластьПоддержки";
 }

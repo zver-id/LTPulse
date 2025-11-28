@@ -1,3 +1,5 @@
+using TechKasConnector.Requisites;
+
 namespace TechKasConnector;
 
 public class TechKasElement

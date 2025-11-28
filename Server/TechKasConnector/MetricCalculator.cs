@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using CommonModels.Models;
 using DBCore;
+using TechKasConnector.Requisites;
 
 namespace TechKasConnector;
 
@@ -90,16 +91,38 @@ public class MetricCalculator
     this.tickets.DeleteFilter(statusFilterId);
     return result;
   }
-
-  public int GetSnowballTicketsCount(int daysAgo, bool activeOnly = false)
+  
+  /// <summary>
+  /// Получить количество обращений старше определенного количества дней.
+  /// </summary>
+  /// <param name="daysAgo">Количество дней.</param>
+  /// <param name="activeOnly">Флаг учитывать ли обращения на контроле.</param>
+  /// <returns>Количесвто обращений.</returns>
+  public int GetSnowballTicketsCount(int daysAgo = -1, bool activeOnly = false)
   {
     int ticketStatusFilter;
     if (activeOnly)
-      ticketStatusFilter = this.tickets.SetFilter(TechKasRequisites.TicketStatus, "Р");
+      ticketStatusFilter = this.tickets.SetFilter(TechKasRequisites.TicketStatus, TicketStatus.InWork);
     else
-      ticketStatusFilter = this.tickets.SetFilter(TechKasRequisites.TicketStatus,
-        new List<string>() { "Р", "К", "И", "П" });
-    return 0;
+      ticketStatusFilter = this.tickets.SetFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
+    var ticketTypeFilter = this.tickets.SetFilter(TechKasRequisites.TicketType, TicketType.WithoutProblems);
+    // Убираем анонимки (Код-338)
+    var excludeAnonims = this.tickets.SetFilter(TechKasRequisites.SupportArea, "30262732");
+    int timeFilter = 0;
+    if (daysAgo != -1)
+    {
+      timeFilter = this.tickets.SetFilter(TechKasRequisites.OpenDate,
+        DateTime.Now.AddDays(-daysAgo).ToString("dd.MM.yyyy"), "<=");
+    }
+
+    var count = this.tickets.Count;
+    this.tickets.DeleteFilter(ticketStatusFilter);
+    this.tickets.DeleteFilter(excludeAnonims);
+    this.tickets.DeleteFilter(ticketTypeFilter);
+    if (timeFilter != 0)
+      this.tickets.DeleteFilter(timeFilter);
+
+    return count;
   }
 
   /// <summary>
@@ -132,13 +155,13 @@ public class MetricCalculator
     {
       if (filter.Value.Count == 1)
       {
-        this.tickets.SetFilter(filter.Key, filter.Value.First(), false);
+        this.tickets.SetFilter(filter.Key, filter.Value.First(), "<>");
       }
       else
       {
         foreach (var value in filter.Value)
         {
-          this.tickets.SetFilter(filter.Key, value, false);
+          this.tickets.SetFilter(filter.Key, value, "<>");
         } 
       }
     }
