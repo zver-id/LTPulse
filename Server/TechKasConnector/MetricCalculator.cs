@@ -35,10 +35,9 @@ public class MetricCalculator
   /// <returns>Количество обращений.</returns>
   public int GetTicketCountByType(string type)
   {
-    int ticketFilter = this.tickets.SetFilter(TechKasRequisites.TicketType, type);
-    int result = this.tickets.Count;
-    this.tickets.DeleteFilter(ticketFilter);
-    return result;
+    using var filter = new ReferenceFilter(this.tickets);
+    filter.AddFilter(TechKasRequisites.TicketType, type);
+    return this.tickets.Count;
   }
 
   /// <summary>
@@ -61,10 +60,10 @@ public class MetricCalculator
     {
       dateForCalculation.Add(currentDay.ToString("dd.MM.yyyy"));
     }
-    var dateFilterId = this.tickets.SetFilter(TechKasRequisites.OpenDate, dateForCalculation);
-    var result = GetTicketCountByType(type);
-    this.tickets.DeleteFilter(dateFilterId);
-    return result;
+
+    using var filter = new ReferenceFilter(this.tickets);
+    filter.AddFilter(TechKasRequisites.OpenDate, dateForCalculation);
+    return this.GetTicketCountByType(type);
   }
 
   /// <summary>
@@ -73,8 +72,9 @@ public class MetricCalculator
   /// <returns>Количество обращений в работе по месяцам создания.</returns>
   public Dictionary<string, int> GetCountTicketInProgressByMonth()
   {
+    using var filter = new ReferenceFilter(this.tickets);
     var result = new Dictionary<string, int>();
-    int statusFilterId = this.tickets.SetFilter(TechKasRequisites.TicketStatus, "Р");
+    filter.AddFilter(TechKasRequisites.TicketStatus, "Р");
     
     foreach (TechKasElement ticket in this.tickets)
     {
@@ -88,7 +88,6 @@ public class MetricCalculator
       else
         result[month]++;
     }
-    this.tickets.DeleteFilter(statusFilterId);
     return result;
   }
   
@@ -100,29 +99,26 @@ public class MetricCalculator
   /// <returns>Количесвто обращений.</returns>
   public int GetSnowballTicketsCount(int daysAgo = -1, bool activeOnly = false)
   {
-    int ticketStatusFilter;
+    using var filter = new ReferenceFilter(this.tickets);
     if (activeOnly)
-      ticketStatusFilter = this.tickets.SetFilter(TechKasRequisites.TicketStatus, TicketStatus.InWork);
+      filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.InWork);
     else
-      ticketStatusFilter = this.tickets.SetFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
-    var ticketTypeFilter = this.tickets.SetFilter(TechKasRequisites.TicketType, TicketType.WithoutProblems);
+      filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
+
+    filter.AddFilter(TechKasRequisites.TicketType, TicketType.WithoutProblems);
     // Убираем анонимки (Код-338)
-    var excludeAnonims = this.tickets.SetFilter(TechKasRequisites.SupportArea, "30262732");
-    int timeFilter = 0;
+    filter.AddFilter(TechKasRequisites.SupportArea, "30262732");
     if (daysAgo != -1)
-    {
-      timeFilter = this.tickets.SetFilter(TechKasRequisites.OpenDate,
+      filter.AddFilter(TechKasRequisites.OpenDate,
         DateTime.Now.AddDays(-daysAgo).ToString("dd.MM.yyyy"), "<=");
-    }
+    return this.tickets.Count;
+  }
 
-    var count = this.tickets.Count;
-    this.tickets.DeleteFilter(ticketStatusFilter);
-    this.tickets.DeleteFilter(excludeAnonims);
-    this.tickets.DeleteFilter(ticketTypeFilter);
-    if (timeFilter != 0)
-      this.tickets.DeleteFilter(timeFilter);
-
-    return count;
+  public float GetTimeSpentOnRequests()
+  {
+    var typeFilter = this.tickets.SetFilter(TechKasRequisites.TicketType, TicketType.Request);
+    
+    return 0;
   }
 
   /// <summary>
@@ -144,7 +140,7 @@ public class MetricCalculator
       this.tickets.SetFilter(filter.Key, filter.Value);
     
     Dictionary<string, List<string>> excludeFilters = initFilters
-      .Where(f => f.ShouldInclude == false)
+      .Where(f => !f.ShouldInclude)
       .GroupBy(f => f.NameOfField)
       .ToDictionary(
         f => f.Key,
