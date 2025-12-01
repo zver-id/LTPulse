@@ -35,7 +35,7 @@ public class MetricCalculator
   /// <returns>Количество обращений.</returns>
   public int GetTicketCountByType(string type)
   {
-    using var filter = new ReferenceFilter(this.tickets);
+    using var filter = new ReferenceFilterManager(this.tickets);
     filter.AddFilter(TechKasRequisites.TicketType, type);
     return this.tickets.Count;
   }
@@ -61,7 +61,7 @@ public class MetricCalculator
       dateForCalculation.Add(currentDay.ToString("dd.MM.yyyy"));
     }
 
-    using var filter = new ReferenceFilter(this.tickets);
+    using var filter = new ReferenceFilterManager(this.tickets);
     filter.AddFilter(TechKasRequisites.OpenDate, dateForCalculation);
     return this.GetTicketCountByType(type);
   }
@@ -72,7 +72,7 @@ public class MetricCalculator
   /// <returns>Количество обращений в работе по месяцам создания.</returns>
   public Dictionary<string, int> GetCountTicketInProgressByMonth()
   {
-    using var filter = new ReferenceFilter(this.tickets);
+    using var filter = new ReferenceFilterManager(this.tickets);
     var result = new Dictionary<string, int>();
     filter.AddFilter(TechKasRequisites.TicketStatus, "Р");
     
@@ -99,7 +99,7 @@ public class MetricCalculator
   /// <returns>Количесвто обращений.</returns>
   public int GetSnowballTicketsCount(int daysAgo = -1, bool activeOnly = false)
   {
-    using var filter = new ReferenceFilter(this.tickets);
+    using var filter = new ReferenceFilterManager(this.tickets);
     if (activeOnly)
       filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.InWork);
     else
@@ -114,9 +114,36 @@ public class MetricCalculator
     return this.tickets.Count;
   }
 
-  public float GetTimeSpentOnRequests()
+  /// <summary>
+  /// Считает количество времени, затраченное на запросы.
+  /// </summary>
+  /// <param name="daysAgo">Количество дней назад, за которое нужно считать.</param>
+  /// <returns>Количество затраченного времени.</returns>
+  public float GetTimeSpentOnRequests(int daysAgo = 0)
   {
-    var typeFilter = this.tickets.SetFilter(TechKasRequisites.TicketType, TicketType.Request);
+    using var filter = new ReferenceFilterManager(this.tickets);
+    filter.AddFilter(TechKasRequisites.TicketType, TicketType.Request);
+    filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Closed, "<>");
+    float total = 0;
+    var employeeNames = this.team.Employees.Select(e => e.Name);
+    foreach (TechKasElement ticket in this.tickets)
+    {
+      Task.Run(Autoclicker.ClickYes);
+      var detail = ticket.GetDetail(2);
+      foreach (TechKasElement record in detail)
+      {
+        bool isActualDate = record.GetRequisite(TechKasRequisites.DateDetail, RequisitesMode.AsString)
+                            == DateTime.Now.AddDays(-daysAgo).ToString("dd.MM.yyyy");
+        bool employeeInTeam =
+          employeeNames.Contains(record.GetRequisite(TechKasRequisites.EmployeeDetail, RequisitesMode.DisplayText));
+        if (isActualDate && employeeInTeam)
+        {
+          total += float.Parse(record.GetRequisite(TechKasRequisites.TimeSpent, RequisitesMode.AsString));
+        }
+      }
+
+      return total;
+    }
     
     return 0;
   }
