@@ -8,6 +8,33 @@ public class TechKasElementDetail : TechKasReferenceRecord, IEnumerable<TechKasE
   {
     this.Element = detail;
   }
+  
+  /// <summary>
+  /// Достигнут конец списка.
+  /// </summary>
+  /// <returns>Если true, то список завершился.</returns>
+  public bool IsEndOfList()
+  {
+    return this.Element.EOF;
+  }
+  
+  /// <summary>
+  /// Установить указатель на первый элемент.
+  /// </summary>
+  public TechKasElement First()
+  {
+    this.Element.First();
+    return new TechKasElement(this.Element, true);
+  }
+  
+  /// <summary>
+  /// Переключиться на следующий элемент.
+  /// </summary>
+  public TechKasElement Next()
+  {
+    this.Element.Next();
+    return new TechKasElement(this.Element, true);
+  }
 
   public IEnumerator<TechKasElement> GetEnumerator()
   {

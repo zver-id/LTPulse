@@ -14,4 +14,11 @@ public static class TechKasRequisites
   public const string EmployeeDetail = "РаботникТ2";
   public const string DateDetail = "ДатаТ2";
   public const string TimeSpent = "Сумма5Т2";
+  
+  public const string TicketStatusDetail = "СостОбращенияТ4";
+  
+  /// <summary>
+  /// Дата и время изменения статуса обращения в дополнительной таблице.
+  /// </summary>
+  public const string DateStatusDetail = "СостОбращенияТ4";
 }

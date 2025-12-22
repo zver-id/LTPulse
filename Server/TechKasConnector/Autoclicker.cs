@@ -14,26 +14,31 @@ public static class Autoclicker
   private static extern int SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
   private const int WM_COMMAND = 0x0111;
-        
+
   /// <summary>
   /// Нажать кнопку.
   /// </summary>
-  public static void ClickYes()
-  {            
+  public async static void ClickYes()
+  {
     Thread.Sleep(1000);
     var count = 0;
 
-    while (count < 50)
+    Task.Run(() => Click());
+
+    void Click()
     {
-      IntPtr hwnd = FindWindow(null, "Подтверждение");
-      if (hwnd != IntPtr.Zero)
+      while (count < 50)
       {
-        int buttonId = 00000000; //ID кнопки "Да"
-        SendMessage(hwnd, WM_COMMAND, (IntPtr)buttonId, IntPtr.Zero); //Нажатие кнопки 
-        break;               
+        IntPtr hwnd = FindWindow(null, "Подтверждение");
+        if (hwnd != IntPtr.Zero)
+        {
+          int buttonId = 00000000; //ID кнопки "Да"
+          SendMessage(hwnd, WM_COMMAND, (IntPtr)buttonId, IntPtr.Zero); //Нажатие кнопки 
+          break;
+        }
+        Thread.Sleep(1000);
+        count++;
       }
-      Thread.Sleep(1000);
-      count++;
     }
   }
 }

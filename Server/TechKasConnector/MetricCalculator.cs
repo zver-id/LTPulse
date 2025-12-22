@@ -128,7 +128,7 @@ public class MetricCalculator
     var employeeNames = this.team.Employees.Select(e => e.Name);
     foreach (TechKasElement ticket in this.tickets)
     {
-      Task.Run(Autoclicker.ClickYes);
+      Autoclicker.ClickYes();
       var detail = ticket.GetDetail(2);
       foreach (TechKasElement record in detail)
       {
@@ -141,11 +141,58 @@ public class MetricCalculator
           total += float.Parse(record.GetRequisite(TechKasRequisites.TimeSpent, RequisitesMode.AsString));
         }
       }
-
       return total;
     }
-    
     return 0;
+  }
+
+  public Dictionary<string, int> GetTimeZones(string ticketType)
+  {
+    using var filter = new ReferenceFilterManager(this.tickets);
+    filter.AddFilter(TechKasRequisites.TicketType, ticketType);
+    filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
+
+    foreach (var ticket in this.tickets)
+    {
+      Autoclicker.ClickYes();
+      var detail = ticket.GetDetail(4);
+      var record = detail.First();
+      
+      var start = DateTime.Now;
+      var end = DateTime.Now;
+      bool hasStart = false;
+      bool hasEnd = false;
+      float spentTime;
+      while (!detail.IsEndOfList())
+      {
+        spentTime = 0;
+        if (record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString) == TicketStatus.InWork)
+        {
+          hasStart = true;
+          start = DateTime.ParseExact(record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString),
+            "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+        }
+        else if (hasStart && new[]{TicketStatus.OnControl, TicketStatus.Forwarded}
+                   .Contains(record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString)))
+        {
+          hasEnd = true;
+          end = DateTime.ParseExact(record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString),
+            "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+        }
+        record = detail.Next();
+
+        if (detail.IsEndOfList())
+        {
+          if (!hasEnd)
+          {
+            hasEnd = true;
+            end = DateTime.Now;
+          }
+        }
+
+      }
+      
+    }
   }
 
   /// <summary>
@@ -157,7 +204,7 @@ public class MetricCalculator
         f=> f.Team == null || f.Team.Id == this.team.Id)
       .ToList();
     Dictionary<string, List<string>> includeFilters = initFilters
-      .Where(f => f.ShouldInclude == true)
+      .Where(f => f.ShouldInclude)
       .GroupBy(f => f.NameOfField)
       .ToDictionary(
         f => f.Key,
