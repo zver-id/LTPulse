@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using CommonModels.Models;
 using DBCore;
+using TechKasConnector.Calendar;
 using TechKasConnector.Requisites;
 
 namespace TechKasConnector;
@@ -151,6 +152,7 @@ public class MetricCalculator
     using var filter = new ReferenceFilterManager(this.tickets);
     filter.AddFilter(TechKasRequisites.TicketType, ticketType);
     filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
+    var calendar = new CalendarCalculator(this.repository); 
 
     foreach (var ticket in this.tickets)
     {
@@ -162,7 +164,7 @@ public class MetricCalculator
       var end = DateTime.Now;
       bool hasStart = false;
       bool hasEnd = false;
-      float spentTime;
+      int spentTime;
       while (!detail.IsEndOfList())
       {
         spentTime = 0;
@@ -181,15 +183,18 @@ public class MetricCalculator
         }
         record = detail.Next();
 
-        if (detail.IsEndOfList())
+        if (detail.IsEndOfList() && !hasEnd)
         {
-          if (!hasEnd)
-          {
-            hasEnd = true;
-            end = DateTime.Now;
-          }
+          hasEnd = true;
+          end = DateTime.Now;
         }
 
+        if (hasStart && hasEnd)
+        {
+         spentTime += calendar.GetDifferenceInMinutes(start, end);
+         hasStart = false;
+         hasEnd = false;
+        }
       }
       
     }
