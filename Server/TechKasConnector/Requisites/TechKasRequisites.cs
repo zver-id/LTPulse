@@ -10,6 +10,7 @@ public static class TechKasRequisites
   public const string OpenDate = "ДатОткр";
   public const string TicketStatus = "СостОбращения";
   public const string SupportArea = "ОбластьПоддержки";
+  public const string Priority = "Строка3";
 
   public const string EmployeeDetail = "РаботникТ2";
   public const string DateDetail = "ДатаТ2";
