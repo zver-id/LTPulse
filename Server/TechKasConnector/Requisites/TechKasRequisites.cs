@@ -5,6 +5,9 @@ namespace TechKasConnector.Requisites;
 /// </summary>
 public static class TechKasRequisites
 {
+  public const string Id = "Код";
+  public const string Name = "Содержание";
+  public const string Organization = "Организация";
   public const string Employee = "Работник";
   public const string TicketType = "ТипОбращения";
   public const string OpenDate = "ДатОткр";

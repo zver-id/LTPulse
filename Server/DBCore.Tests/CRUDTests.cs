@@ -1,3 +1,4 @@
+using System.Globalization;
 using CommonModels.Models;
 
 namespace DBCore.Tests;
@@ -25,5 +26,34 @@ public class CRUDTests
     var expectedTeam = repository.Get<Team>("Name", team.Name);
     
     Assert.AreEqual(expectedTeam.Name, team.Name);
+  }
+
+  [Test]
+  public void AddTicket()
+  {
+    var ticket = new Ticket
+    {
+      Id = 101,
+      Name = "Имя 22тестовое",
+      Organization = "Имя организации",
+      Employee = "Имя сотрудника",
+      Priority = this.repository.GetByPredicate<Priority>(x => x.Name == "Низкий").First(),
+      IncomingDate = DateTime.Now,
+      State = this.repository.GetByPredicate<TicketState>(s =>
+        s.State == "В работе").First(),
+      TimeInWork = 0,
+      Hyperlink = "нет ничо"
+    };
+
+    repository.AddOrUpdate(ticket);
+    
+    Assert.DoesNotThrow(
+      () => repository.AddOrUpdate(ticket));
+  }
+
+  [TearDown]
+  public void TearDown()
+  {
+    repository.Dispose();
   }
 }

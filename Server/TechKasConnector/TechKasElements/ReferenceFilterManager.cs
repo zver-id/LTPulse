@@ -1,6 +1,5 @@
 namespace TechKasConnector;
 
-
 /// <summary>
 /// Вспомогательный класс для работы с фильтрами.
 /// </summary>

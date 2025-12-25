@@ -3,8 +3,10 @@ using CollectionLibrary.Nhibernate.Infrastructure;
 using CommonModels.Interfaces;
 using NHibernate;
 using NHibernate.Criterion;
+using NHibernate.Exceptions;
 using NHibernate.Infrastructure;
 using NHibernate.Linq;
+using Npgsql;
 
 namespace DBCore;
 
@@ -21,15 +23,6 @@ public class DBRepository : IDisposable
   /// <param name="item">Добавляемый объект</param>
   public void Add(IHasId item)
   {
-    try
-    {
-      IsExist(item);
-    }
-    catch (ArgumentException ex)
-    {
-      //TODO нужно понять как это обработать
-      throw ex;
-    }
     using (ITransaction  transaction = this.Session.BeginTransaction())
     {
       this.Session.Save(item);
@@ -41,13 +34,11 @@ public class DBRepository : IDisposable
   /// Обновить свойства объекта в базе данных
   /// </summary>
   /// <param name="item">Объект свойства, которого будут обновляться</param>
-  public void Update(IHasId item)
+  public void AddOrUpdate(IHasId item)
   {
-    if (IsExist(item))
-      return;
-    using (ITransaction  transaction = this.Session.BeginTransaction())
+    using (ITransaction transaction = this.Session.BeginTransaction())
     {
-      this.Session.Update(item);
+      this.Session.SaveOrUpdate(item);
       transaction.Commit();
     }
   }

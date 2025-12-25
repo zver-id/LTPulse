@@ -8,7 +8,12 @@ public class TechKasElement : TechKasReferenceRecord
   /// Признак, что элемент является простым и не имеет вложенных коллекций.
   /// </summary>
   public bool IsSimple { get; set; }
-  
+
+  /// <summary>
+  /// Гиперссылка на элемент
+  /// </summary>
+  public string Hyperlink => this.Element.Hyperlink;
+
   /// <summary>
   /// Получить вложенную коллекцию.
   /// </summary>

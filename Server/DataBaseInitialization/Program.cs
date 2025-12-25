@@ -11,7 +11,9 @@ class Program
     var baseInitializer = new BaseTypeInitializer(new DBRepository());
     //baseInitializer.AddTeams();
     //baseInitializer.AddMetricTypes();
+    baseInitializer.AddPriorities();
+    baseInitializer.AddTicketStates();
     //baseInitializer.AddTeamMetricsFromExcel("Aurora.xlsx", "tables", "Аврора");
-    baseInitializer.AddTeamMetricsFromExcel("atlas.xlsx", "tables", "Атлас");
+    //baseInitializer.AddTeamMetricsFromExcel("atlas.xlsx", "tables", "Атлас");
   }
 }

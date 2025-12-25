@@ -82,6 +82,40 @@ public class BaseTypeInitializer
   }
 
   /// <summary>
+  /// Инициализировать приоритеты.
+  /// </summary>
+  public void AddPriorities()
+  {
+    List<IHasId> priorities =
+    [
+      new Priority { Name = "Критический", TimeToSolve = 4 * 60 },
+      new Priority { Name = "Высокий", TimeToSolve = 8 * 60 },
+      new Priority { Name = "Средний", TimeToSolve = 16 * 60 },
+      new Priority { Name = "Низкий", TimeToSolve = 80 * 60 },
+      new Priority { Name = "Планируемый", TimeToSolve = 168 * 60 }
+    ];
+    
+    this.TryAddTypes(priorities);
+  }
+
+  /// <summary>
+  /// Инициализировать статусы.
+  /// </summary>
+  public void AddTicketStates()
+  {
+    List<IHasId> ticketStates =
+    [
+      new TicketState { State = "Инициализация" },
+      new TicketState { State = "В работе" },
+      new TicketState { State = "На контроле" },
+      new TicketState { State = "Переадресовано" },
+      new TicketState { State = "На закрытии" },
+      new TicketState { State = "Закрыто" }
+    ];
+    this.TryAddTypes(ticketStates);
+  }
+
+  /// <summary>
   /// Записать метрики из существующего файла excel.
   /// </summary>
   /// <param name="fileName">Имя файла с данными.</param>

@@ -4,7 +4,7 @@ using DBCore;
 using TechKasConnector.Calendar;
 using TechKasConnector.Requisites;
 
-namespace TechKasConnector;
+namespace TechKasConnector.DataCalculators;
 
 public class MetricCalculator
 {
