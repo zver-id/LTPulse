@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using CommonModels.Models;
 using DBCore;
 using TechKasConnector.Calendar;
@@ -14,7 +15,23 @@ public class ColorZoneCalculator
   /// <summary>
   /// Список обращений.
   /// </summary>
-  public List<Ticket> Tickets { get; private set; }
+  public List<Ticket> Tickets { get; init; }
+  
+  /// <summary>
+  /// Получить количество обращений по зонам с учётом времени.
+  /// </summary>
+  public Dictionary<string, int> ColorZonesByTime =>
+    this.Tickets.Select(ticket => this.GetColorZoneByTime(ticket.TimeInWork))
+      .GroupBy(p=>p)
+      .ToDictionary(p=>p.Key,p=>p.Count());
+  
+  /// <summary>
+  /// Получить количество обращений по зонам с учётом приоритета.
+  /// </summary>
+  public Dictionary<string, int> ColorZonesByPriority =>
+    this.Tickets.Select(ticket => this.GetColorZoneBySLA(ticket.TimeInWork, ticket.Priority.Name))
+      .GroupBy(p=>p)
+      .ToDictionary(p=>p.Key,p=>p.Count());
   
   /// <summary>
   /// Репозиторий.
@@ -36,7 +53,11 @@ public class ColorZoneCalculator
     this.repository.AddOrUpdate(ticket);
   }
 
-  public void GetTicketList(string ticketType)
+  /// <summary>
+  /// Получить список обращений с вычисленным временем в работе.
+  /// </summary>
+  /// <param name="ticketType">Тип обращений.</param>
+  private void GetTicketList(string ticketType)
   {
     using var filter = new ReferenceFilterManager(this.tickets);
     filter.AddFilter(TechKasRequisites.TicketType, ticketType);
@@ -85,7 +106,7 @@ public class ColorZoneCalculator
         }
       }
       var ticketRecord = this.GetTicket(ticket);
-      ticketRecord.TimeInWork = spentTime;
+      ticketRecord.TimeInWork = (float)spentTime / 60;
       this.AddToTickets(ticketRecord);
     }
   }
@@ -118,44 +139,56 @@ public class ColorZoneCalculator
   /// <summary>
   /// Получить зону для графика только на основе затраченного времени.
   /// </summary>
-  /// <param name="timeInMinutes">Затраченное время в минутах.</param>
+  /// <param name="timeInMinutes">Затраченное время в часах.</param>
   /// <returns>Зона, к которой принадлежит обращение.</returns>
-  private string GetColorZoneByTime(int timeInMinutes, string priority)
+  private string GetColorZoneByTime(float timeInMinutes)
   {
     switch (timeInMinutes)
     {
-      case int t when t <= 8 * 60:
+      case <= 8:
         return "green";
-      case int t when t <= 16 * 60:
+      case <= 16:
         return "sandy";
-      case int t when t <= 24 * 60:
+      case <= 24:
         return "yellow";
       default:
         return "red";
     }
   }
 
-  private string GetColorZoneBySLA(int timeInMinutes, string priority)
+  /// <summary>
+  /// Получить зону с учётом приоритета.
+  /// </summary>
+  /// <param name="timeInHours">Время в часах.</param>
+  /// <param name="priority">Приоритет.</param>
+  /// <returns>Цвет зоны строкой.</returns>
+  private string GetColorZoneBySLA(float timeInHours, string priority)
   {
     var priorities = this.repository.GetByPredicate<Priority>(x => true)
       .ToDictionary(p => p.Name, p => p.TimeToSolve);
-    float spentSLATime = (float)timeInMinutes / priorities[priority];
+    float spentSLATime = (float)timeInHours / priorities[priority];
     switch (spentSLATime)
     {
-      case float t when t <= 0.25:
+      case var t when t <= 0.25:
         return "green";
-      case float t when t <= 0.5:
+      case var t when t <= 0.5:
         return "sandy";
-      case float t when t <= 0.75:
+      case var t when t <= 0.75:
         return "yellow";
       default:
         return "red";
     }
   }
 
-  public ColorZoneCalculator(DBRepository? repository, TechKasReference tickets)
+  /// <summary>
+  /// Конструктор.
+  /// </summary>
+  /// <param name="repository">Репозиторий.</param>
+  /// <param name="tickets">Справочник обращений.</param>
+  public ColorZoneCalculator(DBRepository? repository, TechKasReference tickets, string ticketType)
   {
     this.repository = repository;
     this.tickets = tickets;
+    this.GetTicketList(ticketType);
   }
 }

@@ -147,104 +147,12 @@ public class MetricCalculator
     return 0;
   }
 
-  public Dictionary<string, int> GetTimeZones(string ticketType, Func<int, string, string> zoneSelector)
+  public ColorZoneCalculator GetTimeZones(string ticketType)
   {
     using var filter = new ReferenceFilterManager(this.tickets);
     filter.AddFilter(TechKasRequisites.TicketType, ticketType);
     filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
-    var calendar = new CalendarCalculator(this.repository); 
-    
-    var result = new Dictionary<string, int>
-    {
-      {"red", 0},
-      {"yellow", 0},
-      {"sandy", 0},
-      {"green", 0}
-    };
-
-    foreach (var ticket in this.tickets)
-    {
-      Autoclicker.ClickYes();
-      var detail = ticket.GetDetail(4);
-      var record = detail.First();
-      
-      var start = DateTime.Now;
-      var end = DateTime.Now;
-      bool hasStart = false;
-      bool hasEnd = false;
-      int spentTime = 0;
-      while (!detail.IsEndOfList())
-      {
-        if (record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString) == TicketStatus.InWork)
-        {
-          hasStart = true;
-          start = DateTime.ParseExact(record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString),
-            "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-        }
-        else if (hasStart && new[]{TicketStatus.OnControl, TicketStatus.Forwarded}
-                   .Contains(record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString)))
-        {
-          hasEnd = true;
-          end = DateTime.ParseExact(record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString),
-            "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-        }
-        record = detail.Next();
-
-        if (detail.IsEndOfList() && !hasEnd)
-        {
-          hasEnd = true;
-          end = DateTime.Now;
-        }
-
-        if (hasStart && hasEnd)
-        {
-         spentTime += calendar.GetDifferenceInMinutes(start, end);
-         hasStart = false;
-         hasEnd = false;
-        }
-      }
-      string ticketZone = zoneSelector(spentTime, ticket.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString));
-      result[ticketZone]++;
-    }
-    return result;
-  }
-
-  /// <summary>
-  /// Получить зону для графика только на основе затраченного времени.
-  /// </summary>
-  /// <param name="timeInMinutes">Затраченное время в минутах.</param>
-  /// <returns>Зона, к которой принадлежит обращение.</returns>
-  private string GetColorZoneByTime(int timeInMinutes, string priority)
-  {
-    switch (timeInMinutes)
-    {
-      case int t when t <= 8 * 60:
-        return "green";
-      case int t when t <= 16 * 60:
-        return "sandy";
-      case int t when t <= 24 * 60:
-        return "yellow";
-      default:
-        return "red";
-    }
-  }
-
-  private string GetColorZoneBySLA(int timeInMinutes, string priority)
-  {
-    var priorities = this.repository.GetByPredicate<Priority>(x => true)
-      .ToDictionary(p => p.Name, p => p.TimeToSolve);
-    float spentSLATime = (float)timeInMinutes / priorities[priority];
-    switch (spentSLATime)
-    {
-      case float t when t <= 0.25:
-        return "green";
-      case float t when t <= 0.5:
-        return "sandy";
-      case float t when t <= 0.75:
-        return "yellow";
-      default:
-        return "red";
-    }
+    return new ColorZoneCalculator(this.repository,  this.tickets, ticketType);
   }
 
   /// <summary>
