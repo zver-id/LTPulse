@@ -160,7 +160,7 @@ public class MetricCalculator
   /// </summary>
   private void SetInitFilters()
   {
-    List<TechKasFilter> initFilters = this.repository.GetByPredicate<TechKasFilter>(
+    List<TechKasFilter> initFilters = this.repository.Get<TechKasFilter>(
         f=> f.Team == null || f.Team.Id == this.team.Id)
       .ToList();
     Dictionary<string, List<string>> includeFilters = initFilters

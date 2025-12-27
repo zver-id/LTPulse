@@ -125,11 +125,11 @@ public class ColorZoneCalculator
         Organization = element.GetRequisite(TechKasRequisites.Organization, RequisitesMode.DisplayText),
         Employee = element.GetRequisite(TechKasRequisites.Employee, RequisitesMode.DisplayText),
         Priority = this.repository
-          .GetByPredicate<Priority>(x =>
+          .Get<Priority>(x =>
             x.Name == element.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString)).First(),
         IncomingDate = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString),
           "dd.MM.yyyy", CultureInfo.InvariantCulture),
-        State = this.repository.GetByPredicate<TicketState>(s =>
+        State = this.repository.Get<TicketState>(s =>
           s.State == element.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString)).First(),
         TimeInWork = 0,
         Hyperlink = element.Hyperlink
@@ -164,7 +164,7 @@ public class ColorZoneCalculator
   /// <returns>Цвет зоны строкой.</returns>
   private string GetColorZoneBySLA(float timeInHours, string priority)
   {
-    var priorities = this.repository.GetByPredicate<Priority>(x => true)
+    var priorities = this.repository.Get<Priority>(x => true)
       .ToDictionary(p => p.Name, p => p.TimeToSolve);
     float spentSLATime = (float)timeInHours / priorities[priority];
     switch (spentSLATime)

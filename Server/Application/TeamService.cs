@@ -16,7 +16,7 @@ public class TeamService : GenericService
   {
     return Task.Run(() =>
       {
-        return this.repository.GetByPredicate<Team>(x => true);
+        return this.repository.Get<Team>(x => true);
       }
     );
   }

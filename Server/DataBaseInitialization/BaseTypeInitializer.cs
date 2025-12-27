@@ -124,7 +124,7 @@ public class BaseTypeInitializer
   /// <exception cref="ArgumentException">Переданная команда не существует.</exception>
   public void AddTeamMetricsFromExcel(string fileName, string sheetName, string teamName)
   {
-    var team = this.dbRepository.GetByPredicate<Team>(x=>x.Name == teamName).FirstOrDefault();
+    var team = this.dbRepository.Get<Team>(x=>x.Name == teamName).FirstOrDefault();
     if (team == null)
       throw new ArgumentException("Team not found");
     var metricDict = ExcelParser.ParseExcelToDictionaries(fileName,  sheetName);
@@ -134,10 +134,10 @@ public class BaseTypeInitializer
       {
         if (metric.Value == 0)
           continue;
-        var metricType = this.dbRepository.GetByPredicate<MetricType>(x => x.Name == metric.Key).FirstOrDefault();
+        var metricType = this.dbRepository.Get<MetricType>(x => x.Name == metric.Key).FirstOrDefault();
         if (metricType == null)
         {
-          var metricGroup = this.dbRepository.GetByPredicate<MetricGroup>(x => x.Name == "Month").FirstOrDefault();
+          var metricGroup = this.dbRepository.Get<MetricGroup>(x => x.Name == "Month").FirstOrDefault();
           metricType = new MetricType { Name = metric.Key,  MetricGroup = metricGroup! };
           this.dbRepository.Add(metricType);
         }

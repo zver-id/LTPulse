@@ -78,9 +78,9 @@ public class CalendarCalculator
   public CalendarCalculator(DBRepository repository)
   {
     this.Repository = repository;
-    this.Holidays = this.Repository.GetByPredicate<SpecialDate>(date => date.IsHoliday)
+    this.Holidays = this.Repository.Get<SpecialDate>(date => date.IsHoliday)
       .Select(x => x.Date).ToList();
-    this.WorkingHolidays = this.Repository.GetByPredicate<SpecialDate>(date => !date.IsHoliday)
+    this.WorkingHolidays = this.Repository.Get<SpecialDate>(date => !date.IsHoliday)
       .Select(x => x.Date).ToList();
   }
 }

@@ -23,7 +23,7 @@ public class CRUDTests
     };
     
     repository.Add(team);
-    var expectedTeam = repository.Get<Team>("Name", team.Name);
+    var expectedTeam = repository.GetByField<Team>("Name", team.Name);
     
     Assert.AreEqual(expectedTeam.Name, team.Name);
   }
@@ -37,9 +37,9 @@ public class CRUDTests
       Name = "Имя 22тестовое",
       Organization = "Имя организации",
       Employee = "Имя сотрудника",
-      Priority = this.repository.GetByPredicate<Priority>(x => x.Name == "Низкий").First(),
+      Priority = this.repository.Get<Priority>(x => x.Name == "Низкий").First(),
       IncomingDate = DateTime.Now,
-      State = this.repository.GetByPredicate<TicketState>(s =>
+      State = this.repository.Get<TicketState>(s =>
         s.State == "В работе").First(),
       TimeInWork = 0,
       Hyperlink = "нет ничо"

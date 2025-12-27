@@ -59,7 +59,7 @@ public class DBRepository : IDisposable
   /// <param name="value">Значение свойства</param>
   /// <typeparam name="T">Класс объекта</typeparam>
   /// <returns></returns>
-  public T Get<T>(string fieldName, object value)
+  public T GetByField<T>(string fieldName, object value)
   {
     ICriteria criteria = this.Session.CreateCriteria(typeof(T));
     criteria.Add(Restrictions.Eq(fieldName, value));
@@ -72,7 +72,7 @@ public class DBRepository : IDisposable
   /// <param name="predicate">Условие в виде предиката.</param>
   /// <typeparam name="T">Класс объекта.</typeparam>
   /// <returns>Список сущностей, удовлетворяющих критерию.</returns>
-  public List<T> GetByPredicate<T>(Expression<Func<T, bool>> predicate) where T : class
+  public List<T> Get<T>(Expression<Func<T, bool>> predicate) where T : class
   {
     return this.Session.Query<T>()
         .Where(predicate)
@@ -93,7 +93,7 @@ public class DBRepository : IDisposable
     
     foreach (var property in uniqueProperties)
     {
-      var existItem = Get<IHasId>(property.Name, property.GetValue(item));
+      var existItem = this.GetByField<IHasId>(property.Name, property.GetValue(item));
       if (existItem == null)
         continue;
       throw new ArgumentException(
