@@ -9,9 +9,24 @@ public class GenericMetricCreator
   private readonly MetricCalculator metricCalculator;
   private readonly DBRepository repository;
   private readonly Team team;
-  public virtual void CreateMetric()
+  public Metric GetOrCreateMetric(DateTime date, MetricType metricType)
   {
-    
+    var metric = this.repository.Get<Metric>(m =>
+      m.Date == date && m.MetricType == metricType && m.Team == this.team)
+      .FirstOrDefault();
+    if (metric == null)
+    {
+      return new Metric
+      {
+        Date = date,
+        MetricType = metricType,
+        Team = this.team
+      };
+    }
+    else
+    {
+      return metric;
+    }
   }
 
   /// <summary>
@@ -33,14 +48,10 @@ public class GenericMetricCreator
         };
         this.repository.Add(metricType);
       }
-      var newMetric = new Metric
-      {
-        Date = DateTime.Today,
-        MetricType = metricType,
-        Value = monthCount.Value,
-        Team = this.team
-      };
-      this.repository.Add(newMetric);
+
+      var newMetric = this.GetOrCreateMetric(DateTime.Today, metricType);
+      newMetric.Value = monthCount.Value;
+      this.repository.AddOrUpdate(newMetric);
     }
   }
 
