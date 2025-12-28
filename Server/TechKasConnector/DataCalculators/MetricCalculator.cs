@@ -202,11 +202,9 @@ public class MetricCalculator
   /// </summary>
   private void SetEmployeeFilters()
   {
-    var employees = this.team.Employees;
-    var persNumbers = new List<string>();
-    foreach (var employee in employees)
-      persNumbers.Add(employee.TechKASNumber);
-    this.tickets.SetFilter(TechKasRequisites.Employee, persNumbers);
+    var techkasNumbers = this.team.Employees
+      .Select(e => e.TechKASNumber).ToList();
+    this.tickets.SetFilter(TechKasRequisites.Employee, techkasNumbers);
   }
   
   #endregion
