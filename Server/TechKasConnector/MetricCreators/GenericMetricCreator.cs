@@ -8,6 +8,7 @@ public class GenericMetricCreator
 {
   private readonly MetricCalculator metricCalculator;
   private readonly DBRepository repository;
+  private readonly Team team;
   public virtual void CreateMetric()
   {
     
@@ -30,12 +31,14 @@ public class GenericMetricCreator
           Name = monthCount.Key,
           MetricGroup = metricGroup
         };
+        this.repository.Add(metricType);
       }
       var newMetric = new Metric
       {
         Date = DateTime.Today,
         MetricType = metricType,
-        Value = monthCount.Value
+        Value = monthCount.Value,
+        Team = this.team
       };
       this.repository.Add(newMetric);
     }
@@ -45,5 +48,6 @@ public class GenericMetricCreator
   {
     this.metricCalculator = new MetricCalculator(team);
     this.repository = repository;
+    this.team = team;
   }
 }

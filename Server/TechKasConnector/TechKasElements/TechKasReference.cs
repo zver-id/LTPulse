@@ -71,9 +71,9 @@ public class TechKasReference : IEnumerable<TechKasElement>
       {
         query.Append($" or {this.Reference.TableName}" +
                      $".{this.Reference.Requisites(attributeType).FieldName} = '{attribute}'");
-        if (attributes.Count == attributes.IndexOf(attribute) + 1)
-          query.Append(')');
       }
+      if (attributes.Count == attributes.IndexOf(attribute) + 1)
+        query.Append(')');
     }
     int filterID = this.Reference.AddWhere(query.ToString());
     return filterID;
