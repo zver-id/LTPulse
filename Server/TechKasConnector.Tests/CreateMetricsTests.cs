@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CommonModels.Models;
 using DBCore;
 using TechKasConnector.MetricCreators;
@@ -22,6 +23,18 @@ public class Tests
     this.metricCreator.CreateMonthMetrics();
     var metrics = this.repository.Get<Metric>(x => x.Date == DateTime.Today).FirstOrDefault();
     Assert.NotNull(metrics);
+  }
+
+  [Test]
+  public void GetAllTicketsLessThatTenSeconds()
+  {
+    var stopwatch = new Stopwatch();
+    stopwatch.Start();
+    this.metricCreator.GetAllTicketsWithTime();
+    stopwatch.Stop();
+    var elapsed = stopwatch.ElapsedMilliseconds;
+    Console.WriteLine("Get all tickets with time: " + elapsed);
+    Assert.Less(elapsed, 60000);
   }
 
   [TearDown]

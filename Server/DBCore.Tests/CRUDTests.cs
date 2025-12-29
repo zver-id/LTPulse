@@ -50,6 +50,31 @@ public class CRUDTests
     Assert.DoesNotThrow(
       () => repository.AddOrUpdate(ticket));
   }
+  
+  [Test]
+  public void AddUpdateExistingMetric()
+  {
+    var metric = new Metric
+    {
+      Date = DateTime.Today,
+      MetricType = this.repository.Get<MetricType>(x => x.Name == "Всего в работе").First(),
+      Team = this.repository.Get<Team>(x => x.Name == "ОГВ").First(),
+      Value = 1
+    };
+
+    this.repository.AddOrUpdate(metric);
+    
+    var metric2 = new Metric
+    {
+      Date = DateTime.Today,
+      MetricType = this.repository.Get<MetricType>(x => x.Name == "Всего в работе").First(),
+      Team = this.repository.Get<Team>(x => x.Name == "ОГВ").First(),
+      Value = 4
+    };
+    
+    Assert.DoesNotThrow(
+      () => repository.AddOrUpdate(metric2));
+  }
 
   [TearDown]
   public void TearDown()

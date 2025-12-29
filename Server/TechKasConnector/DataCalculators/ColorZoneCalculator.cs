@@ -57,58 +57,74 @@ public class ColorZoneCalculator
   /// Получить список обращений с вычисленным временем в работе.
   /// </summary>
   /// <param name="ticketType">Тип обращений.</param>
-  private void GetTicketList(string ticketType)
+  private void GetTicketList(string? ticketType = null)
   {
     using var filter = new ReferenceFilterManager(this.tickets);
-    filter.AddFilter(TechKasRequisites.TicketType, ticketType);
+    if (ticketType != null)
+      filter.AddFilter(TechKasRequisites.TicketType, ticketType);
+    
     filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
-    var calendar = new CalendarCalculator(this.repository); 
     
     foreach (var ticket in this.tickets)
     {
-      Autoclicker.ClickYes();
-      var detail = ticket.GetDetail(4);
-      var record = detail.First();
-      
-      var start = DateTime.Now;
-      var end = DateTime.Now;
-      bool hasStart = false;
-      bool hasEnd = false;
-      int spentTime = 0;
-      while (!detail.IsEndOfList())
-      {
-        if (record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString) == TicketStatus.InWork)
-        {
-          hasStart = true;
-          start = DateTime.ParseExact(record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString),
-            "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-        }
-        else if (hasStart && new[]{TicketStatus.OnControl, TicketStatus.Forwarded}
-                   .Contains(record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString)))
-        {
-          hasEnd = true;
-          end = DateTime.ParseExact(record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString),
-            "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-        }
-        record = detail.Next();
-
-        if (detail.IsEndOfList() && !hasEnd)
-        {
-          hasEnd = true;
-          end = DateTime.Now;
-        }
-
-        if (hasStart && hasEnd)
-        {
-         spentTime += calendar.GetDifferenceInMinutes(start, end);
-         hasStart = false;
-         hasEnd = false;
-        }
-      }
+      var spentTime = GetSpentTimeByMinutes(ticket);
       var ticketRecord = this.GetTicket(ticket);
       ticketRecord.TimeInWork = (float)spentTime / 60;
       this.AddToTickets(ticketRecord);
     }
+  }
+
+  
+  /// <summary>
+  /// Рассчитать время, затраченное на обращение в минутах.
+  /// </summary>
+  /// <param name="ticket">Элемент обращения ТехКас.</param>
+  /// <returns>Затраченное время в минутах.</returns>
+  private int GetSpentTimeByMinutes(TechKasElement ticket)
+  {
+    var calendar = new CalendarCalculator(this.repository);
+    Autoclicker.ClickYes();
+    var detail = ticket.GetDetail(4);
+    var record = detail.First();
+      
+    DateTime startOfIteration = DateTime.Now;
+    DateTime endOfIteration = DateTime.Now;
+    bool hasStart = false;
+    bool hasEnd = false;
+    int spentTime = 0;
+    
+    while (!detail.IsEndOfList())
+    {
+      if (record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString) == TicketStatus.InWork)
+      {
+        hasStart = true;
+        startOfIteration = DateTime.ParseExact(record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString),
+          "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+      }
+      else if (hasStart && new[]{TicketStatus.OnControl, TicketStatus.Forwarded}
+                 .Contains(record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString)))
+      {
+        hasEnd = true;
+        endOfIteration = DateTime.ParseExact(record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString),
+          "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+      }
+      record = detail.Next();
+
+      if (detail.IsEndOfList() && !hasEnd)
+      {
+        hasEnd = true;
+        endOfIteration = DateTime.Now;
+      }
+
+      if (hasStart && hasEnd)
+      {
+        spentTime += calendar.GetDifferenceInMinutes(startOfIteration, endOfIteration);
+        hasStart = false;
+        hasEnd = false;
+      }
+    }
+
+    return spentTime;
   }
 
   /// <summary>
@@ -185,7 +201,7 @@ public class ColorZoneCalculator
   /// </summary>
   /// <param name="repository">Репозиторий.</param>
   /// <param name="tickets">Справочник обращений.</param>
-  public ColorZoneCalculator(DBRepository? repository, TechKasReference tickets, string ticketType)
+  public ColorZoneCalculator(DBRepository? repository, TechKasReference tickets, string? ticketType = null)
   {
     this.repository = repository;
     this.tickets = tickets;

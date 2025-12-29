@@ -35,6 +35,12 @@ public class GenericMetricCreator
   public void CreateMonthMetrics()
   {
     Dictionary<string, int> monthsCount = this.metricCalculator.GetCountTicketInProgressByMonth();
+    var total = this.repository
+      .Get<Metric>(m => m.Date == DateTime.Today && 
+                        m.Team == this.team && m.MetricType.Name == "Всего в работе")
+      .First();
+    total.Value = monthsCount.Values.Sum();
+    this.repository.AddOrUpdate(total);
     foreach (KeyValuePair<string, int> monthCount in monthsCount)
     {
       var metricType = this.repository.Get<MetricType>(mt => mt.Name == monthCount.Key).FirstOrDefault();
@@ -53,6 +59,12 @@ public class GenericMetricCreator
       newMetric.Value = monthCount.Value;
       this.repository.AddOrUpdate(newMetric);
     }
+  }
+
+  public List<Ticket> GetAllTicketsWithTime()
+  {
+    var colorCalculator = new ColorZoneCalculator(this.repository, this.metricCalculator.tickets);
+    return colorCalculator.Tickets;
   }
 
   public GenericMetricCreator(DBRepository? repository,  Team team)

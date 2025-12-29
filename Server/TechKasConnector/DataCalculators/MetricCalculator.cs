@@ -13,7 +13,7 @@ public class MetricCalculator
   /// <summary>
   /// Справочник обращений.
   /// </summary>
-  private TechKasReference tickets;
+  public TechKasReference tickets;
   
   /// <summary>
   /// Репозиторий.
