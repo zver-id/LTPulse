@@ -36,6 +36,18 @@ public class Tests
     Console.WriteLine("Get all tickets with time: " + elapsed);
     Assert.Less(elapsed, 60000);
   }
+  
+  [Test]
+  public void CreateMonthsMetric()
+  {
+    var stopwatch = new Stopwatch();
+    stopwatch.Start();
+    this.metricCreator.CreateMonthMetrics();
+    stopwatch.Stop();
+    var elapsed = stopwatch.ElapsedMilliseconds;
+    Console.WriteLine("Create months metric: " + elapsed);
+    Assert.Less(elapsed, 60000);
+  }
 
   [TearDown]
   public void TearDown()

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CommonModels.Interfaces;
 
 namespace CommonModels.Models;
@@ -32,4 +33,9 @@ public class Metric : IHasId
   /// Значение метрики.
   /// </summary>
   public virtual float Value { get; set; }
+
+  /// <summary>
+  /// Список обращений, связанных с метрикой.
+  /// </summary>
+  public virtual List<Ticket> Tickets { get; set; } = new();
 }

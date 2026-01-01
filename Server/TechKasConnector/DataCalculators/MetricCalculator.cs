@@ -15,6 +15,8 @@ public class MetricCalculator
   /// </summary>
   public TechKasReference tickets;
   
+  public ColorZoneCalculator ColorZoneCalculator { get; set; }
+  
   /// <summary>
   /// Репозиторий.
   /// </summary>
@@ -25,6 +27,73 @@ public class MetricCalculator
   /// </summary>
   private Team team;
   
+  #endregion
+  
+  # region Методы, работающие через общий список
+
+  /// <summary>
+  /// Создать метрики "по месяцам".
+  /// </summary>
+  public void CreateMonthMetrics()
+  {
+    var culture = new CultureInfo("ru-RU");
+    var monthGroupedTickets = this.ColorZoneCalculator.Tickets
+      .GroupBy(t => culture.TextInfo.ToTitleCase(t.IncomingDate.ToString("MMMM yyyy", culture)))
+      .ToDictionary(g => g.Key, g => g.ToList());
+    foreach (var monthGroup in monthGroupedTickets)
+    {
+      var metric = this.GetOrCreateMetric(DateTime.Today, this.GetOrCreateMonthMetricType(monthGroup.Key));
+      metric.Value = monthGroup.Value.Count;
+      metric.Tickets = monthGroup.Value;
+    }
+  }
+  
+  /// <summary>
+  /// Получить или создать метрику.
+  /// </summary>
+  /// <param name="date"></param>
+  /// <param name="metricType"></param>
+  /// <returns></returns>
+  public Metric GetOrCreateMetric(DateTime date, MetricType metricType)
+  {
+    var metric = this.repository.Get<Metric>(m =>
+        m.Date == date && m.MetricType == metricType && m.Team == this.team)
+      .FirstOrDefault();
+    if (metric == null)
+    {
+      return new Metric
+      {
+        Date = date,
+        MetricType = metricType,
+        Team = this.team
+      };
+    }
+    else
+    {
+      return metric;
+    }
+  }
+
+  /// <summary>
+  /// Получить или создать тип метрики для метрик по месяцам.
+  /// </summary>
+  /// <param name="metricTypeName">Имя типа метрики.</param>
+  /// <returns>Тип метрики.</returns>
+  private MetricType GetOrCreateMonthMetricType(string metricTypeName)
+  {
+    var metricType = this.repository.Get<MetricType>(mt => mt.Name == metricTypeName).FirstOrDefault();
+    if (metricType == null)
+    {
+      var metricGroup = this.repository.Get<MetricGroup>(mt => mt.Name == "Month").First();
+      metricType = new MetricType
+      {
+        Name = metricTypeName,
+        MetricGroup = metricGroup
+      };
+      this.repository.Add(metricType);
+    }
+    return metricType;
+  }
   #endregion
   
   #region Методы
@@ -219,6 +288,7 @@ public class MetricCalculator
     this.team = team;
     this.repository = new DBRepository();
     this.tickets = new TechKasReference("ПДД");
+    this.ColorZoneCalculator = new ColorZoneCalculator(this.repository, this.tickets);
     this.SetInitFilters();
     this.SetEmployeeFilters();
   }
