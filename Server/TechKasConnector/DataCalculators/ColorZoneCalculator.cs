@@ -15,7 +15,7 @@ public class ColorZoneCalculator
   /// <summary>
   /// Список обращений.
   /// </summary>
-  public List<Ticket> Tickets { get; init; }
+  public List<Ticket> Tickets { get; init; } = new();
   
   /// <summary>
   /// Получить количество обращений по зонам с учётом времени.
@@ -95,13 +95,13 @@ public class ColorZoneCalculator
     
     while (!detail.IsEndOfList())
     {
-      if (record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString) == TicketStatus.InWork)
+      if (record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString) == "В работе")
       {
         hasStart = true;
         startOfIteration = DateTime.ParseExact(record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString),
           "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
       }
-      else if (hasStart && new[]{TicketStatus.OnControl, TicketStatus.Forwarded}
+      else if (hasStart && new[]{"На контроле", "Переадресовано"}
                  .Contains(record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString)))
       {
         hasEnd = true;

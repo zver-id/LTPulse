@@ -24,5 +24,5 @@ public static class TechKasRequisites
   /// <summary>
   /// Дата и время изменения статуса обращения в дополнительной таблице.
   /// </summary>
-  public const string DateStatusDetail = "СостОбращенияТ4";
+  public const string DateStatusDetail = "ДатаВремяT4";
 }
