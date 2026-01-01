@@ -30,7 +30,7 @@ public class Tests
   {
     var stopwatch = new Stopwatch();
     stopwatch.Start();
-    this.metricCreator.GetAllTicketsWithTime();
+    var result = this.metricCreator.GetAllTicketsWithTime();
     stopwatch.Stop();
     var elapsed = stopwatch.ElapsedMilliseconds;
     Console.WriteLine("Get all tickets with time: " + elapsed);

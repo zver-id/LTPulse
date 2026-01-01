@@ -45,6 +45,7 @@ public class MetricCalculator
       var metric = this.GetOrCreateMetric(DateTime.Today, this.GetOrCreateMonthMetricType(monthGroup.Key));
       metric.Value = monthGroup.Value.Count;
       metric.Tickets = monthGroup.Value;
+      this.repository.AddOrUpdate(metric);
     }
   }
   
