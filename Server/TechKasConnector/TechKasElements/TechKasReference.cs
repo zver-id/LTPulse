@@ -32,6 +32,8 @@ public class TechKasReference : IEnumerable<TechKasElement>
   /// </summary>
   private dynamic Reference { get; set; }
   
+  private Dictionary<int, string> ConditionList { get; set; } = [];
+  
   #endregion
 
   #region Методы
@@ -45,9 +47,10 @@ public class TechKasReference : IEnumerable<TechKasElement>
   /// <returns>ИД фильтра.</returns>
   public int SetFilter(string attributeType, string attributeValue, string comparisonOperator = "=")
   {
-    int referenceFilter = this.Reference.AddWhere(
-      $"{this.Reference.TableName}.{this.Reference.Requisites(attributeType).FieldName}" +
-      $" {comparisonOperator} '{attributeValue}'");
+    string conditionString = $"{this.Reference.TableName}.{this.Reference.Requisites(attributeType).FieldName}" +
+                             $" {comparisonOperator} '{attributeValue}'";
+    int referenceFilter = this.Reference.AddWhere(conditionString);
+    this.ConditionList.Add(referenceFilter, conditionString);
     return referenceFilter;
   }
   
@@ -76,6 +79,7 @@ public class TechKasReference : IEnumerable<TechKasElement>
         query.Append(')');
     }
     int filterID = this.Reference.AddWhere(query.ToString());
+    this.ConditionList.Add(filterID, query.ToString());
     return filterID;
   }
 
@@ -86,6 +90,7 @@ public class TechKasReference : IEnumerable<TechKasElement>
   public void DeleteFilter(int filterId)
   {
     this.Reference.DelWhere(filterId);
+    this.ConditionList.Remove(filterId);
   }
 
   /// <summary>

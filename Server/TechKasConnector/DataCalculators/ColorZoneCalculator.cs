@@ -67,7 +67,7 @@ public class ColorZoneCalculator
     
     foreach (var ticket in this.tickets)
     {
-      var spentTime = GetSpentTimeByMinutes(ticket);
+      var spentTime = this.GetSpentTimeByMinutes(ticket);
       var ticketRecord = this.GetTicket(ticket);
       ticketRecord.TimeInWork = (float)spentTime / 60;
       this.AddToTickets(ticketRecord);
@@ -123,7 +123,6 @@ public class ColorZoneCalculator
         hasEnd = false;
       }
     }
-
     return spentTime;
   }
 
@@ -142,11 +141,11 @@ public class ColorZoneCalculator
         Employee = element.GetRequisite(TechKasRequisites.Employee, RequisitesMode.DisplayText),
         Priority = this.repository
           .Get<Priority>(x =>
-            x.Name == element.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString)).First(),
+            x.Name == element.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString)).FirstOrDefault(),
         IncomingDate = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString),
           "dd.MM.yyyy", CultureInfo.InvariantCulture),
         State = this.repository.Get<TicketState>(s =>
-          s.State == element.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString)).First(),
+          s.State == element.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString)).FirstOrDefault(),
         TimeInWork = 0,
         Hyperlink = element.Hyperlink
       };

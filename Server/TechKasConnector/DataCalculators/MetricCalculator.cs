@@ -289,9 +289,9 @@ public class MetricCalculator
     this.team = team;
     this.repository = new DBRepository();
     this.tickets = new TechKasReference("ПДД");
-    this.ColorZoneCalculator = new ColorZoneCalculator(this.repository, this.tickets);
     this.SetInitFilters();
     this.SetEmployeeFilters();
+    this.ColorZoneCalculator = new ColorZoneCalculator(this.repository, this.tickets);
   }
   
   #endregion
