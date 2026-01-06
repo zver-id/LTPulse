@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using CommonModels.Interfaces;
 using CommonModels.Models;
 using DBCore;
 using TechKasConnector.Calendar;
@@ -20,7 +21,7 @@ public class MetricCalculator
   /// <summary>
   /// Репозиторий.
   /// </summary>
-  private DBRepository repository;
+  private IRepository repository;
 
   /// <summary>
   /// Команда, для которой идет расчет.
@@ -30,6 +31,15 @@ public class MetricCalculator
   #endregion
   
   # region Методы, работающие через общий список
+
+  public void ProcessAllMetrics()
+  {
+    this.CreateMonthMetrics();
+    this.CreateSnowballMetric(14, "Старше 2 недель", true);
+    this.CreateSnowballMetric(21, "Старше 3 недель", true);
+    this.CreateSnowballMetric(28, "Старше 4 недель", false);
+    this.CreateTailMetric();
+  }
 
   /// <summary>
   /// Создать метрики "по месяцам".
@@ -47,6 +57,38 @@ public class MetricCalculator
       metric.Tickets = monthGroup.Value;
       this.repository.AddOrUpdate(metric);
     }
+  }
+
+  /// <summary>
+  /// Рассчитать метрики Snowball.
+  /// </summary>
+  /// <param name="daysAgo">Количество дней, за которые считаются обращения.</param>
+  /// <param name="nameOfMetric">Название метрики.</param>
+  /// <param name="isInWorkOnly">Признак, что нужно считать только обращения в работе.</param>
+  public void CreateSnowballMetric(int daysAgo, string nameOfMetric, bool isInWorkOnly)
+  {
+    var culture = new CultureInfo("ru-RU");
+    var tickets = this.ColorZoneCalculator.Tickets
+      .Where(t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(daysAgo))
+      .Where(t => !isInWorkOnly || t.State.State == TicketStatus.InWorkFullString)
+      .ToList();
+    var metricType = this.repository.Get<MetricType>(mt => mt.Name == nameOfMetric).First();
+    var metric = this.GetOrCreateMetric(DateTime.Today, metricType);
+    metric.Value = tickets.Count;
+    metric.Tickets = tickets;
+    this.repository.AddOrUpdate(metric);
+  }
+
+  /// <summary>
+  /// Расчет хвоста.
+  /// </summary>
+  public void CreateTailMetric()
+  {
+    var metricType = this.repository.Get<MetricType>(mt => mt.Name == "Хвост").First();
+    var metric = this.GetOrCreateMetric(DateTime.Today, metricType);
+    metric.Value = this.ColorZoneCalculator.Tickets.Count;
+    metric.Tickets = this.ColorZoneCalculator.Tickets;
+    this.repository.AddOrUpdate(metric);
   }
   
   /// <summary>
@@ -94,6 +136,15 @@ public class MetricCalculator
       this.repository.Add(metricType);
     }
     return metricType;
+  }
+
+  public void Init(Team team)
+  {
+    this.team = team;
+    this.tickets = new TechKasReference("ПДД");
+    this.SetInitFilters();
+    this.SetEmployeeFilters();
+    this.ColorZoneCalculator = new ColorZoneCalculator(this.repository, this.tickets);
   }
   #endregion
   
@@ -284,14 +335,9 @@ public class MetricCalculator
   /// <summary>
   /// Конструктор.
   /// </summary>
-  public MetricCalculator(Team team)
+  public MetricCalculator(IRepository repository)
   {
-    this.team = team;
-    this.repository = new DBRepository();
-    this.tickets = new TechKasReference("ПДД");
-    this.SetInitFilters();
-    this.SetEmployeeFilters();
-    this.ColorZoneCalculator = new ColorZoneCalculator(this.repository, this.tickets);
+    this.repository = repository;
   }
   
   #endregion

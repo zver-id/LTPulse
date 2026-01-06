@@ -10,7 +10,7 @@ using Npgsql;
 
 namespace DBCore;
 
-public class DBRepository : IDisposable
+public class DbRepository : IRepository
 {
   /// <summary>
   /// Сессия репозитория.
@@ -72,7 +72,7 @@ public class DBRepository : IDisposable
   /// <param name="predicate">Условие в виде предиката.</param>
   /// <typeparam name="T">Класс объекта.</typeparam>
   /// <returns>Список сущностей, удовлетворяющих критерию.</returns>
-  public List<T> Get<T>(Expression<Func<T, bool>> predicate) where T : class
+  public List<T> Get<T>(Expression<Func<T, bool>> predicate) where T : IHasId
   {
     return this.Session.Query<T>()
         .Where(predicate)
@@ -115,7 +115,7 @@ public class DBRepository : IDisposable
           var transaction = this.Session.GetCurrentTransaction();
           if (transaction?.IsActive == true)
             transaction.Rollback();
-          Session.Close();
+          this.Session.Close();
         }
       }
       finally
@@ -133,7 +133,7 @@ public class DBRepository : IDisposable
   /// <summary>
   /// Конструктор.
   /// </summary>
-  public DBRepository()
+  public DbRepository()
   {
     this.Session = NhibernateHelper.OpenSession();
   }
@@ -141,7 +141,7 @@ public class DBRepository : IDisposable
   /// <summary>
   /// Деструктор.
   /// </summary>
-  ~DBRepository()
+  ~DbRepository()
   {
     this.Dispose();
   }

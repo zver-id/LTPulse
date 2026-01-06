@@ -5,12 +5,12 @@ namespace DBCore.Tests;
 
 public class CRUDTests
 {
-  private DBRepository repository;
+  private DbRepository repository;
   
   [SetUp]
   public void Setup()
   {
-    repository = new DBRepository();
+    repository = new DbRepository();
   }
 
   [Test]

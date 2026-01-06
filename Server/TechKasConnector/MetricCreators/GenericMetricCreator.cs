@@ -1,3 +1,4 @@
+using CommonModels.Interfaces;
 using CommonModels.Models;
 using DBCore;
 using TechKasConnector.DataCalculators;
@@ -7,7 +8,7 @@ namespace TechKasConnector.MetricCreators;
 public class GenericMetricCreator
 {
   private readonly MetricCalculator metricCalculator;
-  private readonly DBRepository repository;
+  private readonly IRepository repository;
   private readonly Team team;
   public Metric GetOrCreateMetric(DateTime date, MetricType metricType)
   {
@@ -67,9 +68,9 @@ public class GenericMetricCreator
     return colorCalculator.Tickets;
   }
 
-  public GenericMetricCreator(DBRepository? repository,  Team team)
+  public GenericMetricCreator(IRepository repository)
   {
-    this.metricCalculator = new MetricCalculator(team);
+    this.metricCalculator = new MetricCalculator(repository);
     this.repository = repository;
     this.team = team;
   }

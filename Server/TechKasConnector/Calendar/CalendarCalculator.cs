@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using CommonModels.Interfaces;
 using CommonModels.Models;
 using DBCore;
 
@@ -6,7 +7,7 @@ namespace TechKasConnector.Calendar;
 
 public class CalendarCalculator
 {
-  public DBRepository Repository { get; set; }
+  public IRepository Repository { get; set; }
 
   /// <summary>
   /// Праздники.
@@ -75,7 +76,7 @@ public class CalendarCalculator
     return result;
   }
 
-  public CalendarCalculator(DBRepository repository)
+  public CalendarCalculator(IRepository repository)
   {
     this.Repository = repository;
     this.Holidays = this.Repository.Get<SpecialDate>(date => date.IsHoliday)

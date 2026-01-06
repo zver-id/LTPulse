@@ -13,7 +13,7 @@ public class BaseTypeInitializer
   /// <summary>
   /// Репозиторий.
   /// </summary>
-  private DBRepository dbRepository { get; init; }
+  private DbRepository dbRepository { get; init; }
   
   /// <summary>
   /// Записать типы метрик.
@@ -183,7 +183,7 @@ public class BaseTypeInitializer
     }
   }
 
-  public BaseTypeInitializer(DBRepository repository)
+  public BaseTypeInitializer(DbRepository repository)
   {
     this.dbRepository = repository;
   }

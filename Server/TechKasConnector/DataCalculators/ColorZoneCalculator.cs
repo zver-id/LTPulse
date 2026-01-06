@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using CommonModels.Interfaces;
 using CommonModels.Models;
 using DBCore;
 using TechKasConnector.Calendar;
@@ -36,7 +37,7 @@ public class ColorZoneCalculator
   /// <summary>
   /// Репозиторий.
   /// </summary>
-  private readonly DBRepository repository;
+  private readonly IRepository repository;
   
   /// <summary>
   /// Справочник обращений.
@@ -200,7 +201,7 @@ public class ColorZoneCalculator
   /// </summary>
   /// <param name="repository">Репозиторий.</param>
   /// <param name="tickets">Справочник обращений.</param>
-  public ColorZoneCalculator(DBRepository? repository, TechKasReference tickets, string? ticketType = null)
+  public ColorZoneCalculator(IRepository repository, TechKasReference tickets, string? ticketType = null)
   {
     this.repository = repository;
     this.tickets = tickets;

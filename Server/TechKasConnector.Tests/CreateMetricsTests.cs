@@ -8,11 +8,11 @@ namespace TechKasConnector.Tests;
 public class Tests
 {
   private GenericMetricCreator metricCreator;
-  private DBRepository repository;
+  private DbRepository repository;
   [SetUp]
   public void Setup()
   {
-    this.repository = new DBRepository();
+    this.repository = new DbRepository();
     var team = this.repository.Get<Team>(x => x.Name == "ОГВ").FirstOrDefault();
     this.metricCreator = new GenericMetricCreator(this.repository, team);
   }

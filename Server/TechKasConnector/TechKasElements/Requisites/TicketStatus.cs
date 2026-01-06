@@ -34,6 +34,9 @@ public static class TicketStatus
   /// Незакрытие обращения (в работе, на контроле и т.д.)
   /// </summary>
   public static readonly List<string> Active = [Initialization, InWork, OnControl, Forwarded];
-
-
+  
+  /// <summary>
+  /// В работе.
+  /// </summary>
+  public const string InWorkFullString = "В работе";
 }
