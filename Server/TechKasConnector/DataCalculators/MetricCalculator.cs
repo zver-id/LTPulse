@@ -35,10 +35,42 @@ public class MetricCalculator
   public void ProcessAllMetrics()
   {
     this.CreateMonthMetrics();
-    this.CreateSnowballMetric(14, "Старше 2 недель", true);
-    this.CreateSnowballMetric(21, "Старше 3 недель", true);
-    this.CreateSnowballMetric(28, "Старше 4 недель", false);
-    this.CreateTailMetric();
+    this.CreateMetric("Старше 2 недель",
+      t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(2 * 7) &&
+           t.State.State == TicketStatus.InWorkFullString);
+    this.CreateMetric("Старше 3 недель",
+      t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(3 * 7) &&
+           t.State.State == TicketStatus.InWorkFullString);
+    this.CreateMetric("Старше 4 недель",
+    t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(4 * 7));
+    
+    this.CreateMetric("Хвост", t => true);
+    
+    this.CreateMetric("0-8", t => t.TimeInWork <= 8 * 60 && TicketType.IncidentsConsultation.Contains(t.Type));
+    this.CreateMetric("8-16", t => t.TimeInWork is > 8 * 60 and < 16 * 60 &&
+                                   TicketType.IncidentsConsultation.Contains(t.Type));
+    this.CreateMetric("16-24", t => t.TimeInWork > 16 * 60 && t.TimeInWork < 24 * 60 &&
+                                    TicketType.IncidentsConsultation.Contains(t.Type));
+    this.CreateMetric(">24", t => t.TimeInWork > 24 * 60 && TicketType.IncidentsConsultation.Contains(t.Type));
+    
+    this.CreateMetric("green", t => t.TimeInWork / t.Priority.TimeToSolve <= 0.25 
+                                    && TicketType.IncidentsConsultation.Contains(t.Type));
+    this.CreateMetric("sandy", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.25 && 
+                                    t.TimeInWork / t.Priority.TimeToSolve < 0.5 
+                                    && TicketType.IncidentsConsultation.Contains(t.Type));
+    this.CreateMetric("yellow", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.5 &&
+                                     t.TimeInWork / t.Priority.TimeToSolve < 0.75
+                                     && TicketType.IncidentsConsultation.Contains(t.Type));
+    this.CreateMetric("red", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.75
+                                  && TicketType.IncidentsConsultation.Contains(t.Type));
+    
+    this.CreateMetric("Инциденты", t => t.Type == TicketType.Incident && t.IncomingDate == DateTime.Now.Date);
+    this.CreateMetric("Консультации", t => t.Type == TicketType.Consultation && t.IncomingDate == DateTime.Now.Date);
+    this.CreateMetric("Запросы", t => t.Type == TicketType.Request && t.IncomingDate == DateTime.Now.Date);
+    this.CreateMetric("Проблемы", t => t.Type == TicketType.Problem && t.IncomingDate == DateTime.Now.Date);
+    this.CreateMetric("Поступило всего", t => t.IncomingDate == DateTime.Now.Date);
+    
+    
   }
 
   /// <summary>
@@ -62,17 +94,14 @@ public class MetricCalculator
   /// <summary>
   /// Рассчитать метрики Snowball.
   /// </summary>
-  /// <param name="daysAgo">Количество дней, за которые считаются обращения.</param>
-  /// <param name="nameOfMetric">Название метрики.</param>
+  /// <param name="nameOfMetricType">Название метрики.</param>
   /// <param name="isInWorkOnly">Признак, что нужно считать только обращения в работе.</param>
-  public void CreateSnowballMetric(int daysAgo, string nameOfMetric, bool isInWorkOnly)
+  public void CreateMetric(string nameOfMetricType, Predicate<Ticket> predicate)
   {
-    var culture = new CultureInfo("ru-RU");
     var tickets = this.ColorZoneCalculator.Tickets
-      .Where(t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(daysAgo))
-      .Where(t => !isInWorkOnly || t.State.State == TicketStatus.InWorkFullString)
+      .Where (t => predicate(t))
       .ToList();
-    var metricType = this.repository.Get<MetricType>(mt => mt.Name == nameOfMetric).First();
+    var metricType = this.repository.Get<MetricType>(mt => mt.Name == nameOfMetricType).First();
     var metric = this.GetOrCreateMetric(DateTime.Today, metricType);
     metric.Value = tickets.Count;
     metric.Tickets = tickets;
@@ -144,7 +173,7 @@ public class MetricCalculator
     this.tickets = new TechKasReference("ПДД");
     this.SetInitFilters();
     this.SetEmployeeFilters();
-    this.ColorZoneCalculator = new ColorZoneCalculator(this.repository, this.tickets);
+    this.ColorZoneCalculator = new ColorZoneCalculator(this.repository, this.tickets, this.team);
   }
   #endregion
   
@@ -273,7 +302,7 @@ public class MetricCalculator
     using var filter = new ReferenceFilterManager(this.tickets);
     filter.AddFilter(TechKasRequisites.TicketType, ticketType);
     filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
-    return new ColorZoneCalculator(this.repository,  this.tickets, ticketType);
+    return new ColorZoneCalculator(this.repository,  this.tickets, this.team, ticketType);
   }
 
   /// <summary>

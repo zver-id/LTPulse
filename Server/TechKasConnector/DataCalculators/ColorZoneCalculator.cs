@@ -19,6 +19,11 @@ public class ColorZoneCalculator
   public List<Ticket> Tickets { get; init; } = new();
   
   /// <summary>
+  /// Команда для которой идет расчет.
+  /// </summary>
+  private Team team;
+  
+  /// <summary>
   /// Получить количество обращений по зонам с учётом времени.
   /// </summary>
   public Dictionary<string, int> ColorZonesByTime =>
@@ -128,6 +133,33 @@ public class ColorZoneCalculator
   }
 
   /// <summary>
+  /// Считает количество времени, отмеченное за текущий день командой.
+  /// </summary>
+  /// <param name="ticket">Обращение у которого считаем отмеченное время.</param>
+  /// <param name="daysAgo">Количество дней назад, за которое нужно считать.</param>
+  /// <returns>Количество затраченного времени.</returns>
+  public float GetTimeStamp(TechKasElement ticket, int daysAgo = 0)
+  {
+    float total = 0;
+    var employeeNames = this.team.Employees.Select(e => e.Name).ToList();
+    
+    Autoclicker.ClickYes();
+    var detail = ticket.GetDetail(2);
+    foreach (TechKasElement record in detail)
+    {
+      bool isActualDate = record.GetRequisite(TechKasRequisites.DateDetail, RequisitesMode.AsString)
+                          == DateTime.Now.AddDays(-daysAgo).ToString("dd.MM.yyyy");
+      bool employeeInTeam =
+        employeeNames.Contains(record.GetRequisite(TechKasRequisites.EmployeeDetail, RequisitesMode.DisplayText));
+      if (isActualDate && employeeInTeam)
+      {
+        total += float.Parse(record.GetRequisite(TechKasRequisites.TimeSpent, RequisitesMode.AsString));
+      }
+    }
+    return total;
+  }
+
+  /// <summary>
   /// Получить обращение из элемента ТехКас.
   /// </summary>
   /// <param name="element">Элемент ТехКас.</param>
@@ -138,15 +170,16 @@ public class ColorZoneCalculator
       {
         Id = int.Parse(element.GetRequisite(TechKasRequisites.Id, RequisitesMode.AsString).Trim()),
         Name = element.GetRequisite(TechKasRequisites.Name, RequisitesMode.AsString),
+        Type = element.GetRequisite(TechKasRequisites.TicketType, RequisitesMode.AsString),
         Organization = element.GetRequisite(TechKasRequisites.Organization, RequisitesMode.DisplayText),
         Employee = element.GetRequisite(TechKasRequisites.Employee, RequisitesMode.DisplayText),
         Priority = this.repository
           .Get<Priority>(x =>
-            x.Name == element.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString)).FirstOrDefault(),
+            x.Name == element.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString)).First(),
         IncomingDate = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString),
           "dd.MM.yyyy", CultureInfo.InvariantCulture),
         State = this.repository.Get<TicketState>(s =>
-          s.State == element.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString)).FirstOrDefault(),
+          s.State == element.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString)).First(),
         TimeInWork = 0,
         Hyperlink = element.Hyperlink
       };
@@ -201,10 +234,11 @@ public class ColorZoneCalculator
   /// </summary>
   /// <param name="repository">Репозиторий.</param>
   /// <param name="tickets">Справочник обращений.</param>
-  public ColorZoneCalculator(IRepository repository, TechKasReference tickets, string? ticketType = null)
+  public ColorZoneCalculator(IRepository repository, TechKasReference tickets, Team team, string? ticketType = null)
   {
     this.repository = repository;
     this.tickets = tickets;
+    this.team = team;
     this.GetTicketList(ticketType);
   }
 }

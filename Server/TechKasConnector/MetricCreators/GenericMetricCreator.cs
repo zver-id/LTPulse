@@ -64,7 +64,7 @@ public class GenericMetricCreator
 
   public List<Ticket> GetAllTicketsWithTime()
   {
-    var colorCalculator = new ColorZoneCalculator(this.repository, this.metricCalculator.tickets);
+    var colorCalculator = new ColorZoneCalculator(this.repository, this.metricCalculator.tickets, this.team);
     return colorCalculator.Tickets;
   }
 

@@ -19,6 +19,11 @@ public class Ticket : IHasId
   public virtual string Name { get; set; }
   
   /// <summary>
+  /// Тип обращения.
+  /// </summary>
+  public virtual string Type { get; set; }
+  
+  /// <summary>
   /// Организация.
   /// </summary>
   public virtual string Organization { get; set; }
@@ -47,6 +52,11 @@ public class Ticket : IHasId
   /// Время в работе.
   /// </summary>
   public virtual float TimeInWork { get; set; }
+  
+  /// <summary>
+  /// Время отмеченное за день.
+  /// </summary>
+  public virtual float TimeStampedOnDay { get; set; }
   
   /// <summary>
   /// Гиперссылка.

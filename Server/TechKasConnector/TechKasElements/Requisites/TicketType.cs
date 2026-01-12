@@ -11,4 +11,5 @@ public static class TicketType
   public static readonly string Problem = "П";
 
   public static readonly List<string> WithoutProblems = [Incident, Consultation, Request];
+  public static readonly List<string> IncidentsConsultation = [Incident, Consultation];
 }
