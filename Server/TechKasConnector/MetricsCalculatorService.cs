@@ -51,7 +51,7 @@ public class MetricsCalculatorService : BackgroundService
       
     using var scope = this.serviceScopeFactory.CreateScope();
     var metricCreator = scope.ServiceProvider.GetRequiredService<MetricCalculator>();
-    metricCreator.Init(messageBody.team);
+    metricCreator.Init(messageBody.Team);
     metricCreator.ProcessAllMetrics();
     return string.Empty;
   }
