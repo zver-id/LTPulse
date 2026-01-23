@@ -55,7 +55,7 @@ public class RabbitMQClient
     var body = Encoding.UTF8.GetBytes(message);
     
     await channel.BasicPublishAsync(
-      $"Ex",
+      String.Empty, 
       routingKey: this.requestQueueName,
       mandatory:false,
       basicProperties: new BasicProperties(),
