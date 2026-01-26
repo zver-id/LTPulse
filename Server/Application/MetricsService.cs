@@ -20,7 +20,7 @@ public class MetricsService : GenericService
     
     return Task.Run(() =>
     {
-      List<Metric> metrics = this.repository.GetByPredicate<Metric>(filter);
+      List<Metric> metrics = this.repository.Get<Metric>(filter);
       var result = new List<Dictionary<string, object>>();
 
       

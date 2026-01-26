@@ -13,7 +13,7 @@ public class BaseTypeInitializer
   /// <summary>
   /// Репозиторий.
   /// </summary>
-  private DBRepository dbRepository { get; init; }
+  private DbRepository dbRepository { get; init; }
   
   /// <summary>
   /// Записать типы метрик.
@@ -82,6 +82,40 @@ public class BaseTypeInitializer
   }
 
   /// <summary>
+  /// Инициализировать приоритеты.
+  /// </summary>
+  public void AddPriorities()
+  {
+    List<IHasId> priorities =
+    [
+      new Priority { Name = "Критический", TimeToSolve = 4 * 60 },
+      new Priority { Name = "Высокий", TimeToSolve = 8 * 60 },
+      new Priority { Name = "Средний", TimeToSolve = 16 * 60 },
+      new Priority { Name = "Низкий", TimeToSolve = 80 * 60 },
+      new Priority { Name = "Планируемый", TimeToSolve = 168 * 60 }
+    ];
+    
+    this.TryAddTypes(priorities);
+  }
+
+  /// <summary>
+  /// Инициализировать статусы.
+  /// </summary>
+  public void AddTicketStates()
+  {
+    List<IHasId> ticketStates =
+    [
+      new TicketState { State = "Инициализация" },
+      new TicketState { State = "В работе" },
+      new TicketState { State = "На контроле" },
+      new TicketState { State = "Переадресовано" },
+      new TicketState { State = "На закрытии" },
+      new TicketState { State = "Закрыто" }
+    ];
+    this.TryAddTypes(ticketStates);
+  }
+
+  /// <summary>
   /// Записать метрики из существующего файла excel.
   /// </summary>
   /// <param name="fileName">Имя файла с данными.</param>
@@ -90,7 +124,7 @@ public class BaseTypeInitializer
   /// <exception cref="ArgumentException">Переданная команда не существует.</exception>
   public void AddTeamMetricsFromExcel(string fileName, string sheetName, string teamName)
   {
-    var team = this.dbRepository.GetByPredicate<Team>(x=>x.Name == teamName).FirstOrDefault();
+    var team = this.dbRepository.Get<Team>(x=>x.Name == teamName).FirstOrDefault();
     if (team == null)
       throw new ArgumentException("Team not found");
     var metricDict = ExcelParser.ParseExcelToDictionaries(fileName,  sheetName);
@@ -100,10 +134,10 @@ public class BaseTypeInitializer
       {
         if (metric.Value == 0)
           continue;
-        var metricType = this.dbRepository.GetByPredicate<MetricType>(x => x.Name == metric.Key).FirstOrDefault();
+        var metricType = this.dbRepository.Get<MetricType>(x => x.Name == metric.Key).FirstOrDefault();
         if (metricType == null)
         {
-          var metricGroup = this.dbRepository.GetByPredicate<MetricGroup>(x => x.Name == "Month").FirstOrDefault();
+          var metricGroup = this.dbRepository.Get<MetricGroup>(x => x.Name == "Month").FirstOrDefault();
           metricType = new MetricType { Name = metric.Key,  MetricGroup = metricGroup! };
           this.dbRepository.Add(metricType);
         }
@@ -149,7 +183,7 @@ public class BaseTypeInitializer
     }
   }
 
-  public BaseTypeInitializer(DBRepository repository)
+  public BaseTypeInitializer(DbRepository repository)
   {
     this.dbRepository = repository;
   }

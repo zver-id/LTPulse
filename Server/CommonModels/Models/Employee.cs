@@ -25,10 +25,5 @@ public class Employee : IHasId
   /// <summary>
   /// Номер карточки в ТехКАС.
   /// </summary>
-  public virtual int TechKASNumber { get; set; }
-  
-  /// <summary>
-  /// Команда.
-  /// </summary>
-  public virtual Team Team { get; set; }
+  public virtual string TechKASNumber { get; set; }
 }

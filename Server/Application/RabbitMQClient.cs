@@ -37,7 +37,7 @@ public class RabbitMQClient
   public async Task SendMessage(object obj)
   {
     var message = JsonSerializer.Serialize(obj);
-    await SendMessage(message);
+    await this.SendMessage(message);
   }
 
   /// <summary>
@@ -55,7 +55,7 @@ public class RabbitMQClient
     var body = Encoding.UTF8.GetBytes(message);
     
     await channel.BasicPublishAsync(
-      $"Ex",
+      String.Empty, 
       routingKey: this.requestQueueName,
       mandatory:false,
       basicProperties: new BasicProperties(),
@@ -65,12 +65,13 @@ public class RabbitMQClient
   /// <summary>
   /// Создать экземпляр. 
   /// </summary>
-  /// <param name="hostName">Хост подключения.</param>
+  /// <param name="connectionString">Строка подключения.</param>
   /// <returns>Экземпляр подключения.</returns>
-  public static async Task<RabbitMQClient> CreateAsync(string hostName)
+  public static async Task<RabbitMQClient> CreateAsync(string connectionString)
   {
     var instance = new RabbitMQClient();
-    var factory = new ConnectionFactory() { HostName = hostName };;
+    var factory = new ConnectionFactory();
+    factory.Uri = new Uri(connectionString);
     instance.connection = await factory.CreateConnectionAsync();
     instance.channel = await instance.connection.CreateChannelAsync();
     return instance;

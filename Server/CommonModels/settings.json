@@ -1,0 +1,4 @@
+﻿{
+  "DatabaseConnectionString":"Host=localhost;Port=5432;Database=LTPulse;Username=admin;Password=Qwerty123",
+  "RabbitMQConnectionString": "amqp://admin:Qwerty123@localhost:5672/stathost"
+}

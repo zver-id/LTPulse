@@ -1,15 +1,16 @@
+using System.Globalization;
 using CommonModels.Models;
 
 namespace DBCore.Tests;
 
 public class CRUDTests
 {
-  private DBRepository repository;
+  private DbRepository repository;
   
   [SetUp]
   public void Setup()
   {
-    repository = new DBRepository();
+    repository = new DbRepository();
   }
 
   [Test]
@@ -22,8 +23,62 @@ public class CRUDTests
     };
     
     repository.Add(team);
-    var expectedTeam = repository.Get<Team>("Name", team.Name);
+    var expectedTeam = repository.GetByField<Team>("Name", team.Name);
     
     Assert.AreEqual(expectedTeam.Name, team.Name);
+  }
+
+  [Test]
+  public void AddTicket()
+  {
+    var ticket = new Ticket
+    {
+      Id = 101,
+      Name = "Имя 22тестовое",
+      Organization = "Имя организации",
+      Employee = "Имя сотрудника",
+      Priority = this.repository.Get<Priority>(x => x.Name == "Низкий").First(),
+      IncomingDate = DateTime.Now,
+      State = this.repository.Get<TicketState>(s =>
+        s.State == "В работе").First(),
+      TimeInWork = 0,
+      Hyperlink = "нет ничо"
+    };
+
+    repository.AddOrUpdate(ticket);
+    
+    Assert.DoesNotThrow(
+      () => repository.AddOrUpdate(ticket));
+  }
+  
+  [Test]
+  public void AddUpdateExistingMetric()
+  {
+    var metric = new Metric
+    {
+      Date = DateTime.Today,
+      MetricType = this.repository.Get<MetricType>(x => x.Name == "Всего в работе").First(),
+      Team = this.repository.Get<Team>(x => x.Name == "ОГВ").First(),
+      Value = 1
+    };
+
+    this.repository.AddOrUpdate(metric);
+    
+    var metric2 = new Metric
+    {
+      Date = DateTime.Today,
+      MetricType = this.repository.Get<MetricType>(x => x.Name == "Всего в работе").First(),
+      Team = this.repository.Get<Team>(x => x.Name == "ОГВ").First(),
+      Value = 4
+    };
+    
+    Assert.DoesNotThrow(
+      () => repository.AddOrUpdate(metric2));
+  }
+
+  [TearDown]
+  public void TearDown()
+  {
+    repository.Dispose();
   }
 }

@@ -8,13 +8,13 @@ public abstract class GenericService
   /// <summary>
   /// Репозиторий.
   /// </summary>
-  protected readonly DBRepository repository;
+  protected readonly DbRepository repository;
   
   /// <summary>
   /// Конструктор.
   /// </summary>
   public GenericService()
   {
-    this.repository = new DBRepository();
+    this.repository = new DbRepository();
   }
 }

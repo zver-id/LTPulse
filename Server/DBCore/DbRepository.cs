@@ -3,12 +3,14 @@ using CollectionLibrary.Nhibernate.Infrastructure;
 using CommonModels.Interfaces;
 using NHibernate;
 using NHibernate.Criterion;
+using NHibernate.Exceptions;
 using NHibernate.Infrastructure;
 using NHibernate.Linq;
+using Npgsql;
 
 namespace DBCore;
 
-public class DBRepository : IDisposable
+public class DbRepository : IRepository
 {
   /// <summary>
   /// Сессия репозитория.
@@ -21,15 +23,6 @@ public class DBRepository : IDisposable
   /// <param name="item">Добавляемый объект</param>
   public void Add(IHasId item)
   {
-    try
-    {
-      IsExist(item);
-    }
-    catch (ArgumentException ex)
-    {
-      //TODO нужно понять как это обработать
-      throw ex;
-    }
     using (ITransaction  transaction = this.Session.BeginTransaction())
     {
       this.Session.Save(item);
@@ -41,13 +34,11 @@ public class DBRepository : IDisposable
   /// Обновить свойства объекта в базе данных
   /// </summary>
   /// <param name="item">Объект свойства, которого будут обновляться</param>
-  public void Update(IHasId item)
+  public void AddOrUpdate(IHasId item)
   {
-    if (IsExist(item))
-      return;
-    using (ITransaction  transaction = this.Session.BeginTransaction())
+    using (ITransaction transaction = this.Session.BeginTransaction())
     {
-      this.Session.Update(item);
+      this.Session.SaveOrUpdate(item);
       transaction.Commit();
     }
   }
@@ -68,7 +59,7 @@ public class DBRepository : IDisposable
   /// <param name="value">Значение свойства</param>
   /// <typeparam name="T">Класс объекта</typeparam>
   /// <returns></returns>
-  public T Get<T>(string fieldName, object value)
+  public T GetByField<T>(string fieldName, object value)
   {
     ICriteria criteria = this.Session.CreateCriteria(typeof(T));
     criteria.Add(Restrictions.Eq(fieldName, value));
@@ -81,7 +72,7 @@ public class DBRepository : IDisposable
   /// <param name="predicate">Условие в виде предиката.</param>
   /// <typeparam name="T">Класс объекта.</typeparam>
   /// <returns>Список сущностей, удовлетворяющих критерию.</returns>
-  public List<T> GetByPredicate<T>(Expression<Func<T, bool>> predicate) where T : class
+  public List<T> Get<T>(Expression<Func<T, bool>> predicate) where T : IHasId
   {
     return this.Session.Query<T>()
         .Where(predicate)
@@ -102,7 +93,7 @@ public class DBRepository : IDisposable
     
     foreach (var property in uniqueProperties)
     {
-      var existItem = Get<IHasId>(property.Name, property.GetValue(item));
+      var existItem = this.GetByField<IHasId>(property.Name, property.GetValue(item));
       if (existItem == null)
         continue;
       throw new ArgumentException(
@@ -124,7 +115,7 @@ public class DBRepository : IDisposable
           var transaction = this.Session.GetCurrentTransaction();
           if (transaction?.IsActive == true)
             transaction.Rollback();
-          Session.Close();
+          this.Session.Close();
         }
       }
       finally
@@ -142,7 +133,7 @@ public class DBRepository : IDisposable
   /// <summary>
   /// Конструктор.
   /// </summary>
-  public DBRepository()
+  public DbRepository()
   {
     this.Session = NhibernateHelper.OpenSession();
   }
@@ -150,7 +141,7 @@ public class DBRepository : IDisposable
   /// <summary>
   /// Деструктор.
   /// </summary>
-  ~DBRepository()
+  ~DbRepository()
   {
     this.Dispose();
   }
