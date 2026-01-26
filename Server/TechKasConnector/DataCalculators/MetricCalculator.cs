@@ -16,7 +16,7 @@ public class MetricCalculator
   /// </summary>
   public TechKasReference tickets;
   
-  public ColorZoneCalculator ColorZoneCalculator { get; set; }
+  public TicketListGenerator TicketListGenerator { get; set; }
   
   /// <summary>
   /// Репозиторий.
@@ -76,10 +76,10 @@ public class MetricCalculator
   /// <summary>
   /// Создать метрики "по месяцам".
   /// </summary>
-  public void CreateMonthMetrics()
+  private void CreateMonthMetrics()
   {
     var culture = new CultureInfo("ru-RU");
-    var monthGroupedTickets = this.ColorZoneCalculator.Tickets
+    var monthGroupedTickets = this.TicketListGenerator.Tickets
       .GroupBy(t => culture.TextInfo.ToTitleCase(t.IncomingDate.ToString("MMMM yyyy", culture)))
       .ToDictionary(g => g.Key, g => g.ToList());
     foreach (var monthGroup in monthGroupedTickets)
@@ -92,31 +92,19 @@ public class MetricCalculator
   }
 
   /// <summary>
-  /// Рассчитать метрики Snowball.
+  /// Рассчитать метрику.
   /// </summary>
   /// <param name="nameOfMetricType">Название метрики.</param>
   /// <param name="isInWorkOnly">Признак, что нужно считать только обращения в работе.</param>
-  public void CreateMetric(string nameOfMetricType, Predicate<Ticket> predicate)
+  private void CreateMetric(string nameOfMetricType, Predicate<Ticket> predicate)
   {
-    var tickets = this.ColorZoneCalculator.Tickets
+    var tickets = this.TicketListGenerator.Tickets
       .Where (t => predicate(t))
       .ToList();
     var metricType = this.repository.Get<MetricType>(mt => mt.Name == nameOfMetricType).First();
     var metric = this.GetOrCreateMetric(DateTime.Today, metricType);
     metric.Value = tickets.Count;
     metric.Tickets = tickets;
-    this.repository.AddOrUpdate(metric);
-  }
-
-  /// <summary>
-  /// Расчет хвоста.
-  /// </summary>
-  public void CreateTailMetric()
-  {
-    var metricType = this.repository.Get<MetricType>(mt => mt.Name == "Хвост").First();
-    var metric = this.GetOrCreateMetric(DateTime.Today, metricType);
-    metric.Value = this.ColorZoneCalculator.Tickets.Count;
-    metric.Tickets = this.ColorZoneCalculator.Tickets;
     this.repository.AddOrUpdate(metric);
   }
   
@@ -126,7 +114,7 @@ public class MetricCalculator
   /// <param name="date"></param>
   /// <param name="metricType"></param>
   /// <returns></returns>
-  public Metric GetOrCreateMetric(DateTime date, MetricType metricType)
+  private Metric GetOrCreateMetric(DateTime date, MetricType metricType)
   {
     var metric = this.repository.Get<Metric>(m =>
         m.Date == date && m.MetricType == metricType && m.Team == this.team)
@@ -167,142 +155,17 @@ public class MetricCalculator
     return metricType;
   }
 
+  /// <summary>
+  /// Инициализация калькулятора.
+  /// </summary>
+  /// <param name="team">Команда, по которой производится расчет.</param>
   public void Init(Team team)
   {
     this.team = team;
     this.tickets = new TechKasReference("ПДД");
     this.SetInitFilters();
     this.SetEmployeeFilters();
-    this.ColorZoneCalculator = new ColorZoneCalculator(this.repository, this.tickets, this.team);
-  }
-  #endregion
-  
-  #region Методы
-
-  /// <summary>
-  /// Получить количество обращений по типу.
-  /// </summary>
-  /// <param name="type">Тип обращения.</param>
-  /// <returns>Количество обращений.</returns>
-  public int GetTicketCountByType(string type)
-  {
-    using var filter = new ReferenceFilterManager(this.tickets);
-    filter.AddFilter(TechKasRequisites.TicketType, type);
-    return this.tickets.Count;
-  }
-
-  /// <summary>
-  /// Получить количество обращений по типу, поступивших за день.
-  /// </summary>
-  /// <param name="type">Тип обращений.</param>
-  /// <param name="daysAgo">Количество дней назад за которое надо получить сведения.</param>
-  /// <returns>Количество обращений.</returns>
-  public int GetIncomingTicketsCountByType(string type, int daysAgo)
-  {
-    var dateForCalculation = new List<string>();
-    var currentDay = DateTime.Today - new TimeSpan(daysAgo, 0, 0, 0);
-    if (currentDay.DayOfWeek == DayOfWeek.Monday)
-    {
-      dateForCalculation.Add(currentDay.ToString("dd.MM.yyyy"));
-      dateForCalculation.Add((currentDay - new TimeSpan(1, 0,0,0)).ToString("dd.MM.yyyy"));
-      dateForCalculation.Add((currentDay - new TimeSpan(2, 0,0,0)).ToString("dd.MM.yyyy"));
-    }
-    else
-    {
-      dateForCalculation.Add(currentDay.ToString("dd.MM.yyyy"));
-    }
-
-    using var filter = new ReferenceFilterManager(this.tickets);
-    filter.AddFilter(TechKasRequisites.OpenDate, dateForCalculation);
-    return this.GetTicketCountByType(type);
-  }
-
-  /// <summary>
-  /// Количество обращений в работе по месяцам создания.
-  /// </summary>
-  /// <returns>Количество обращений в работе по месяцам создания.</returns>
-  public Dictionary<string, int> GetCountTicketInProgressByMonth()
-  {
-    using var filter = new ReferenceFilterManager(this.tickets);
-    var result = new Dictionary<string, int>();
-    filter.AddFilter(TechKasRequisites.TicketStatus, "Р");
-    
-    foreach (TechKasElement ticket in this.tickets)
-    {
-      DateTime dateOfCreate = DateTime.ParseExact(
-        ticket.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString),
-        "dd.MM.yyyy", CultureInfo.InvariantCulture);
-      string monthName = dateOfCreate.ToString("MMMM", new CultureInfo("ru-RU"));
-      string month = $"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(monthName)} {dateOfCreate.Year}";
-      if (!result.ContainsKey(month))
-        result.Add(month, 1);
-      else
-        result[month]++;
-    }
-    return result;
-  }
-  
-  /// <summary>
-  /// Получить количество обращений старше определенного количества дней.
-  /// </summary>
-  /// <param name="daysAgo">Количество дней.</param>
-  /// <param name="activeOnly">Флаг учитывать ли обращения на контроле.</param>
-  /// <returns>Количесвто обращений.</returns>
-  public int GetSnowballTicketsCount(int daysAgo = -1, bool activeOnly = false)
-  {
-    using var filter = new ReferenceFilterManager(this.tickets);
-    if (activeOnly)
-      filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.InWork);
-    else
-      filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
-
-    filter.AddFilter(TechKasRequisites.TicketType, TicketType.WithoutProblems);
-    // Убираем анонимки (Код-338)
-    filter.AddFilter(TechKasRequisites.SupportArea, "30262732");
-    if (daysAgo != -1)
-      filter.AddFilter(TechKasRequisites.OpenDate,
-        DateTime.Now.AddDays(-daysAgo).ToString("dd.MM.yyyy"), "<=");
-    return this.tickets.Count;
-  }
-
-  /// <summary>
-  /// Считает количество времени, затраченное на запросы.
-  /// </summary>
-  /// <param name="daysAgo">Количество дней назад, за которое нужно считать.</param>
-  /// <returns>Количество затраченного времени.</returns>
-  public float GetTimeSpentOnRequests(int daysAgo = 0)
-  {
-    using var filter = new ReferenceFilterManager(this.tickets);
-    filter.AddFilter(TechKasRequisites.TicketType, TicketType.Request);
-    filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Closed, "<>");
-    float total = 0;
-    var employeeNames = this.team.Employees.Select(e => e.Name);
-    foreach (TechKasElement ticket in this.tickets)
-    {
-      Autoclicker.ClickYes();
-      var detail = ticket.GetDetail(2);
-      foreach (TechKasElement record in detail)
-      {
-        bool isActualDate = record.GetRequisite(TechKasRequisites.DateDetail, RequisitesMode.AsString)
-                            == DateTime.Now.AddDays(-daysAgo).ToString("dd.MM.yyyy");
-        bool employeeInTeam =
-          employeeNames.Contains(record.GetRequisite(TechKasRequisites.EmployeeDetail, RequisitesMode.DisplayText));
-        if (isActualDate && employeeInTeam)
-        {
-          total += float.Parse(record.GetRequisite(TechKasRequisites.TimeSpent, RequisitesMode.AsString));
-        }
-      }
-      return total;
-    }
-    return 0;
-  }
-
-  public ColorZoneCalculator GetTimeZones(string ticketType)
-  {
-    using var filter = new ReferenceFilterManager(this.tickets);
-    filter.AddFilter(TechKasRequisites.TicketType, ticketType);
-    filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
-    return new ColorZoneCalculator(this.repository,  this.tickets, this.team, ticketType);
+    this.TicketListGenerator = new TicketListGenerator(this.repository, this.tickets, this.team);
   }
 
   /// <summary>

@@ -11,7 +11,7 @@ namespace TechKasConnector.DataCalculators;
 /// <summary>
 /// Класс для работы с "цветными" зонами.
 /// </summary>
-public class ColorZoneCalculator
+public class TicketListGenerator
 {
   /// <summary>
   /// Список обращений.
@@ -21,24 +21,8 @@ public class ColorZoneCalculator
   /// <summary>
   /// Команда для которой идет расчет.
   /// </summary>
-  private Team team;
-  
-  /// <summary>
-  /// Получить количество обращений по зонам с учётом времени.
-  /// </summary>
-  public Dictionary<string, int> ColorZonesByTime =>
-    this.Tickets.Select(ticket => this.GetColorZoneByTime(ticket.TimeInWork))
-      .GroupBy(p=>p)
-      .ToDictionary(p=>p.Key,p=>p.Count());
-  
-  /// <summary>
-  /// Получить количество обращений по зонам с учётом приоритета.
-  /// </summary>
-  public Dictionary<string, int> ColorZonesByPriority =>
-    this.Tickets.Select(ticket => this.GetColorZoneBySLA(ticket.TimeInWork, ticket.Priority.Name))
-      .GroupBy(p=>p)
-      .ToDictionary(p=>p.Key,p=>p.Count());
-  
+  private Team Team {get; init;}
+
   /// <summary>
   /// Репозиторий.
   /// </summary>
@@ -48,6 +32,11 @@ public class ColorZoneCalculator
   /// Справочник обращений.
   /// </summary>
   private readonly TechKasReference tickets;
+  
+  /// <summary>
+  /// Календарь рабочего времени.
+  /// </summary>
+  private CalendarCalculator Calendar {get; init;}
 
   /// <summary>
   /// Добавить обращение к списку.
@@ -79,7 +68,6 @@ public class ColorZoneCalculator
       this.AddToTickets(ticketRecord);
     }
   }
-
   
   /// <summary>
   /// Рассчитать время, затраченное на обращение в минутах.
@@ -88,7 +76,6 @@ public class ColorZoneCalculator
   /// <returns>Затраченное время в минутах.</returns>
   private int GetSpentTimeByMinutes(TechKasElement ticket)
   {
-    var calendar = new CalendarCalculator(this.repository);
     Autoclicker.ClickYes();
     var detail = ticket.GetDetail(4);
     var record = detail.First();
@@ -124,7 +111,7 @@ public class ColorZoneCalculator
 
       if (hasStart && hasEnd)
       {
-        spentTime += calendar.GetDifferenceInMinutes(startOfIteration, endOfIteration);
+        spentTime += this.Calendar.GetDifferenceInMinutes(startOfIteration, endOfIteration);
         hasStart = false;
         hasEnd = false;
       }
@@ -141,7 +128,7 @@ public class ColorZoneCalculator
   public float GetTimeStamp(TechKasElement ticket, int daysAgo = 0)
   {
     float total = 0;
-    var employeeNames = this.team.Employees.Select(e => e.Name).ToList();
+    var employeeNames = this.Team.Employees.Select(e => e.Name).ToList();
     
     Autoclicker.ClickYes();
     var detail = ticket.GetDetail(2);
@@ -186,59 +173,16 @@ public class ColorZoneCalculator
   }
 
   /// <summary>
-  /// Получить зону для графика только на основе затраченного времени.
-  /// </summary>
-  /// <param name="timeInMinutes">Затраченное время в часах.</param>
-  /// <returns>Зона, к которой принадлежит обращение.</returns>
-  private string GetColorZoneByTime(float timeInMinutes)
-  {
-    switch (timeInMinutes)
-    {
-      case <= 8:
-        return "green";
-      case <= 16:
-        return "sandy";
-      case <= 24:
-        return "yellow";
-      default:
-        return "red";
-    }
-  }
-
-  /// <summary>
-  /// Получить зону с учётом приоритета.
-  /// </summary>
-  /// <param name="timeInHours">Время в часах.</param>
-  /// <param name="priority">Приоритет.</param>
-  /// <returns>Цвет зоны строкой.</returns>
-  private string GetColorZoneBySLA(float timeInHours, string priority)
-  {
-    var priorities = this.repository.Get<Priority>(x => true)
-      .ToDictionary(p => p.Name, p => p.TimeToSolve);
-    float spentSLATime = (float)timeInHours / priorities[priority];
-    switch (spentSLATime)
-    {
-      case var t when t <= 0.25:
-        return "green";
-      case var t when t <= 0.5:
-        return "sandy";
-      case var t when t <= 0.75:
-        return "yellow";
-      default:
-        return "red";
-    }
-  }
-
-  /// <summary>
   /// Конструктор.
   /// </summary>
   /// <param name="repository">Репозиторий.</param>
   /// <param name="tickets">Справочник обращений.</param>
-  public ColorZoneCalculator(IRepository repository, TechKasReference tickets, Team team, string? ticketType = null)
+  public TicketListGenerator(IRepository repository, TechKasReference tickets, Team team, string? ticketType = null)
   {
     this.repository = repository;
     this.tickets = tickets;
-    this.team = team;
+    this.Team = team;
+    this.Calendar = new CalendarCalculator(this.repository);
     this.GetTicketList(ticketType);
   }
 }
