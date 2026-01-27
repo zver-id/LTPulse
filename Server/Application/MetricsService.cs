@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using CommonModels.Interfaces;
 using CommonModels.Models;
 
 namespace Application;
@@ -8,7 +9,8 @@ namespace Application;
 /// </summary>
 public class MetricsService : GenericService
 {
-  
+
+
   /// <summary>
   /// Получить все метрики за количество дней предстоящих текущей дате.
   /// </summary>
@@ -37,6 +39,14 @@ public class MetricsService : GenericService
       }
       return result;
     });
+  }
+  
+  /// <summary>
+  /// Конструктор.
+  /// </summary>
+  /// <param name="repository">Репозиторий.</param>
+  public MetricsService(IRepository repository) : base(repository)
+  {
   }
   
 }

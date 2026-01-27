@@ -1,3 +1,4 @@
+using CommonModels.Interfaces;
 using CommonModels.Models;
 using DBCore;
 
@@ -8,6 +9,8 @@ namespace Application;
 /// </summary>
 public class TeamService : GenericService
 {
+
+
   /// <summary>
   /// Получить список всех команд.
   /// </summary>
@@ -28,5 +31,13 @@ public class TeamService : GenericService
         return this.repository.GetById<Team>(id);
       }
     );
+  }
+  
+  /// <summary>
+  /// Конструктор.
+  /// </summary>
+  /// <param name="repository">Репозиторий.</param>
+  public TeamService(IRepository repository) : base(repository)
+  {
   }
 }

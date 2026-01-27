@@ -42,9 +42,9 @@ public class TeamsController : ControllerBase
   /// Конструктор.
   /// </summary>
   /// <param name="mapper">Маппер.</param>
-  public TeamsController( IMapper mapper)
+  public TeamsController(IMapper mapper, TeamService teamService)
   {
     this.mapper = mapper;
-    teamService = new TeamService();
+    this.teamService = teamService;
   }
 }

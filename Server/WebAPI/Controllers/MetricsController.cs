@@ -58,11 +58,10 @@ public class MetricsController : ControllerBase
     return this.Ok(response);
   }
 
-  public MetricsController(IMapper mapper)
+  public MetricsController(IMapper mapper, MetricsService metricsService, TeamService teamService)
   {
     this.mapper = mapper;
-    //TODO зарегистрироать все нормально
-    this.metricsService = new MetricsService();
-    this.teamService = new TeamService();
+    this.metricsService = metricsService;
+    this.teamService = teamService;
   }
 }

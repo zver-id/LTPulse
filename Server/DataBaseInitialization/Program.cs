@@ -1,4 +1,5 @@
 ﻿using DBCore;
+using NHibernate.Infrastructure;
 
 namespace DataBaseInitialization;
 
@@ -8,7 +9,9 @@ class Program
   {
     var metrics = ExcelParser.ParseExcelToDictionaries("Aurora.xlsx", "tables");
     Console.WriteLine(metrics);
-    var baseInitializer = new BaseTypeInitializer(new DbRepository());
+    var baseInitializer = new BaseTypeInitializer(
+      new DbRepository(
+        new NhibernateHelper("Host=localhost;Port=5432;Database=LTPulse;Username=admin;Password=Qwerty123")));
     baseInitializer.AddTeams();
     baseInitializer.AddMetricTypes();
     baseInitializer.AddPriorities();

@@ -27,7 +27,6 @@ public class MetricCalculator
   /// Команда, для которой идет расчет.
   /// </summary>
   private Team team;
-  
   #endregion
   
   # region Методы, работающие через общий список

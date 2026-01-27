@@ -1,3 +1,4 @@
+using CommonModels.Interfaces;
 using CommonModels.Models;
 using DBCore;
 
@@ -8,13 +9,13 @@ public abstract class GenericService
   /// <summary>
   /// Репозиторий.
   /// </summary>
-  protected readonly DbRepository repository;
+  protected readonly IRepository repository;
   
   /// <summary>
   /// Конструктор.
   /// </summary>
-  public GenericService()
+  public GenericService(IRepository repository)
   {
-    this.repository = new DbRepository();
+    this.repository = repository;
   }
 }

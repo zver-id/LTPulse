@@ -48,7 +48,7 @@ public class DbRepository : IRepository
   /// <param name="id">ID объекта</param>
   /// <typeparam name="T">Тип объекта</typeparam>
   /// <returns></returns>
-  public T GetById<T>(int id)
+  public T GetById<T>(int id)  where T : IHasId
   {
     return this.Session.Get<T>(id);
   }
@@ -133,9 +133,9 @@ public class DbRepository : IRepository
   /// <summary>
   /// Конструктор.
   /// </summary>
-  public DbRepository()
+  public DbRepository(NhibernateHelper nhibernateHelper)
   {
-    this.Session = NhibernateHelper.OpenSession();
+    this.Session = nhibernateHelper.OpenSession();
   }
 
   /// <summary>
