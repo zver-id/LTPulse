@@ -27,12 +27,6 @@ public class MetricCalculator
   /// Команда, для которой идет расчет.
   /// </summary>
   private Team team;
-  
-  /// <summary>
-  /// Конфигурация.
-  /// </summary>
-  private IConfiguration Config {get; init;}
-  
   #endregion
   
   # region Методы, работающие через общий список
@@ -232,10 +226,9 @@ public class MetricCalculator
   /// <summary>
   /// Конструктор.
   /// </summary>
-  public MetricCalculator(IRepository repository, IConfiguration configuration)
+  public MetricCalculator(IRepository repository)
   {
     this.repository = repository;
-    this.Config = configuration;
   }
   
   #endregion

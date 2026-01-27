@@ -7,7 +7,7 @@ namespace TechKasConnector.Calendar;
 
 public class CalendarCalculator
 {
-  public IRepository Repository { get; set; }
+  private IRepository Repository { get; }
 
   /// <summary>
   /// Праздники.
