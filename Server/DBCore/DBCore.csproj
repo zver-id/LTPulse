@@ -17,10 +17,4 @@
       <PackageReference Include="Npgsql" Version="10.0.0-rc.1" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Update="settings.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
-
 </Project>
