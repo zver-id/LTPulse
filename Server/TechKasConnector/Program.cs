@@ -15,7 +15,6 @@ public static class Program
     
     builder.Services.AddScoped<IRepository, DbRepository>();
     builder.Services.AddScoped<MetricCalculator>();
-    //builder.Services.AddScoped<TicketListGenerator>();
 
     var host = builder.Build();
     host.Run();

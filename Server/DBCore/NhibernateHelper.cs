@@ -10,37 +10,24 @@ using AppSettings = CommonModels.AppSettings;
 
 namespace NHibernate.Infrastructure;
 
-public static class NhibernateHelper
+public class NhibernateHelper
 {
-  private static ISessionFactory _sessionFactory;
-
-  public static ISessionFactory SessionFactory
-  {
-    get
-    {
-      if (_sessionFactory == null)
-      {
-        _sessionFactory = CreateSessionFactory();
-      }
-      return _sessionFactory;
-    }
-  }
+  private ISessionFactory SessionFactory { get; }
   
-  private static void Expose(Configuration configuration)
+  private void Expose(Configuration configuration)
   {
     new SchemaUpdate(configuration).Execute(true, true);
   }
   
-  private static AutoPersistenceModel GetAutoPersistenceModel() =>
+  private AutoPersistenceModel GetAutoPersistenceModel() =>
     AutoMap.AssemblyOf<Ticket>(new StoreConfiguration())
       //.Conventions.AddFromAssemblyOf<IdConvention>()
       //.Conventions.AddFromAssemblyOf<NHibernateInitializer>()
       .UseOverridesFromAssemblyOf<DbRepository>();
 
-  private static ISessionFactory CreateSessionFactory()
+  private ISessionFactory CreateSessionFactory(string connectionString)
   {
     var cfg = new StoreConfiguration();
-    string connectionString = AppSettings.DatabaseConnectionString;
     return Fluently.Configure()
       .Database(PostgreSQLConfiguration.Standard
         .ConnectionString(connectionString)
@@ -52,8 +39,13 @@ public static class NhibernateHelper
       .BuildSessionFactory();
   }
 
-  public static ISession OpenSession()
+  public ISession OpenSession()
   {
-    return SessionFactory.OpenSession();
+    return this.SessionFactory.OpenSession();
+  }
+
+  public NhibernateHelper(string connectionString)
+  {
+    this.SessionFactory = this.CreateSessionFactory(connectionString);
   }
 }

@@ -1,9 +1,14 @@
+using System.Configuration;
 using Application;
 using AutoMapper;
+using CommonModels.Interfaces;
+using DBCore;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NHibernate.Infrastructure;
 using WebAPI.Mappings;
 
 namespace WebAPI;
@@ -20,8 +25,15 @@ public class Program
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        
-        
+
+        var dataBaseConnectionString = builder.Configuration.GetConnectionString("PostgreSQL");
+        if (string.IsNullOrEmpty(dataBaseConnectionString))
+            throw new ConfigurationErrorsException("PostgreSQL connection string not found");
+        builder.Services.AddSingleton<NhibernateHelper>(service => new NhibernateHelper(dataBaseConnectionString));
+        builder.Services.AddScoped<IRepository, DbRepository>();
+
+        builder.Services.AddScoped<MetricsService>();
+        builder.Services.AddScoped<TeamService>();
         
         
         ILoggerFactory loggerFactory = LoggerFactory.Create(logBuilder => logBuilder.AddJsonConsole());

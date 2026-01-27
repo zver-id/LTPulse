@@ -16,11 +16,16 @@ public class MetricsCalculatorService : BackgroundService
   private readonly ILogger<MetricsCalculatorService> logger;
   private RabbitMQClient rabbitMQProducer;
   private IServiceScopeFactory serviceScopeFactory;
+  
+  /// <summary>
+  /// Конфигурация.
+  /// </summary>
+  private IConfiguration Config { get; init; }
 
   protected override async Task ExecuteAsync(CancellationToken stoppingToken)
   {
     this.logger.LogInformation("MetricsCalculatorService running at: {time}", DateTimeOffset.Now);
-    this.rabbitMQProducer = await RabbitMQClient.CreateAsync(AppSettings.RabbitMQConnectionString);
+    this.rabbitMQProducer = await RabbitMQClient.CreateAsync(this.Config.GetConnectionString("RabbitMQ"));
     var rabbitMQConsumer = new AsyncEventingBasicConsumer(this.rabbitMQProducer.channel);
     rabbitMQConsumer.ReceivedAsync += async (ch, ea) =>
     {
@@ -57,9 +62,10 @@ public class MetricsCalculatorService : BackgroundService
   }
   
   public MetricsCalculatorService(ILogger<MetricsCalculatorService> logger,
-    IServiceScopeFactory serviceScopeFactory)
+    IServiceScopeFactory serviceScopeFactory, IConfiguration configuration)
   {
     this.logger = logger;
     this.serviceScopeFactory = serviceScopeFactory;
+    this.Config = configuration;
   }
 }
