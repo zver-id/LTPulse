@@ -5,6 +5,7 @@ using Application;
 using AutoMapper;
 using CommonModels.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using WebAPI.DTO;
 
 namespace WebAPI.Controllers;
@@ -27,10 +28,16 @@ public class MetricsController : ControllerBase
   /// Сервис метрик.
   /// </summary>
   private readonly MetricsService metricsService;
+  
+  /// <summary>
+  /// Логгер.
+  /// </summary>
+  private ILogger logger { get; }
 
   [HttpGet]
   public async Task<ActionResult<List<Dictionary<string, object>>>> Get(int teamId, int dayCount)
   {
+    this.logger.LogInformation("Get Team Metrics");
     var team = await this.teamService.GetTeamById(teamId);
     if (team == null)
       return this.BadRequest("Team not found");
@@ -58,10 +65,11 @@ public class MetricsController : ControllerBase
     return this.Ok(response);
   }
 
-  public MetricsController(IMapper mapper, MetricsService metricsService, TeamService teamService)
+  public MetricsController(IMapper mapper, MetricsService metricsService, TeamService teamService, ILogger<MetricsController> logger)
   {
     this.mapper = mapper;
     this.metricsService = metricsService;
     this.teamService = teamService;
+    this.logger = logger;
   }
 }

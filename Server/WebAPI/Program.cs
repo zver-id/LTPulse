@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NHibernate.Infrastructure;
+using NLog.Web;
 using WebAPI.Mappings;
 
 namespace WebAPI;
@@ -18,6 +19,9 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        
+        builder.Logging.ClearProviders();
+        builder.Host.UseNLog();
 
         // Add services to the container.
         builder.Services.AddAuthorization();

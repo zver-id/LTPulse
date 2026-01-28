@@ -5,6 +5,9 @@ using NHibernate.Infrastructure;
 using TechKasConnector.Calendar;
 using TechKasConnector.DataCalculators;
 using TechKasConnectService;
+using NLog;
+using NLog.Extensions.Logging;
+using NLog.Web;
 
 namespace TechKasConnector;
 
@@ -13,6 +16,9 @@ public static class Program
   public static void Main(string[] args)
   {
     var builder = Host.CreateApplicationBuilder(args);
+    
+    builder.Logging.ClearProviders();
+    builder.Logging.AddNLog();
     
     var dataBaseConnectionString = builder.Configuration.GetConnectionString("PostgreSQL");
     if (string.IsNullOrEmpty(dataBaseConnectionString))
