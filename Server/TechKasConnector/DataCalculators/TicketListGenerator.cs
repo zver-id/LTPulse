@@ -63,8 +63,11 @@ public class TicketListGenerator
     foreach (var ticket in this.tickets)
     {
       var spentTime = this.GetSpentTimeByMinutes(ticket);
+      var stampedTime = this.GetTimeStamp(ticket);
+      
       var ticketRecord = this.GetTicket(ticket);
       ticketRecord.TimeInWork = (float)spentTime / 60;
+      ticketRecord.TimeStampedOnDay = stampedTime;
       this.AddToTickets(ticketRecord);
     }
   }
