@@ -11,6 +11,7 @@ public static class TechKasRequisites
   public const string Employee = "Работник";
   public const string TicketType = "ТипОбращения";
   public const string OpenDate = "ДатОткр";
+  public const string ClosedDate = "ДатЗакр";
   public const string TicketStatus = "СостОбращения";
   public const string SupportArea = "ОбластьПоддержки";
   public const string Priority = "Строка3";
@@ -25,4 +26,24 @@ public static class TechKasRequisites
   /// Дата и время изменения статуса обращения в дополнительной таблице.
   /// </summary>
   public const string DateStatusDetail = "ДатаВремяT4";
+  
+  /// <summary>
+  /// Номер обращения, которое соответствует оценке.
+  /// </summary>
+  public const string GradeTicketNum = "Обращение";
+  
+  /// <summary>
+  /// Оценка по обращению.
+  /// </summary>
+  public const string GradeScore = "ISBIntNumber";
+
+  /// <summary>
+  /// Текст оценки.
+  /// </summary>
+  public const string GradeText = "Текст";
+  
+  /// <summary>
+  /// Текст оценки.
+  /// </summary>
+  public const string GradeDate = "ДатаВремя";
 }

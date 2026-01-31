@@ -29,6 +29,7 @@ public static class Program
     builder.Services.AddHostedService<MetricsCalculatorService>();
     builder.Services.AddScoped<MetricCalculator>();
     builder.Services.AddScoped<CalendarCalculator>();
+    builder.Services.AddScoped<GradeListGenerator>();
 
     var host = builder.Build();
     host.Run();

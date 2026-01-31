@@ -14,9 +14,17 @@ public class MetricCalculator
   /// <summary>
   /// Справочник обращений.
   /// </summary>
-  public TechKasReference tickets;
+  private TechKasReference tickets;
   
-  public TicketListGenerator TicketListGenerator { get; set; }
+  /// <summary>
+  /// Генератор списка обращений в работе.
+  /// </summary>
+  private TicketListGenerator TicketListGenerator { get; set; }
+  
+  /// <summary>
+  /// Генератор списка обращений.
+  /// </summary>
+  private GradeListGenerator GradeListGenerator { get; set; }
   
   /// <summary>
   /// Репозиторий.
@@ -27,6 +35,17 @@ public class MetricCalculator
   /// Команда, для которой идет расчет.
   /// </summary>
   private Team team;
+  
+  /// <summary>
+  /// Логгер.
+  /// </summary>
+  private ILogger logger;
+  
+  /// <summary>
+  /// Логгер.
+  /// </summary>
+  private CalendarCalculator calendar;
+  
   #endregion
   
   # region Методы, работающие через общий список
@@ -68,8 +87,7 @@ public class MetricCalculator
     this.CreateMetric("Запросы", t => t.Type == TicketType.Request && t.IncomingDate == DateTime.Now.Date);
     this.CreateMetric("Проблемы", t => t.Type == TicketType.Problem && t.IncomingDate == DateTime.Now.Date);
     this.CreateMetric("Поступило всего", t => t.IncomingDate == DateTime.Now.Date);
-    
-    
+    this.CreateGradeMetric("Поступившие", g => g.Date == DateTime.Now.Date );
   }
 
   /// <summary>
@@ -97,13 +115,27 @@ public class MetricCalculator
   /// <param name="isInWorkOnly">Признак, что нужно считать только обращения в работе.</param>
   private void CreateMetric(string nameOfMetricType, Predicate<Ticket> predicate)
   {
-    var tickets = this.TicketListGenerator.Tickets
-      .Where (t => predicate(t))
-      .ToList();
     var metricType = this.repository.Get<MetricType>(mt => mt.Name == nameOfMetricType).First();
     var metric = this.GetOrCreateMetric(DateTime.Today, metricType);
+    var tickets = this.TicketListGenerator.Tickets
+        .Where (t => predicate(t))
+        .ToList();
     metric.Value = tickets.Count;
     metric.Tickets = tickets;
+ 
+    this.repository.AddOrUpdate(metric);
+  }
+  
+  private void CreateGradeMetric(string nameOfMetricType, Predicate<Grade> predicate)
+  {
+    var metricType = this.repository.Get<MetricType>(mt => mt.Name == nameOfMetricType).First();
+    var metric = this.GetOrCreateMetric(DateTime.Today, metricType);
+    var grades = this.GradeListGenerator.Grades
+      .Where (t => predicate(t))
+      .ToList();
+    metric.Value = grades.Count;
+    metric.Grades = grades;
+ 
     this.repository.AddOrUpdate(metric);
   }
   
@@ -153,7 +185,7 @@ public class MetricCalculator
     }
     return metricType;
   }
-
+  
   /// <summary>
   /// Инициализация калькулятора.
   /// </summary>
@@ -165,6 +197,7 @@ public class MetricCalculator
     this.SetInitFilters();
     this.SetEmployeeFilters();
     this.TicketListGenerator = new TicketListGenerator(this.repository, this.tickets, this.team);
+    this.GradeListGenerator.GenerateForTeam(this.team);
   }
 
   /// <summary>
@@ -226,9 +259,13 @@ public class MetricCalculator
   /// <summary>
   /// Конструктор.
   /// </summary>
-  public MetricCalculator(IRepository repository)
+  public MetricCalculator(IRepository repository, ILogger logger, CalendarCalculator calendar,
+    GradeListGenerator gradeListGenerator)
   {
     this.repository = repository;
+    this.logger = logger;
+    this.calendar = calendar;
+    this.GradeListGenerator = gradeListGenerator;
   }
   
   #endregion
