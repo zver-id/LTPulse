@@ -37,5 +37,10 @@ public class Metric : IHasId
   /// <summary>
   /// Список обращений, связанных с метрикой.
   /// </summary>
-  public virtual IList<Ticket> Tickets { get; set; } = new List<Ticket>();
+  public virtual IList<Ticket> Tickets{ get; set; } = new List<Ticket>();
+  
+  /// <summary>
+  /// Оценки.
+  /// </summary>
+  public virtual IList<Grade> Grades { get; set; } = new List<Grade>();
 }

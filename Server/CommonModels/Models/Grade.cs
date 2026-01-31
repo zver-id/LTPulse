@@ -1,3 +1,4 @@
+using System;
 using CommonModels.Interfaces;
 
 namespace CommonModels.Models;
@@ -21,6 +22,11 @@ public class Grade : IHasId
   /// Результат.
   /// </summary>
   public virtual int Score { get; set; }
+  
+  /// <summary>
+  /// Дата.
+  /// </summary>
+  public virtual DateTime Date { get; set; }
   
   /// <summary>
   /// Обращение по которому поступила оценка.
