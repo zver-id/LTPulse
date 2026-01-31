@@ -10,5 +10,7 @@ public class MetricTypeOverride : IAutoMappingOverride<MetricType>
   {
     mapping.Map(x => x.Name)
       .Unique();
+    
+    mapping.Id(t => t.Id).GeneratedBy.Sequence("ID_MetricType");
   }
 }
