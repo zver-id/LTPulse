@@ -16,14 +16,20 @@ public class ReportGenerator
   /// <summary>
   /// Команда.
   /// </summary>
-  public Team Team { get; }
+  private Team Team { get; set; }
 
   /// <summary>
   /// Получить все метрики команды.
   /// </summary>
   /// <returns></returns>
-  public List<Metric> GetAllMetrics()
+  public List<Metric> GetAllMetricsForTeam(Team team)
   {
+    this.Team = team;
     return this.Repository.Get<Metric>(m => m.Team == this.Team);
+  }
+
+  public ReportGenerator(IRepository repository)
+  {
+    this.Repository = repository;
   }
 }
