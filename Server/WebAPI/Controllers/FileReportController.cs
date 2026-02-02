@@ -22,17 +22,20 @@ public class FileReportController : ControllerBase
   [HttpGet]
   public async Task<ActionResult> GenerateReport(int teamId)
   {
-    var reportWriter = new ReportWriter(new ReportGenerator(this.Repository));
+    var reportWriter = new ReportGenerator(this.Repository);
     var team = this.Repository.Get<Team>(t => t.Id == teamId).First();
     try
     {
-      reportWriter.CreateReport(team);
+      var reportBytes = reportWriter.GenerateForTeam(team);
+      //System.IO.File.WriteAllBytes(@"C:\Temp\Report.csv", reportBytes);
+      return this.File(reportBytes, 
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+        "report.xlsx");
     }
     catch (Exception e)
     {
       return this.Problem();
     }
-    return this.Ok();
   }
 
   public FileReportController(IRepository repository, IMapper mapper)
