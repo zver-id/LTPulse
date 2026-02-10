@@ -65,29 +65,16 @@ public class ReportGenerator
     var count = 0;
     foreach (var metricGroup in metricGroups)
     {
-      if (chartList.Drawings[metricGroup.NameOfChart] is ExcelChart chart)
+      // у графика по месяцам меняются месяцы, поэтому нужно именно новый
+      if (metricGroup.Name == "Month")
+      {
+        this.GenerateLineChart(metricGroup);
+      }
+      else if (chartList.Drawings[metricGroup.NameOfChart] is ExcelChart chart)
       {
         this.RefreshChartSeries(chart, metricGroup);
       }
-      /*
-      switch (metricGroup.ChartType)
-      {
-        case "Line":
-          this.GenerateLineChart(metricGroup);
-          break;
-        case "Area":
-          this.GenerateAreaChart(metricGroup);
-          break;
-        case "Column":
-          this.GenerateColumnChart(metricGroup);
-          break;
-        default:
-          continue;
-      }
-      */
     }
-    
-    
     return this.ExcelPackage.GetAsByteArray();
   }
 
@@ -216,7 +203,6 @@ public class ReportGenerator
         continue;
       var series = chart.Series.Add(dataWorksheet.Cells[metricType.Id, lastColumn - DaysDataCountOnChart, metricType.Id, lastColumn],
         dataWorksheet.Cells[1, lastColumn-DaysDataCountOnChart, 1, lastColumn]) as ExcelAreaChartSerie;
-
       if (series != null)
       {
         series.Header = metricType.Name;

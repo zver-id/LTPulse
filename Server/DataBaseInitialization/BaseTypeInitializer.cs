@@ -37,7 +37,7 @@ public class BaseTypeInitializer
     
     List<IHasId> metricTypes =
     [
-      new MetricType{ Name = "Старше 2 недель", MetricGroup = metricGroups["Older3Week"] },
+      new MetricType{Name = "Старше 2 недель", MetricGroup = metricGroups["Older3Week"] },
       new MetricType{Name = "Старше 3 недель",  MetricGroup = metricGroups["Older3Week"] }, 
       new MetricType{Name = "Старше 4 недель",   MetricGroup = metricGroups["Snowball"] },
       new MetricType{Name = "Всего в работе", MetricGroup = metricGroups["Month"] },
@@ -47,6 +47,10 @@ public class BaseTypeInitializer
       new MetricType{Name = "8-16",  MetricGroup = metricGroups["ColorZones"] },
       new MetricType{Name = "16-24",  MetricGroup = metricGroups["ColorZones"] },
       new MetricType{Name = ">24",  MetricGroup = metricGroups["ColorZones"] },
+      new MetricType{Name = "<0.25", MetricGroup = metricGroups["ColorZonesPriority"] },
+      new MetricType{Name = "0.25-0.5",  MetricGroup = metricGroups["ColorZonesPriority"] },
+      new MetricType{Name = "0.5-0.75",  MetricGroup = metricGroups["ColorZonesPriority"] },
+      new MetricType{Name = ">0.75",  MetricGroup = metricGroups["ColorZonesPriority"] },
       new MetricType{Name = "Поступившие", MetricGroup = metricGroups["NegativeGrades"] },
       new MetricType{Name = "Проработанные",  MetricGroup = metricGroups["NegativeGrades"] },
       new MetricType{Name = "Инциденты",   MetricGroup = metricGroups["IncomingTypes"] },
