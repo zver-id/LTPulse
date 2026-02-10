@@ -1,4 +1,3 @@
-
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Xml;
@@ -9,8 +8,12 @@ using OfficeOpenXml.Drawing.Chart;
 
 namespace Application.ReportGeneration;
 
+/// <summary>
+/// Генератор excel отчета.
+/// </summary>
 public class ReportGenerator
 {
+  #region Поля и свойства
   /// <summary>
   /// Репозиторий.
   /// </summary>
@@ -50,6 +53,10 @@ public class ReportGenerator
   /// Количество данных по дням на графике.
   /// </summary>
   private const int DaysDataCountOnChart = 70;
+  
+  #endregion
+
+  #region Методы
 
   /// <summary>
   /// Сгенерировать отчёт по команде.
@@ -68,7 +75,7 @@ public class ReportGenerator
       // у графика по месяцам меняются месяцы, поэтому нужно именно новый
       if (metricGroup.Name == "Month")
       {
-        this.GenerateLineChart(metricGroup);
+        this.GenerateChart(metricGroup, eChartType.Line);
       }
       else if (chartList.Drawings[metricGroup.NameOfChart] is ExcelChart chart)
       {
@@ -130,11 +137,7 @@ public class ReportGenerator
     var series = chart.Series;
     var metrics = this.Repository.Get<MetricGroup>(mg => mg.Id == metricGroup.Id)
       .SelectMany(mg => mg.MetricTypes);
-    var startColumn = lastColumn - DaysDataCountOnChart;
-    if (startColumn < 2)
-    {
-      startColumn = 2;
-    }
+    var startColumn = this.GetStartColumn(lastColumn);
     foreach (var metric in metrics)
     {
       var serie = series.FirstOrDefault(s => s.Header == metric.Name);
@@ -150,117 +153,114 @@ public class ReportGenerator
   /// Сгенерировать линейный график.
   /// </summary>
   /// <param name="metricGroup">Группа метрик.</param>
+  /// <param name="chartType">Тип графика.</param>
   /// <exception cref="NullReferenceException"></exception>
-  private void GenerateLineChart(MetricGroup metricGroup)
+  private void GenerateChart(MetricGroup metricGroup, eChartType chartType)
   {
     var chartWorksheet = this.ExcelPackage.Workbook.Worksheets["Графики"];
-    var chart = chartWorksheet.Drawings.AddChart(metricGroup.NameOfChart, eChartType.Line);
+    var chart = chartWorksheet.Drawings.AddChart(metricGroup.NameOfChart, chartType);
     chart.Title.Text = metricGroup.NameOfChart; 
     chart.SetPosition(this.CurrentChartRow, 0, 1, 0);
     this.CurrentChartRow += ChartHeightInRows + 1;
     chart.SetSize(ChartWidthInPixel, ChartHeightInPixel);
     
-    var dataWorksheet = this.ExcelPackage.Workbook.Worksheets["tables"];
+    ExcelWorksheet? dataWorksheet = this.ExcelPackage.Workbook.Worksheets["tables"];
     if (dataWorksheet == null)
       throw new NullReferenceException("Изначально нужно заполнить лист с данными");
     var lastColumn = dataWorksheet.Dimension.End.Column;
+    var startColumn = this.GetStartColumn(lastColumn);
     var seriesRowsNums = this.Repository.Get<MetricGroup>(mg => mg.Id == metricGroup.Id)
       .SelectMany(mg => mg.MetricTypes)
       .Select(m => m.Id);
-    foreach (var seresNum in seriesRowsNums)
+    foreach (var seriesNum in seriesRowsNums)
     {
-      var range = dataWorksheet.Cells[seresNum, lastColumn - DaysDataCountOnChart, seresNum, lastColumn];
+      var range = dataWorksheet.Cells[seriesNum, startColumn, seriesNum, lastColumn];
       if (range.All(cell => cell.Value == null))
         continue;
-      var series = chart.Series.Add(dataWorksheet.Cells[seresNum, lastColumn - DaysDataCountOnChart, seresNum, lastColumn],
-        dataWorksheet.Cells[1, lastColumn-DaysDataCountOnChart, 1, lastColumn]) as ExcelLineChartSerie;
-      series.Header = dataWorksheet.Cells[seresNum, 1].Value.ToString();
-      series.DataLabel.ShowValue = true;
-      series.DataLabel.Position = eLabelPosition.Top;
-    }
-  }
-  
-  private void GenerateAreaChart(MetricGroup metricGroup)
-  {
-    var chartWorksheet = this.ExcelPackage.Workbook.Worksheets["Графики"];
-    var chart = chartWorksheet.Drawings.AddChart(metricGroup.NameOfChart, eChartType.AreaStacked100);
-    chart.Title.Text = metricGroup.NameOfChart;
-    chart.Legend.Position = eLegendPosition.Right;
-    chart.SetPosition(this.CurrentChartRow, 0, 1, 0);
-    this.CurrentChartRow += ChartHeightInRows + 1;
-    chart.SetSize(ChartWidthInPixel, ChartHeightInPixel);
-    
-    var dataWorksheet = this.ExcelPackage.Workbook.Worksheets["tables"];
-    if (dataWorksheet == null)
-      throw new NullReferenceException("Изначально нужно заполнить лист с данными");
-    var lastColumn = dataWorksheet.Dimension.End.Column;
-    var metricTypes = this.Repository.Get<MetricGroup>(mg => mg.Id == metricGroup.Id)
-      .SelectMany(mg => mg.MetricTypes);
-    foreach (var metricType in metricTypes)
-    {
-      var range = dataWorksheet.Cells[metricType.Id, lastColumn - DaysDataCountOnChart, metricType.Id, lastColumn];
-      if (range.All(cell => cell.Value == null))
-        continue;
-      var series = chart.Series.Add(dataWorksheet.Cells[metricType.Id, lastColumn - DaysDataCountOnChart, metricType.Id, lastColumn],
-        dataWorksheet.Cells[1, lastColumn-DaysDataCountOnChart, 1, lastColumn]) as ExcelAreaChartSerie;
-      if (series != null)
-      {
-        series.Header = metricType.Name;
-        //series.DataLabel.ShowValue = true;
-        //series.DataLabel.Format = "0";
-      }
-    }
-  }
-  
-  private void GenerateColumnChart(MetricGroup metricGroup)
-  {
-    var chartWorksheet = this.ExcelPackage.Workbook.Worksheets["Графики"];
-    var chart = chartWorksheet.Drawings.AddChart(metricGroup.NameOfChart, eChartType.ColumnClustered);
-    chart.Title.Text = metricGroup.NameOfChart; 
-    chart.SetPosition(this.CurrentChartRow, 0, 1, 0);
-    this.CurrentChartRow += ChartHeightInRows + 1;
-    chart.SetSize(ChartWidthInPixel, ChartHeightInPixel);
-    
-    var dataWorksheet = this.ExcelPackage.Workbook.Worksheets["tables"];
-    if (dataWorksheet == null)
-      throw new NullReferenceException("Изначально нужно заполнить лист с данными");
-    var lastColumn = dataWorksheet.Dimension.End.Column;
-    var seriesRowsNums = this.Repository.Get<MetricGroup>(mg => mg.Id == metricGroup.Id)
-      .SelectMany(mg => mg.MetricTypes)
-      .Select(m => m.Id);
-    foreach (var seresNum in seriesRowsNums)
-    {
-      var range = dataWorksheet.Cells[seresNum, lastColumn - DaysDataCountOnChart, seresNum, lastColumn];
-      if (range.All(cell => cell.Value == null))
-        continue;
-      var series = chart.Series.Add(dataWorksheet.Cells[seresNum, lastColumn - DaysDataCountOnChart, seresNum, lastColumn],
-        dataWorksheet.Cells[1, lastColumn-DaysDataCountOnChart, 1, lastColumn]);
-      series.Header = dataWorksheet.Cells[seresNum, 1].Value.ToString();
-      //series.DataLabel.ShowValue = true;
-      //series.DataLabel.Position = eLabelPosition.Top;
+      this.AddSeriesToChart(chart, dataWorksheet, seriesNum, chartType);
     }
   }
 
+  /// <summary>
+  /// Добавить серию на график.
+  /// </summary>
+  /// <param name="chart">График.</param>
+  /// <param name="dataWorksheet">Лист с данными.</param>
+  /// <param name="rowNum">Номер строки с данными.</param>
+  /// <param name="chartType">Тип графика.</param>
+  private void AddSeriesToChart(ExcelChart chart, ExcelWorksheet dataWorksheet, int rowNum, eChartType chartType)
+  {
+    var lastColumn = dataWorksheet.Dimension.End.Column;
+    var startColumn = this.GetStartColumn(lastColumn);
+    switch (chartType)
+    {
+      case eChartType.Line:
+        var seriesLine = chart.Series.Add(dataWorksheet.Cells[rowNum, startColumn, rowNum, lastColumn],
+          dataWorksheet.Cells[1, startColumn, 1, lastColumn]) as ExcelLineChartSerie;
+        seriesLine.Header = dataWorksheet.Cells[rowNum, 1].Value.ToString();
+        seriesLine.DataLabel.ShowValue = true;
+        seriesLine.DataLabel.Position = eLabelPosition.Top;
+        break;
+      case eChartType.Area:
+        var seriesArea = chart.Series.Add(dataWorksheet.Cells[rowNum, startColumn, rowNum, lastColumn],
+          dataWorksheet.Cells[1, startColumn, 1, lastColumn]) as ExcelAreaChartSerie;
+        seriesArea.Header = dataWorksheet.Cells[rowNum, 1].Value.ToString();
+        break;
+      case eChartType.ColumnClustered:
+        var seriesColumn = chart.Series.Add(dataWorksheet.Cells[rowNum, startColumn, rowNum, lastColumn],
+          dataWorksheet.Cells[1, startColumn, 1, lastColumn]);
+        break;
+      default:
+        return;
+    }
+  }
+
+  /// <summary>
+  /// Возвращает номер стартового столбца диапозона.
+  /// </summary>
+  /// <param name="lastColumn">Номер последнего столбца.</param>
+  /// <returns>Номер первого столбца.</returns>
+  private int GetStartColumn(int lastColumn)
+  {
+    var startColumn = lastColumn - DaysDataCountOnChart;
+    if (startColumn < 2)
+    {
+      return 2;
+    }
+    return startColumn;
+  }
+
+  /// <summary>
+  /// Получить шаблон отчета.
+  /// </summary>
+  /// <returns>Шаблон отчета в формате потока байт.</returns>
   private Stream? GetTemplate()
   {
     var assembly = Assembly.GetExecutingAssembly();
     string resourceName = "Application.ReportGeneration.report_template.xlsx";
     return assembly.GetManifestResourceStream(resourceName);
   }
+  
+  #endregion
 
   #region Конструкторы
   
+  /// <summary>
+  /// Конструктор.
+  /// </summary>
+  /// <param name="repository">Репозиторий.</param>
   public ReportGenerator(IRepository repository)
   {
     this.Repository = repository; 
     this.ExcelPackage = new ExcelPackage(this.GetTemplate());
-    //this.ExcelPackage = new ExcelPackage();
   }
 
+  /// <summary>
+  /// Статический конструктор.
+  /// </summary>
   static ReportGenerator()
   {
     ExcelPackage.License.SetNonCommercialPersonal("LTPulse");
-    //ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
   }
   #endregion
 }
