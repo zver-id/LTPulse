@@ -22,4 +22,14 @@ public class MetricGroup : IHasId
   /// Метрики группы.
   /// </summary>
   public virtual IList<MetricType> MetricTypes { get; set; }
+  
+  /// <summary>
+  /// Наименование графика в отчете.
+  /// </summary>
+  public virtual string NameOfChart { get; set;}
+  
+  /// <summary>
+  /// Тип графика в отчете.
+  /// </summary>
+  public virtual string ChartType { get; set; }
 }
