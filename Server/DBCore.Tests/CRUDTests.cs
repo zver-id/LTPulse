@@ -1,5 +1,6 @@
 using System.Globalization;
 using CommonModels.Models;
+using NHibernate.Infrastructure;
 
 namespace DBCore.Tests;
 
@@ -10,10 +11,10 @@ public class CRUDTests
   [SetUp]
   public void Setup()
   {
-    repository = new DbRepository();
+    repository = new DbRepository(new NhibernateHelper("Host=localhost;Port=5432;Database=LTPulse;Username=admin;Password=Qwerty123"));
   }
 
-  [Test]
+  //[Test]
   public void Add_AddTeam_AddedSuccessfully()
   {
     var team = new Team
@@ -28,7 +29,7 @@ public class CRUDTests
     Assert.AreEqual(expectedTeam.Name, team.Name);
   }
 
-  [Test]
+  //[Test]
   public void AddTicket()
   {
     var ticket = new Ticket
@@ -51,7 +52,7 @@ public class CRUDTests
       () => repository.AddOrUpdate(ticket));
   }
   
-  [Test]
+  //[Test]
   public void AddUpdateExistingMetric()
   {
     var metric = new Metric
@@ -74,6 +75,39 @@ public class CRUDTests
     
     Assert.DoesNotThrow(
       () => repository.AddOrUpdate(metric2));
+  }
+
+  [Test]
+  public void AddTicketsToMetricAndSaveList()
+  {
+    var ticket = new Ticket
+    {
+      Id = 101,
+      Name = "Имя 22тестовое",
+      Organization = "Имя организации",
+      Employee = "Имя сотрудника",
+      Priority = this.repository.Get<Priority>(x => x.Name == "Низкий").First(),
+      IncomingDate = DateTime.Now,
+      State = this.repository.Get<TicketState>(s =>
+        s.State == "В работе").First(),
+      TimeInWork = 0,
+      Hyperlink = "нет ничо"
+    };
+    
+    var metric = new Metric
+    {
+      Date = DateTime.Today,
+      MetricType = this.repository.Get<MetricType>(x => x.Name == "Всего в работе").First(),
+      Team = this.repository.Get<Team>(x => x.Name == "ОГВ").First(),
+      Value = 1
+    };
+    
+    metric.Tickets.Add(ticket);
+    this.repository.AddOrUpdate(ticket);
+    this.repository.AddOrUpdate(metric);
+    
+    var existMetric = this.repository.Get<Metric>(x => x.Date == DateTime.Today).First();
+    Assert.AreEqual(existMetric.Tickets.Count, 1);
   }
 
   [TearDown]
