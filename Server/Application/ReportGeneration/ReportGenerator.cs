@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Xml;
+using CommonModels.Attributes;
 using CommonModels.Interfaces;
 using CommonModels.Models;
 using OfficeOpenXml;
@@ -82,6 +83,8 @@ public class ReportGenerator
         this.RefreshChartSeries(chart, metricGroup);
       }
     }
+    var allTicketsMetric = this.Repository.Get<Metric>(m => m.Team == team).First();
+    this.AddListWithItems("Инциденты", allTicketsMetric);
     return this.ExcelPackage.GetAsByteArray();
   }
 
@@ -150,7 +153,7 @@ public class ReportGenerator
   }
 
   /// <summary>
-  /// Сгенерировать линейный график.
+  /// Сгенерировать график.
   /// </summary>
   /// <param name="metricGroup">Группа метрик.</param>
   /// <param name="chartType">Тип графика.</param>
@@ -228,6 +231,47 @@ public class ReportGenerator
       return 2;
     }
     return startColumn;
+  }
+
+  /// <summary>
+  /// Добавить лист с элементами метрики.
+  /// </summary>
+  /// <param name="nameOfList">Наименование листа.</param>
+  /// <param name="metric">Метрика из которой будем брать элементы.</param>
+  private void AddListWithItems(string nameOfList, Metric metric)
+  {
+    var itemList = this.ExcelPackage.Workbook.Worksheets.Add(nameOfList);
+    var propNames = DisplayNameGetter.GetPropertiesWithDisplayNames<Ticket>();
+    for (var p = 0; p != propNames.Count; p++)
+    {
+      itemList.Cells[1, p + 1].Value = propNames.ElementAt(p).Key;
+    }
+    for (var ticket = 0; ticket != metric.Tickets.Count; ticket++)
+    {
+      for (var prop = 0; prop != propNames.Count; prop++)
+      {
+        itemList.Cells[ticket + 2, prop + 1].Value = propNames.
+          ElementAt(prop).Value
+          .GetValue(metric.Tickets[ticket])
+          .ToString();
+      }
+    }
+    this.FormatItemList(itemList);
+  }
+
+  /// <summary>
+  /// Добавить форматирование на лист с данными.
+  /// </summary>
+  /// <param name="sheet">Лист с данными.</param>
+  private void FormatItemList(ExcelWorksheet sheet)
+  {
+    sheet.Cells.AutoFitColumns(1, 50);
+    
+    var dataRange = sheet.Cells[sheet.Dimension.Address];
+    dataRange.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+    dataRange.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+    dataRange.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+    dataRange.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
   }
 
   /// <summary>
