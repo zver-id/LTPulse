@@ -48,8 +48,11 @@ public class MetricCalculator
   
   #endregion
   
-  # region Методы, работающие через общий список
+  # region Методы
 
+  /// <summary>
+  /// Рассчитать все метрики.
+  /// </summary>
   public void ProcessAllMetrics()
   {
     this.CreateMonthMetrics();

@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using CollectionLibrary.Nhibernate.Infrastructure;
+using CommonModels.Attibutes;
 using CommonModels.Interfaces;
 using NHibernate;
 using NHibernate.Criterion;
