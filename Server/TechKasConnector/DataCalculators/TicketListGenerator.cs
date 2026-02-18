@@ -13,6 +13,8 @@ namespace TechKasConnector.DataCalculators;
 /// </summary>
 public class TicketListGenerator
 {
+  #region  Поля и свойства
+  
   /// <summary>
   /// Список обращений.
   /// </summary>
@@ -37,6 +39,8 @@ public class TicketListGenerator
   /// Календарь рабочего времени.
   /// </summary>
   private CalendarCalculator Calendar {get; init;}
+  
+  #endregion
 
   /// <summary>
   /// Добавить обращение к списку.
