@@ -76,6 +76,25 @@ public class CalendarCalculator
     return result;
   }
 
+  /// <summary>
+  /// Получить следующий рабочий день.
+  /// </summary>
+  /// <param name="startDate">Время начала отсчета.</param>
+  /// <param name="interval">Интервал времени.</param>
+  /// <returns>Дата следующего рабочего дня. Время то же что и в начале.</returns>
+  public DateTime AddTimeSpanWithHolidays(DateTime startDate, TimeSpan interval)
+  {
+    while (true)
+    {
+      startDate = startDate.Add(interval);
+      if (this.isWorkingHoliday(startDate.Date))
+        return startDate;
+      if (this.isHoliday(startDate.Date) || startDate.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+        continue;
+      return startDate;
+    }
+  }
+
   public CalendarCalculator(IRepository repository)
   {
     this.Repository = repository;

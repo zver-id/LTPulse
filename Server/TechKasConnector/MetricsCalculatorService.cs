@@ -33,7 +33,15 @@ public class MetricsCalculatorService : BackgroundService
       var message = Encoding.UTF8.GetString(body);
       var correlationId = ea.BasicProperties.CorrelationId;
       var replyTo = ea.BasicProperties.ReplyTo;
-      this.ProcessMessage(message);
+      try
+      {
+        this.ProcessMessage(message);
+      }
+      catch (Exception e)
+      {
+        this.logger.LogError(e, "Error processing message");
+        throw;
+      }
       await this.rabbitMQProducer.channel.BasicAckAsync(ea.DeliveryTag, false);
     };
 
