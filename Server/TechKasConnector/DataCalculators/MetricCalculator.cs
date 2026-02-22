@@ -39,7 +39,7 @@ public class MetricCalculator
   /// <summary>
   /// Логгер.
   /// </summary>
-  private ILogger logger;
+  private ILogger<MetricCalculator> logger;
   
   /// <summary>
   /// Логгер.
@@ -262,7 +262,7 @@ public class MetricCalculator
   /// <summary>
   /// Конструктор.
   /// </summary>
-  public MetricCalculator(IRepository repository, ILogger logger, CalendarCalculator calendar,
+  public MetricCalculator(IRepository repository, ILogger<MetricCalculator> logger, CalendarCalculator calendar,
     GradeListGenerator gradeListGenerator)
   {
     this.repository = repository;

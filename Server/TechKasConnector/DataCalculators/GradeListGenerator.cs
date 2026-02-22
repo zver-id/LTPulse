@@ -33,7 +33,7 @@ public class GradeListGenerator
   /// <summary>
   /// Логгер.
   /// </summary>
-  private readonly ILogger logger;
+  private readonly ILogger<GradeListGenerator> logger;
   
   /// <summary>
   /// Рассчитать список оценок.
@@ -98,7 +98,7 @@ public class GradeListGenerator
   /// <param name="logger">Логгер.</param>
   /// <param name="repository">Репозиторий.</param>
   /// <param name="calendar">Календарь рабочего времени.</param>
-  public GradeListGenerator(ILogger logger, IRepository repository, CalendarCalculator calendar)
+  public GradeListGenerator(ILogger<GradeListGenerator> logger, IRepository repository, CalendarCalculator calendar)
   {
     this.logger = logger;
     this.Repository = repository;
