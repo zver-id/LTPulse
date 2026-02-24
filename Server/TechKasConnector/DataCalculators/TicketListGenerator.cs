@@ -147,7 +147,8 @@ public class TicketListGenerator
         employeeNames.Contains(record.GetRequisite(TechKasRequisites.EmployeeDetail, RequisitesMode.DisplayText));
       if (isActualDate && employeeInTeam)
       {
-        total += float.Parse(record.GetRequisite(TechKasRequisites.TimeSpent, RequisitesMode.AsString));
+        total += float.Parse(record.GetRequisite(TechKasRequisites.TimeSpent, RequisitesMode.AsString),
+          CultureInfo.InvariantCulture);
       }
     }
     return total;

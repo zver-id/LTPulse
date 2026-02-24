@@ -52,7 +52,7 @@ public class GradeListGenerator
     foreach (var grade in gradesReference)
     {
       Grade newGrade = this.GetOrCreateGrade(grade);
-      this.Repository.AddOrUpdate(newGrade);
+      this.Repository.Add(newGrade);
       if (listOfEmployeeNames.Contains(newGrade.Ticket.Employee))
         this.Grades.Add(newGrade);
     }
@@ -73,9 +73,10 @@ public class GradeListGenerator
     {
       Id = id,
       Score = int.Parse(element.GetRequisite(TechKasRequisites.GradeScore, RequisitesMode.AsString)),
-      Text = element.GetRequisite(TechKasRequisites.GradeText, RequisitesMode.AsString),
+      Text = element.GetRequisiteWithOpen(TechKasRequisites.GradeText, RequisitesMode.AsString),
       Date = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.GradeDate, RequisitesMode.AsString),
-        "dd.MM.yyyy", CultureInfo.InvariantCulture),
+        "dd.MM.yyyy hh:mm:ss", CultureInfo.InvariantCulture),
+      //TODO тут NRE
       Ticket = this.Repository.GetById<Ticket>(id)
     };
   }
