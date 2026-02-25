@@ -75,29 +75,30 @@ public class GradeListGenerator
       Score = int.Parse(element.GetRequisite(TechKasRequisites.GradeScore, RequisitesMode.AsString)),
       Text = element.GetRequisiteWithOpen(TechKasRequisites.GradeText, RequisitesMode.AsString),
       Date = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.GradeDate, RequisitesMode.AsString),
-        "dd.MM.yyyy hh:mm:ss", CultureInfo.InvariantCulture),
-      Ticket = this.GetRelatedTicket(element.GetRequisite(TechKasRequisites.GradeScore, RequisitesMode.AsString))
+        "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture),
+      Ticket = this.GetRelatedTicket(id)
     };
   }
 
   /// <summary>
   /// Получить связанное обращение.
   /// </summary>
-  /// <param name="ticketNumber">Номер обращения в формате, в котором они хранятся в ТехКас</param>
+  /// <param name="ticketNumber">Номер обращения.</param>
   /// <returns>Связанное обращение.</returns>
   /// <exception cref="ArgumentNullException">Возникает, когда не удается найти обращение по указанному ИД.</exception>
-  private Ticket GetRelatedTicket(string ticketNumber)
+  private Ticket GetRelatedTicket(int ticketNumber)
   {
-    var ticket = this.Repository.GetById<Ticket>(int.Parse(ticketNumber.Trim()));
+    var ticket = this.Repository.GetById<Ticket>(ticketNumber);
     if (ticket != null)
       return ticket;
     var ticketReference = new TechKasReference("ПДД");
     using var filter = new ReferenceFilterManager(ticketReference);
-    filter.AddFilter(TechKasRequisites.Id, ticketNumber);
-    var ticketElement = ticketReference.FirstOrDefault(t=> true);
+    // В ТехКас все номера обращений имеют 4 пробела в начале. Без этого не фильтруется.
+    filter.AddFilter(TechKasRequisites.Id,$"    {ticketNumber}");
+    var ticketElement = ticketReference.FirstOrDefault();
     if (ticketElement == null)
       throw new ArgumentNullException("Переданный ИД обращения не сущетсвует в ТехКас");
-    return new Ticket
+    ticket = new Ticket
     {
       Id = int.Parse(ticketElement.GetRequisite(TechKasRequisites.Id, RequisitesMode.AsString).Trim()),
       Name = ticketElement.GetRequisite(TechKasRequisites.Name, RequisitesMode.AsString),
@@ -115,6 +116,8 @@ public class GradeListGenerator
       TimeInWork = 0,
       Hyperlink = ticketElement.Hyperlink
     };
+    this.Repository.Add(ticket);
+    return ticket;
   }
 
   /// <summary>
