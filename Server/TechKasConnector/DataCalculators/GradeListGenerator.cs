@@ -59,7 +59,7 @@ public class GradeListGenerator
   }
   
   /// <summary>
-  /// Создать или получить сущетсвующую оценку.
+  /// Создать или получить существующую оценку.
   /// </summary>
   /// <param name="element">Элемент ТехКас.</param>
   /// <returns>Оценка.</returns>
@@ -76,8 +76,44 @@ public class GradeListGenerator
       Text = element.GetRequisiteWithOpen(TechKasRequisites.GradeText, RequisitesMode.AsString),
       Date = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.GradeDate, RequisitesMode.AsString),
         "dd.MM.yyyy hh:mm:ss", CultureInfo.InvariantCulture),
-      //TODO тут NRE
-      Ticket = this.Repository.GetById<Ticket>(id)
+      Ticket = this.GetRelatedTicket(element.GetRequisite(TechKasRequisites.GradeScore, RequisitesMode.AsString))
+    };
+  }
+
+  /// <summary>
+  /// Получить связанное обращение.
+  /// </summary>
+  /// <param name="ticketNumber">Номер обращения в формате, в котором они хранятся в ТехКас</param>
+  /// <returns>Связанное обращение.</returns>
+  /// <exception cref="ArgumentNullException">Возникает, когда не удается найти обращение по указанному ИД.</exception>
+  private Ticket GetRelatedTicket(string ticketNumber)
+  {
+    var ticket = this.Repository.GetById<Ticket>(int.Parse(ticketNumber.Trim()));
+    if (ticket != null)
+      return ticket;
+    var ticketReference = new TechKasReference("ПДД");
+    using var filter = new ReferenceFilterManager(ticketReference);
+    filter.AddFilter(TechKasRequisites.Id, ticketNumber);
+    var ticketElement = ticketReference.FirstOrDefault(t=> true);
+    if (ticketElement == null)
+      throw new ArgumentNullException("Переданный ИД обращения не сущетсвует в ТехКас");
+    return new Ticket
+    {
+      Id = int.Parse(ticketElement.GetRequisite(TechKasRequisites.Id, RequisitesMode.AsString).Trim()),
+      Name = ticketElement.GetRequisite(TechKasRequisites.Name, RequisitesMode.AsString),
+      Type = ticketElement.GetRequisite(TechKasRequisites.TicketType, RequisitesMode.AsString),
+      Organization = ticketElement.GetRequisite(TechKasRequisites.Organization, RequisitesMode.DisplayText),
+      Employee = ticketElement.GetRequisite(TechKasRequisites.Employee, RequisitesMode.DisplayText),
+      Priority = this.Repository
+        .Get<Priority>(x =>
+          x.Name == ticketElement.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString)).First(),
+      IncomingDate = DateTime.ParseExact(
+        ticketElement.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString),
+        "dd.MM.yyyy", CultureInfo.InvariantCulture),
+      State = this.Repository.Get<TicketState>(s =>
+        s.State == ticketElement.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString)).First(),
+      TimeInWork = 0,
+      Hyperlink = ticketElement.Hyperlink
     };
   }
 

@@ -132,7 +132,7 @@ public class TicketListGenerator
   /// <param name="ticket">Обращение у которого считаем отмеченное время.</param>
   /// <param name="daysAgo">Количество дней назад, за которое нужно считать.</param>
   /// <returns>Количество затраченного времени.</returns>
-  public float GetTimeStamp(TechKasElement ticket, int daysAgo = 0)
+  private float GetTimeStamp(TechKasElement ticket, int daysAgo = 0)
   {
     float total = 0;
     var employeeNames = this.Team.Employees.Select(e => e.Name).ToList();
