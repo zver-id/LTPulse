@@ -62,6 +62,7 @@ public class TicketListGenerator
     if (ticketType != null)
       filter.AddFilter(TechKasRequisites.TicketType, ticketType);
     
+    //TODO нужно добавить закрытые день в день обращения
     filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
     
     foreach (var ticket in this.tickets)

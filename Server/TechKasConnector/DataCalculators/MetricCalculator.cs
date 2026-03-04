@@ -67,28 +67,28 @@ public class MetricCalculator
     
     this.CreateMetric("Хвост", t => true);
     
-    this.CreateMetric("0-8", t => t.TimeInWork <= 8 * 60 && TicketType.IncidentsConsultation.Contains(t.Type));
-    this.CreateMetric("8-16", t => t.TimeInWork is > 8 * 60 and < 16 * 60 &&
-                                   TicketType.IncidentsConsultation.Contains(t.Type));
-    this.CreateMetric("16-24", t => t.TimeInWork > 16 * 60 && t.TimeInWork < 24 * 60 &&
-                                    TicketType.IncidentsConsultation.Contains(t.Type));
-    this.CreateMetric(">24", t => t.TimeInWork > 24 * 60 && TicketType.IncidentsConsultation.Contains(t.Type));
+    this.CreateMetric("0-8", t => t.TimeInWork <= 8 && TicketType.IncidentsConsultationFull.Contains(t.Type));
+    this.CreateMetric("8-16", t => t.TimeInWork is > 8 and < 16 &&
+                                   TicketType.IncidentsConsultationFull.Contains(t.Type));
+    this.CreateMetric("16-24", t => t.TimeInWork > 16 && t.TimeInWork < 24 &&
+                                    TicketType.IncidentsConsultationFull.Contains(t.Type));
+    this.CreateMetric(">24", t => t.TimeInWork > 24 && TicketType.IncidentsConsultationFull.Contains(t.Type));
     
-    this.CreateMetric("green", t => t.TimeInWork / t.Priority.TimeToSolve <= 0.25 
-                                    && TicketType.IncidentsConsultation.Contains(t.Type));
-    this.CreateMetric("sandy", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.25 && 
+    this.CreateMetric("<0.25", t => t.TimeInWork / t.Priority.TimeToSolve <= 0.25 
+                                    && TicketType.IncidentsConsultationFull.Contains(t.Type));
+    this.CreateMetric("0.25-0.5", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.25 && 
                                     t.TimeInWork / t.Priority.TimeToSolve < 0.5 
-                                    && TicketType.IncidentsConsultation.Contains(t.Type));
-    this.CreateMetric("yellow", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.5 &&
+                                    && TicketType.IncidentsConsultationFull.Contains(t.Type));
+    this.CreateMetric("0.5-0.75", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.5 &&
                                      t.TimeInWork / t.Priority.TimeToSolve < 0.75
-                                     && TicketType.IncidentsConsultation.Contains(t.Type));
-    this.CreateMetric("red", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.75
-                                  && TicketType.IncidentsConsultation.Contains(t.Type));
+                                     && TicketType.IncidentsConsultationFull.Contains(t.Type));
+    this.CreateMetric(">0.75", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.75
+                                  && TicketType.IncidentsConsultationFull.Contains(t.Type));
     
-    this.CreateMetric("Инциденты", t => t.Type == TicketType.Incident && t.IncomingDate == DateTime.Now.Date);
-    this.CreateMetric("Консультации", t => t.Type == TicketType.Consultation && t.IncomingDate == DateTime.Now.Date);
-    this.CreateMetric("Запросы", t => t.Type == TicketType.Request && t.IncomingDate == DateTime.Now.Date);
-    this.CreateMetric("Проблемы", t => t.Type == TicketType.Problem && t.IncomingDate == DateTime.Now.Date);
+    this.CreateMetric("Инциденты", t => t.Type == TicketType.IncidentFull && t.IncomingDate == DateTime.Now.Date);
+    this.CreateMetric("Консультации", t => t.Type == TicketType.ConsultationFull && t.IncomingDate == DateTime.Now.Date);
+    this.CreateMetric("Запросы", t => t.Type == TicketType.RequestFull && t.IncomingDate == DateTime.Now.Date);
+    this.CreateMetric("Проблемы", t => t.Type == TicketType.ProblemFull && t.IncomingDate == DateTime.Now.Date);
     this.CreateMetric("Поступило всего", t => t.IncomingDate == DateTime.Now.Date);
     this.CreateGradeMetric("Поступившие", g => g.Date == DateTime.Now.Date );
   }
@@ -98,8 +98,11 @@ public class MetricCalculator
   /// </summary>
   private void CreateMonthMetrics()
   {
+    var inWorkState = this.repository.Get<TicketState>(ts => ts.State == TicketStatus.InWorkFullString).First();
     var culture = new CultureInfo("ru-RU");
     var monthGroupedTickets = this.TicketListGenerator.Tickets
+      .Where(t=> t.State.Id == inWorkState.Id)
+      .Where(t => TicketType.IncidentsConsultationFull.Contains(t.Type))
       .GroupBy(t => culture.TextInfo.ToTitleCase(t.IncomingDate.ToString("MMMM yyyy", culture)))
       .ToDictionary(g => g.Key, g => g.ToList());
     foreach (var monthGroup in monthGroupedTickets)
@@ -195,7 +198,7 @@ public class MetricCalculator
   /// <param name="team">Команда, по которой производится расчет.</param>
   public void Init(Team team)
   {
-    this.team = team;
+    this.team = this.repository.GetById<Team>(team.Id);
     this.tickets = new TechKasReference("ПДД");
     this.SetInitFilters();
     this.SetEmployeeFilters();
@@ -252,6 +255,11 @@ public class MetricCalculator
   {
     var techkasNumbers = this.team.Employees
       .Select(e => e.TechKASNumber).ToList();
+    if (techkasNumbers.Count == 0)
+    {
+      this.logger.LogError("В команде нет сотрудников. Рассчет прекращен.");
+      throw new ArgumentException("В команде нет сотрудников. Рассчет прекращен.");
+    }
     this.tickets.SetFilter(TechKasRequisites.Employee, techkasNumbers);
   }
   
