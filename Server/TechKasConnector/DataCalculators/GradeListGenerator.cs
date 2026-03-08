@@ -97,7 +97,10 @@ public class GradeListGenerator
     filter.AddFilter(TechKasRequisites.Id,$"    {ticketNumber}");
     var ticketElement = ticketReference.FirstOrDefault();
     if (ticketElement == null)
-      throw new ArgumentNullException("Переданный ИД обращения не сущетсвует в ТехКас");
+    {
+      this.logger.LogWarning($"Переданный ИД {ticketNumber} обращения не существует в ТехКас");
+      return null;
+    }
     ticket = new Ticket
     {
       Id = int.Parse(ticketElement.GetRequisite(TechKasRequisites.Id, RequisitesMode.AsString).Trim()),

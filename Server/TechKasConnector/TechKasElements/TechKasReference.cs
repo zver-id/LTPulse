@@ -43,12 +43,29 @@ public class TechKasReference : IEnumerable<TechKasElement>
   /// </summary>
   /// <param name="attributeType">Тип атрибута, по которому ставим фильтр.</param>
   /// <param name="attributeValue">Значение атрибута.</param>
-  /// <param name="comparosonType">Тип сравнения (сортировать по этому значению, исключить значение)</param>
+  /// <param name="comparisonOperator">Тип сравнения (сортировать по этому значению, исключить значение)</param>
   /// <returns>ИД фильтра.</returns>
   public int SetFilter(string attributeType, string attributeValue, string comparisonOperator = "=")
   {
     string conditionString = $"{this.Reference.TableName}.{this.Reference.Requisites(attributeType).FieldName}" +
                              $" {comparisonOperator} '{attributeValue}'";
+    int referenceFilter = this.Reference.AddWhere(conditionString);
+    this.ConditionList.Add(referenceFilter, conditionString);
+    return referenceFilter;
+  }
+
+  /// <summary>
+  /// Добавить фильтр к справочнику. Все значения, равные Null также будут включены.
+  /// </summary>
+  /// <param name="attributeType">Тип атрибута, по которому ставим фильтр.</param>
+  /// <param name="attributeValue">Значение атрибута.</param>
+  /// <param name="comparisonOperator">Тип сравнения (сортировать по этому значению, исключить значение)</param>
+  /// <returns>ИД фильтра.</returns>
+  public int SetNullableFilter(string attributeType, string attributeValue, string comparisonOperator = "=")
+  {
+    string conditionString = $"{this.Reference.TableName}.{this.Reference.Requisites(attributeType).FieldName}" +
+                             $" {comparisonOperator} '{attributeValue}'" +
+                             $" or {this.Reference.TableName}.{this.Reference.Requisites(attributeType).FieldName} is Null";
     int referenceFilter = this.Reference.AddWhere(conditionString);
     this.ConditionList.Add(referenceFilter, conditionString);
     return referenceFilter;

@@ -63,27 +63,36 @@ public class MetricCalculator
       t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(3 * 7) &&
            t.State.State == TicketStatus.InWorkFullString);
     this.CreateMetric("Старше 4 недель",
-    t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(4 * 7));
+    t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(4 * 7) &&
+         !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     
-    this.CreateMetric("Хвост", t => true);
+    this.CreateMetric("Хвост", t => !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     
-    this.CreateMetric("0-8", t => t.TimeInWork <= 8 && TicketType.IncidentsConsultationFull.Contains(t.Type));
+    this.CreateMetric("0-8", t => t.TimeInWork <= 8 && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                  !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric("8-16", t => t.TimeInWork is > 8 and < 16 &&
-                                   TicketType.IncidentsConsultationFull.Contains(t.Type));
+                                   TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                   !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric("16-24", t => t.TimeInWork > 16 && t.TimeInWork < 24 &&
-                                    TicketType.IncidentsConsultationFull.Contains(t.Type));
-    this.CreateMetric(">24", t => t.TimeInWork > 24 && TicketType.IncidentsConsultationFull.Contains(t.Type));
+                                    TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                    !string.Equals(t.State.State, TicketStatus.ClosedFullString));
+    this.CreateMetric(">24", t => t.TimeInWork > 24 && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                  !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     
     this.CreateMetric("<0.25", t => t.TimeInWork / t.Priority.TimeToSolve <= 0.25 
-                                    && TicketType.IncidentsConsultationFull.Contains(t.Type));
+                                    && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                    !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric("0.25-0.5", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.25 && 
                                     t.TimeInWork / t.Priority.TimeToSolve < 0.5 
-                                    && TicketType.IncidentsConsultationFull.Contains(t.Type));
+                                    && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                    !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric("0.5-0.75", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.5 &&
                                      t.TimeInWork / t.Priority.TimeToSolve < 0.75
-                                     && TicketType.IncidentsConsultationFull.Contains(t.Type));
+                                     && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                     !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric(">0.75", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.75
-                                  && TicketType.IncidentsConsultationFull.Contains(t.Type));
+                                  && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                  !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     
     this.CreateMetric("Инциденты", t => t.Type == TicketType.IncidentFull && t.IncomingDate == DateTime.Now.Date);
     this.CreateMetric("Консультации", t => t.Type == TicketType.ConsultationFull && t.IncomingDate == DateTime.Now.Date);
@@ -102,7 +111,6 @@ public class MetricCalculator
     var culture = new CultureInfo("ru-RU");
     var monthGroupedTickets = this.TicketListGenerator.Tickets
       .Where(t=> t.State.Id == inWorkState.Id)
-      .Where(t => TicketType.IncidentsConsultationFull.Contains(t.Type))
       .GroupBy(t => culture.TextInfo.ToTitleCase(t.IncomingDate.ToString("MMMM yyyy", culture)))
       .ToDictionary(g => g.Key, g => g.ToList());
     foreach (var monthGroup in monthGroupedTickets)

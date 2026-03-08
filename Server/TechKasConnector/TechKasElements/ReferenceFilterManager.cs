@@ -20,6 +20,19 @@ public class ReferenceFilterManager(TechKasReference reference) : IDisposable
     filterIds.Add(filterId);
     return filterId;
   }
+  
+  public int AddNullableFilter(string requisite, string value, string operation = "=")
+  {
+    int filterId = reference.SetNullableFilter(requisite, value, operation);
+    filterIds.Add(filterId);
+    return filterId;
+  }
+
+  public void RemoveFilter(int filterId)
+  {
+    reference.DeleteFilter(filterId);
+    this.filterIds.Remove(filterId);
+  }
 
   public void Dispose()
   {

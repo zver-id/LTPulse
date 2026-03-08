@@ -25,7 +25,7 @@ public class SchedulerService : BackgroundService
     {
       this.logger.LogInformation("Inspect job to start.");
       await scheduler.StartJobs();
-      await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+      await Task.Delay(TimeSpan.FromMinutes(5));
     }
   }
 
