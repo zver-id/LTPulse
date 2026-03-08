@@ -27,22 +27,41 @@ public class MetricsCalculatorService : BackgroundService
     this.logger.LogInformation("MetricsCalculatorService running at: {time}", DateTimeOffset.Now);
     this.rabbitMQProducer = await RabbitMQClient.CreateAsync(this.Config.GetConnectionString("RabbitMQ"));
     var rabbitMQConsumer = new AsyncEventingBasicConsumer(this.rabbitMQProducer.channel);
+    
+    var maxConcurrentMessages  = Environment.ProcessorCount - 1;
+    var messageSemaphore = new SemaphoreSlim(maxConcurrentMessages);
+    
+    await this.rabbitMQProducer.channel.BasicQosAsync(
+      prefetchSize: 0, 
+      prefetchCount: (ushort)maxConcurrentMessages, 
+      global: false
+    );
+    
     rabbitMQConsumer.ReceivedAsync += async (ch, ea) =>
     {
-      var body = ea.Body.ToArray();
-      var message = Encoding.UTF8.GetString(body);
-      var correlationId = ea.BasicProperties.CorrelationId;
-      var replyTo = ea.BasicProperties.ReplyTo;
-      try
+      await messageSemaphore.WaitAsync(stoppingToken);
+      _ = Task.Run(async () =>
       {
-        this.ProcessMessage(message);
-      }
-      catch (Exception e)
-      {
-        this.logger.LogError(e, "Error processing message");
-        throw;
-      }
-      await this.rabbitMQProducer.channel.BasicAckAsync(ea.DeliveryTag, false);
+        try
+        {
+          var body = ea.Body.ToArray();
+          var message = Encoding.UTF8.GetString(body);
+          var correlationId = ea.BasicProperties.CorrelationId;
+          var replyTo = ea.BasicProperties.ReplyTo;
+          this.ProcessMessage(message);
+        }
+        catch (Exception e)
+        {
+          this.logger.LogError(e, "Error processing message");
+          throw;
+        }
+        finally
+        {
+          messageSemaphore.Release();
+        }
+        //TODO нужно перенаправлять ошибочные сообщения в другую очередь
+        await this.rabbitMQProducer.channel.BasicAckAsync(ea.DeliveryTag, false);
+      });
     };
 
     this.rabbitMQProducer.channel.BasicConsumeAsync(
