@@ -2,6 +2,7 @@
 using CommonModels.Interfaces;
 using CommonModels.Models;
 using DBCore;
+using NLog.LayoutRenderers;
 using TechKasConnector.Calendar;
 using TechKasConnector.Requisites;
 
@@ -100,6 +101,7 @@ public class MetricCalculator
     this.CreateMetric("Проблемы", t => t.Type == TicketType.ProblemFull && t.IncomingDate == DateTime.Now.Date);
     this.CreateMetric("Поступило всего", t => t.IncomingDate == DateTime.Now.Date);
     this.CreateGradeMetric("Поступившие", g => g.Date == DateTime.Now.Date );
+    this.CreateSpentTimeMetric("Затрачено в часах", t => t.Type == TicketType.RequestFull);
   }
 
   /// <summary>
@@ -140,6 +142,30 @@ public class MetricCalculator
     this.repository.AddOrUpdate(metric);
   }
   
+  /// <summary>
+  /// Рассчитать метрику.
+  /// </summary>
+  /// <param name="nameOfMetricType">Название метрики.</param>
+  /// <param name="isInWorkOnly">Признак, что нужно считать только обращения в работе.</param>
+  private void CreateSpentTimeMetric(string nameOfMetricType, Predicate<Ticket> predicate)
+  {
+    var metricType = this.repository.Get<MetricType>(mt => mt.Name == nameOfMetricType).First();
+    var metric = this.GetOrCreateMetric(DateTime.Today, metricType);
+    var tickets = this.TicketListGenerator.Tickets
+      .Where (t => predicate(t))
+      .ToList();
+    metric.Value = tickets
+      .Sum(t => t.TimeStampedOnDay);
+    metric.Tickets = tickets;
+ 
+    this.repository.AddOrUpdate(metric);
+  }
+  
+  /// <summary>
+  /// Создать метрику по оценкам.
+  /// </summary>
+  /// <param name="nameOfMetricType">Название метрики.</param>
+  /// <param name="predicate">Условие отбора.</param>
   private void CreateGradeMetric(string nameOfMetricType, Predicate<Grade> predicate)
   {
     var metricType = this.repository.Get<MetricType>(mt => mt.Name == nameOfMetricType).First();
@@ -173,10 +199,7 @@ public class MetricCalculator
         Team = this.team
       };
     }
-    else
-    {
-      return metric;
-    }
+    return metric;
   }
 
   /// <summary>
