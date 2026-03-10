@@ -63,18 +63,17 @@ public class TicketListGenerator
       filter.AddFilter(TechKasRequisites.TicketType, ticketType);
     
     int activeStatusFilterId = filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
-    this.AddTechKasElementsToTickets(this.tickets);
+    this.AddTechKasElementsToTickets();
     
     filter.RemoveFilter(activeStatusFilterId);
     filter.AddFilter(TechKasRequisites.ClosedDate, this.Calendar.GetPreviousDates(daysAgo).First());
-    this.AddTechKasElementsToTickets(this.tickets);
+    this.AddTechKasElementsToTickets();
   }
 
   /// <summary>
   /// Добавить обращения справочника в список.
   /// </summary>
-  /// <param name="tickets">Справочник обращений.</param>
-  private void AddTechKasElementsToTickets(TechKasReference tickets)
+  private void AddTechKasElementsToTickets()
   {
     foreach (var ticket in this.tickets)
     {
@@ -174,6 +173,9 @@ public class TicketListGenerator
   private Ticket GetTicket(TechKasElement element)
   {
     var id = int.Parse(element.GetRequisite(TechKasRequisites.Id, RequisitesMode.AsString).Trim());
+    Ticket ticket = this.repository.GetById<Ticket>(id);
+    if (ticket != null)
+      return ticket;
     var name = element.GetRequisite(TechKasRequisites.Name, RequisitesMode.AsString);
     var type = element.GetRequisite(TechKasRequisites.TicketType, RequisitesMode.AsString);
     var organization = element.GetRequisite(TechKasRequisites.Organization, RequisitesMode.DisplayText);

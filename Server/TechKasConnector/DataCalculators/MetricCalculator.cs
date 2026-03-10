@@ -69,38 +69,39 @@ public class MetricCalculator
     
     this.CreateMetric("Хвост", t => !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     
-    this.CreateMetric("0-8", t => t.TimeInWork <= 8 && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+    this.CreateMetric("0-8", t => t.TimeInWork <= 8 && TicketType.IncidentFull.Contains(t.Type) &&
                                   !string.Equals(t.State.State, TicketStatus.ClosedFullString));
-    this.CreateMetric("8-16", t => t.TimeInWork is > 8 and < 16 &&
-                                   TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+    this.CreateMetric("8-16", t => t.TimeInWork is > 8 and <= 16 &&
+                                   TicketType.IncidentFull.Contains(t.Type) &&
                                    !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric("16-24", t => t.TimeInWork > 16 && t.TimeInWork < 24 &&
-                                    TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                    TicketType.IncidentFull.Contains(t.Type) &&
                                     !string.Equals(t.State.State, TicketStatus.ClosedFullString));
-    this.CreateMetric(">24", t => t.TimeInWork > 24 && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+    this.CreateMetric(">24", t => t.TimeInWork > 24 && TicketType.IncidentFull.Contains(t.Type) &&
                                   !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     
     this.CreateMetric("<0.25", t => t.TimeInWork / t.Priority.TimeToSolve <= 0.25 
-                                    && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                    && TicketType.IncidentFull.Contains(t.Type) &&
                                     !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric("0.25-0.5", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.25 && 
                                     t.TimeInWork / t.Priority.TimeToSolve < 0.5 
-                                    && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                    && TicketType.IncidentFull.Contains(t.Type) &&
                                     !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric("0.5-0.75", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.5 &&
                                      t.TimeInWork / t.Priority.TimeToSolve < 0.75
-                                     && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                     && TicketType.IncidentFull.Contains(t.Type) &&
                                      !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric(">0.75", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.75
-                                  && TicketType.IncidentsConsultationFull.Contains(t.Type) &&
+                                  && TicketType.IncidentFull.Contains(t.Type) &&
                                   !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     
-    this.CreateMetric("Инциденты", t => t.Type == TicketType.IncidentFull && t.IncomingDate == DateTime.Now.Date);
-    this.CreateMetric("Консультации", t => t.Type == TicketType.ConsultationFull && t.IncomingDate == DateTime.Now.Date);
-    this.CreateMetric("Запросы", t => t.Type == TicketType.RequestFull && t.IncomingDate == DateTime.Now.Date);
-    this.CreateMetric("Проблемы", t => t.Type == TicketType.ProblemFull && t.IncomingDate == DateTime.Now.Date);
-    this.CreateMetric("Поступило всего", t => t.IncomingDate == DateTime.Now.Date);
-    this.CreateGradeMetric("Поступившие", g => g.Date == DateTime.Now.Date );
+    this.CreateMetric("Инциденты", t => t.Type == TicketType.IncidentFull && t.IncomingDate.Date == DateTime.Now.Date);
+    this.CreateMetric("Консультации", t => t.Type == TicketType.ConsultationFull && t.IncomingDate.Date == DateTime.Now.Date);
+    this.CreateMetric("Запросы", t => t.Type == TicketType.RequestFull && t.IncomingDate.Date == DateTime.Now.Date);
+    this.CreateMetric("Проблемы", t => t.Type == TicketType.ProblemFull && t.IncomingDate.Date == DateTime.Now.Date);
+    this.CreateMetric("Поступило всего", t => t.IncomingDate.Date == DateTime.Now.Date);
+    this.CreateMetric("Всего в работе", t => t.State.State.Equals(TicketStatus.InWorkFullString));
+    this.CreateGradeMetric("Поступившие", g => g.Date.Date == DateTime.Now.Date );
     this.CreateSpentTimeMetric("Затрачено в часах", t => t.Type == TicketType.RequestFull);
   }
 
