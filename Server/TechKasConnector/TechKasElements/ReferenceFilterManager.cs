@@ -3,7 +3,7 @@ namespace TechKasConnector;
 /// <summary>
 /// Вспомогательный класс для работы с фильтрами.
 /// </summary>
-public class ReferenceFilterManager(TechKasReference reference) : IDisposable
+internal class ReferenceFilterManager(TechKasReference reference) : IDisposable
 {
   private readonly List<int> filterIds = new List<int>();
 

@@ -11,7 +11,7 @@ namespace TechKasConnector.DataCalculators;
 /// <summary>
 /// Класс для работы с "цветными" зонами.
 /// </summary>
-public class TicketListGenerator
+internal class TicketListGenerator
 {
   #region  Поля и свойства
   
@@ -173,9 +173,8 @@ public class TicketListGenerator
   private Ticket GetTicket(TechKasElement element)
   {
     var id = int.Parse(element.GetRequisite(TechKasRequisites.Id, RequisitesMode.AsString).Trim());
+    
     Ticket ticket = this.repository.GetById<Ticket>(id);
-    if (ticket != null)
-      return ticket;
     var name = element.GetRequisite(TechKasRequisites.Name, RequisitesMode.AsString);
     var type = element.GetRequisite(TechKasRequisites.TicketType, RequisitesMode.AsString);
     var organization = element.GetRequisite(TechKasRequisites.Organization, RequisitesMode.DisplayText);
@@ -189,7 +188,20 @@ public class TicketListGenerator
       s.State == element.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString)).First();
     var timeInWork = 0;
     var hyperlink = element.Hyperlink;
-     return new Ticket
+    if (ticket != null)
+    {
+      ticket.Name = name;
+      ticket.Type = type;
+      ticket.Organization = organization;
+      ticket.Employee = employee;
+      ticket.Priority = priority;
+      ticket.IncomingDate = incomingDate;
+      ticket.State = state;
+      ticket.TimeInWork = timeInWork;
+      ticket.Hyperlink = hyperlink;
+      return ticket;
+    }
+    return new Ticket
       {
         Id = id,
         Name = name,

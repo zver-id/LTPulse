@@ -52,6 +52,18 @@ public class DbRepository : IRepository
   {
     return this.Session.Get<T>(id);
   }
+
+  /// <summary>
+  /// Удалить сущность из БД.
+  /// </summary>
+  /// <param name="item">Сущность.</param>
+  public void Delete(IHasId item)
+  {
+    using ITransaction transaction = this.Session.BeginTransaction();
+    this.Session.Delete(item);
+    transaction.Commit();
+  }
+
   /// <summary>
   /// Получить объект по свойству и его значению
   /// </summary>
@@ -78,6 +90,8 @@ public class DbRepository : IRepository
         .Where(predicate)
         .ToList();
   }
+
+
 
   /// <summary>
   /// Проверка существования объекта в БД по уникальным полям

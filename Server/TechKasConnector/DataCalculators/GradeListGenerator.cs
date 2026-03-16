@@ -51,10 +51,18 @@ public class GradeListGenerator
 
     foreach (var grade in gradesReference)
     {
-      Grade newGrade = this.GetOrCreateGrade(grade);
-      this.Repository.Add(newGrade);
-      if (listOfEmployeeNames.Contains(newGrade.Ticket.Employee))
-        this.Grades.Add(newGrade);
+      try
+      {
+        Grade newGrade = this.GetOrCreateGrade(grade);
+        this.Repository.Add(newGrade);
+        if (listOfEmployeeNames.Contains(newGrade.Ticket.Employee))
+          this.Grades.Add(newGrade);
+      }
+      catch (ArgumentNullException e)
+      {
+        this.logger.LogError(e, "Не найдено связанное с оценкой обращение. Оценка пропущена");
+        continue;
+      }
     }
   }
   
@@ -91,15 +99,15 @@ public class GradeListGenerator
     var ticket = this.Repository.GetById<Ticket>(ticketNumber);
     if (ticket != null)
       return ticket;
-    var ticketReference = new TechKasReference("ПДД");
+    var ticketReference = new TechKasReference("ПДД", false);
     using var filter = new ReferenceFilterManager(ticketReference);
     // В ТехКас все номера обращений имеют 4 пробела в начале. Без этого не фильтруется.
     filter.AddFilter(TechKasRequisites.Id,$"    {ticketNumber}");
     var ticketElement = ticketReference.FirstOrDefault();
     if (ticketElement == null)
     {
-      this.logger.LogWarning($"Переданный ИД {ticketNumber} обращения не существует в ТехКас");
-      return null;
+      this.logger.LogError($"Переданный ИД {ticketNumber} обращения не существует в ТехКас");
+      throw new ArgumentNullException($"Переданный ИД {ticketNumber} обращения не существует в ТехКас");
     }
     ticket = new Ticket
     {

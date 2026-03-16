@@ -1,8 +1,6 @@
 ﻿using System.Globalization;
 using CommonModels.Interfaces;
 using CommonModels.Models;
-using DBCore;
-using NLog.LayoutRenderers;
 using TechKasConnector.Calendar;
 using TechKasConnector.Requisites;
 
@@ -30,7 +28,7 @@ public class MetricCalculator
   /// <summary>
   /// Репозиторий.
   /// </summary>
-  private IRepository repository;
+  private readonly IRepository repository;
 
   /// <summary>
   /// Команда, для которой идет расчет.
@@ -40,7 +38,7 @@ public class MetricCalculator
   /// <summary>
   /// Логгер.
   /// </summary>
-  private ILogger<MetricCalculator> logger;
+  private readonly ILogger<MetricCalculator> logger;
   
   /// <summary>
   /// Логгер.
@@ -56,43 +54,47 @@ public class MetricCalculator
   /// </summary>
   public void ProcessAllMetrics()
   {
+    this.logger.LogInformation($"Начало записи метрик для команды {this.team.Name}");
     this.CreateMonthMetrics();
     this.CreateMetric("Старше 2 недель",
       t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(2 * 7) &&
-           t.State.State == TicketStatus.InWorkFullString);
+           t.State.State == TicketStatus.InWorkFullString &&
+      !t.Type.Equals(TicketType.ProblemFull));
     this.CreateMetric("Старше 3 недель",
       t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(3 * 7) &&
-           t.State.State == TicketStatus.InWorkFullString);
+           t.State.State == TicketStatus.InWorkFullString &&
+           !t.Type.Equals(TicketType.ProblemFull));
     this.CreateMetric("Старше 4 недель",
     t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(4 * 7) &&
-         !string.Equals(t.State.State, TicketStatus.ClosedFullString));
+         !string.Equals(t.State.State, TicketStatus.ClosedFullString) &&
+         !t.Type.Equals(TicketType.ProblemFull));
     
     this.CreateMetric("Хвост", t => !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     
-    this.CreateMetric("0-8", t => t.TimeInWork <= 8 && TicketType.IncidentFull.Contains(t.Type) &&
+    this.CreateMetric("0-8", t => t.TimeInWork <= 8 && TicketType.IncidentFull.Equals(t.Type) &&
                                   !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric("8-16", t => t.TimeInWork is > 8 and <= 16 &&
-                                   TicketType.IncidentFull.Contains(t.Type) &&
+                                   TicketType.IncidentFull.Equals(t.Type) &&
                                    !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric("16-24", t => t.TimeInWork > 16 && t.TimeInWork < 24 &&
-                                    TicketType.IncidentFull.Contains(t.Type) &&
+                                    TicketType.IncidentFull.Equals(t.Type) &&
                                     !string.Equals(t.State.State, TicketStatus.ClosedFullString));
-    this.CreateMetric(">24", t => t.TimeInWork > 24 && TicketType.IncidentFull.Contains(t.Type) &&
+    this.CreateMetric(">24", t => t.TimeInWork > 24 && TicketType.IncidentFull.Equals(t.Type) &&
                                   !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     
     this.CreateMetric("<0.25", t => t.TimeInWork / t.Priority.TimeToSolve <= 0.25 
-                                    && TicketType.IncidentFull.Contains(t.Type) &&
+                                    && TicketType.IncidentFull.Equals(t.Type) &&
                                     !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric("0.25-0.5", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.25 && 
                                     t.TimeInWork / t.Priority.TimeToSolve < 0.5 
-                                    && TicketType.IncidentFull.Contains(t.Type) &&
+                                    && TicketType.IncidentFull.Equals(t.Type) &&
                                     !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric("0.5-0.75", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.5 &&
                                      t.TimeInWork / t.Priority.TimeToSolve < 0.75
-                                     && TicketType.IncidentFull.Contains(t.Type) &&
+                                     && TicketType.IncidentFull.Equals(t.Type) &&
                                      !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     this.CreateMetric(">0.75", t => t.TimeInWork / t.Priority.TimeToSolve >= 0.75
-                                  && TicketType.IncidentFull.Contains(t.Type) &&
+                                  && TicketType.IncidentFull.Equals(t.Type) &&
                                   !string.Equals(t.State.State, TicketStatus.ClosedFullString));
     
     this.CreateMetric("Инциденты", t => t.Type == TicketType.IncidentFull && t.IncomingDate.Date == DateTime.Now.Date);
@@ -101,8 +103,9 @@ public class MetricCalculator
     this.CreateMetric("Проблемы", t => t.Type == TicketType.ProblemFull && t.IncomingDate.Date == DateTime.Now.Date);
     this.CreateMetric("Поступило всего", t => t.IncomingDate.Date == DateTime.Now.Date);
     this.CreateMetric("Всего в работе", t => t.State.State.Equals(TicketStatus.InWorkFullString));
-    this.CreateGradeMetric("Поступившие", g => g.Date.Date == DateTime.Now.Date );
+    this.CreateGradeMetric("Поступившие", g => g.Date.Date == DateTime.Now.Date && g.Score == 4 );
     this.CreateSpentTimeMetric("Затрачено в часах", t => t.Type == TicketType.RequestFull);
+    this.logger.LogInformation($"Метрики для команды {this.team.Name} рассчитаны");
   }
 
   /// <summary>
@@ -110,10 +113,16 @@ public class MetricCalculator
   /// </summary>
   private void CreateMonthMetrics()
   {
-    var inWorkState = this.repository.Get<TicketState>(ts => ts.State == TicketStatus.InWorkFullString).First();
+    var currentMonthMetrics = this.repository.Get<Metric>(m => m.MetricType.MetricGroup.Name.Equals("Month") &&
+                                                               m.Team == this.team &&
+                                                               m.Date.Date == DateTime.Now.Date);
+    foreach (var metric in currentMonthMetrics)
+    {
+      this.repository.Delete(metric);
+    }
     var culture = new CultureInfo("ru-RU");
     var monthGroupedTickets = this.TicketListGenerator.Tickets
-      .Where(t=> t.State.Id == inWorkState.Id)
+      .Where(t=> t.State.State.Equals(TicketStatus.InWorkFullString))
       .GroupBy(t => culture.TextInfo.ToTitleCase(t.IncomingDate.ToString("MMMM yyyy", culture)))
       .ToDictionary(g => g.Key, g => g.ToList());
     foreach (var monthGroup in monthGroupedTickets)
@@ -230,12 +239,14 @@ public class MetricCalculator
   /// <param name="team">Команда, по которой производится расчет.</param>
   public void Init(Team team)
   {
+    this.logger.LogInformation($"Initializing metric calculator for team: {team.Name}");
     this.team = this.repository.GetById<Team>(team.Id);
     this.tickets = new TechKasReference("ПДД");
     this.SetInitFilters();
     this.SetEmployeeFilters();
     this.TicketListGenerator = new TicketListGenerator(this.repository, this.tickets, this.team);
     this.GradeListGenerator.GenerateForTeam(this.team);
+    this.logger.LogInformation($"Finish initialize metric calculator for team: {team.Name}");
   }
 
   /// <summary>

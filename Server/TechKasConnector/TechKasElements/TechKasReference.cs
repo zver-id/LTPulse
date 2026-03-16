@@ -7,7 +7,7 @@ namespace TechKasConnector;
 /// <summary>
 /// Справочник ТехКас.
 /// </summary>
-public class TechKasReference : IEnumerable<TechKasElement>
+internal class TechKasReference : IEnumerable<TechKasElement>
 {
   private IEnumerable<TechKasElement> enumerableImplementation;
 
