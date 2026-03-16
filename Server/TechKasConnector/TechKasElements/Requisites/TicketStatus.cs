@@ -39,4 +39,9 @@ public static class TicketStatus
   /// В работе.
   /// </summary>
   public const string InWorkFullString = "В работе";
+  
+  /// <summary>
+  /// Закрыто.
+  /// </summary>
+  public static readonly string ClosedFullString = "Закрыто";
 }

@@ -11,7 +11,7 @@ namespace TechKasConnector.DataCalculators;
 /// <summary>
 /// Класс для работы с "цветными" зонами.
 /// </summary>
-public class TicketListGenerator
+internal class TicketListGenerator
 {
   #region  Поля и свойства
   
@@ -56,14 +56,25 @@ public class TicketListGenerator
   /// Получить список обращений с вычисленным временем в работе.
   /// </summary>
   /// <param name="ticketType">Тип обращений.</param>
-  private void GetTicketList(string? ticketType = null)
+  private void GetTicketList(string? ticketType = null, int daysAgo = 0)
   {
     using var filter = new ReferenceFilterManager(this.tickets);
     if (ticketType != null)
       filter.AddFilter(TechKasRequisites.TicketType, ticketType);
     
-    filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
+    int activeStatusFilterId = filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
+    this.AddTechKasElementsToTickets();
     
+    filter.RemoveFilter(activeStatusFilterId);
+    filter.AddFilter(TechKasRequisites.ClosedDate, this.Calendar.GetPreviousDates(daysAgo).First());
+    this.AddTechKasElementsToTickets();
+  }
+
+  /// <summary>
+  /// Добавить обращения справочника в список.
+  /// </summary>
+  private void AddTechKasElementsToTickets()
+  {
     foreach (var ticket in this.tickets)
     {
       var spentTime = this.GetSpentTimeByMinutes(ticket);
@@ -132,7 +143,7 @@ public class TicketListGenerator
   /// <param name="ticket">Обращение у которого считаем отмеченное время.</param>
   /// <param name="daysAgo">Количество дней назад, за которое нужно считать.</param>
   /// <returns>Количество затраченного времени.</returns>
-  public float GetTimeStamp(TechKasElement ticket, int daysAgo = 0)
+  private float GetTimeStamp(TechKasElement ticket, int daysAgo = 0)
   {
     float total = 0;
     var employeeNames = this.Team.Employees.Select(e => e.Name).ToList();
@@ -147,7 +158,8 @@ public class TicketListGenerator
         employeeNames.Contains(record.GetRequisite(TechKasRequisites.EmployeeDetail, RequisitesMode.DisplayText));
       if (isActualDate && employeeInTeam)
       {
-        total += float.Parse(record.GetRequisite(TechKasRequisites.TimeSpent, RequisitesMode.AsString));
+        total += float.Parse(record.GetRequisite(TechKasRequisites.TimeSpent, RequisitesMode.AsString),
+          CultureInfo.InvariantCulture);
       }
     }
     return total;
@@ -160,22 +172,46 @@ public class TicketListGenerator
   /// <returns>Обращение.</returns>
   private Ticket GetTicket(TechKasElement element)
   {
-     return new Ticket
+    var id = int.Parse(element.GetRequisite(TechKasRequisites.Id, RequisitesMode.AsString).Trim());
+    
+    Ticket ticket = this.repository.GetById<Ticket>(id);
+    var name = element.GetRequisite(TechKasRequisites.Name, RequisitesMode.AsString);
+    var type = element.GetRequisite(TechKasRequisites.TicketType, RequisitesMode.AsString);
+    var organization = element.GetRequisite(TechKasRequisites.Organization, RequisitesMode.DisplayText);
+    var employee = element.GetRequisite(TechKasRequisites.Employee, RequisitesMode.DisplayText);
+    var priority = this.repository
+      .Get<Priority>(x =>
+        x.Name == element.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString)).First();
+    var incomingDate = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString),
+      "dd.MM.yyyy", CultureInfo.InvariantCulture);
+    var state = this.repository.Get<TicketState>(s =>
+      s.State == element.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString)).First();
+    var timeInWork = 0;
+    var hyperlink = element.Hyperlink;
+    if (ticket != null)
+    {
+      ticket.Name = name;
+      ticket.Type = type;
+      ticket.Organization = organization;
+      ticket.Employee = employee;
+      ticket.Priority = priority;
+      ticket.IncomingDate = incomingDate;
+      ticket.State = state;
+      ticket.TimeInWork = timeInWork;
+      ticket.Hyperlink = hyperlink;
+      return ticket;
+    }
+    return new Ticket
       {
-        Id = int.Parse(element.GetRequisite(TechKasRequisites.Id, RequisitesMode.AsString).Trim()),
-        Name = element.GetRequisite(TechKasRequisites.Name, RequisitesMode.AsString),
-        Type = element.GetRequisite(TechKasRequisites.TicketType, RequisitesMode.AsString),
-        Organization = element.GetRequisite(TechKasRequisites.Organization, RequisitesMode.DisplayText),
-        Employee = element.GetRequisite(TechKasRequisites.Employee, RequisitesMode.DisplayText),
-        Priority = this.repository
-          .Get<Priority>(x =>
-            x.Name == element.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString)).First(),
-        IncomingDate = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString),
-          "dd.MM.yyyy", CultureInfo.InvariantCulture),
-        State = this.repository.Get<TicketState>(s =>
-          s.State == element.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString)).First(),
-        TimeInWork = 0,
-        Hyperlink = element.Hyperlink
+        Id = id,
+        Name = name,
+        Type = type,
+        Organization = organization,
+        Employee = employee,
+        Priority = priority,
+        IncomingDate = incomingDate,
+        State = state,
+        Hyperlink = hyperlink
       };
   }
 

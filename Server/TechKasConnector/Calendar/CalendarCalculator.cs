@@ -42,7 +42,10 @@ public class CalendarCalculator
         currentDay = currentDay.AddDays(-1);
       }
     }
-    return previousDates.Select(d => d.ToString("dd.MM.yyyy")).ToList();
+    return previousDates
+      .OrderBy(day => day.Date)
+      .Select(d => d.ToString("dd.MM.yyyy"))
+      .ToList();
   }
 
   /// <summary>

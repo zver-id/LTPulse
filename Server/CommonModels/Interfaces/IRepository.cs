@@ -17,4 +17,10 @@ public interface IRepository: IDisposable
   /// <typeparam name="T">Тип объекта</typeparam>
   /// <returns>Объект из базы данных.</returns>
   public T GetById<T>(int id) where T : IHasId;
+
+  /// <summary>
+  /// Удалить сущность из БД.
+  /// </summary>
+  /// <param name="item">Сущность.</param>
+  public void Delete(IHasId item);
 }

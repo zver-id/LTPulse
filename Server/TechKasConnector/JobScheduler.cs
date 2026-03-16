@@ -48,6 +48,7 @@ public class JobScheduler
           RepeatInterval = TimeSpan.FromDays(1)
         };
         this.Repository.AddOrUpdate(newJob);
+        this.Jobs.Add(newJob);
         this.Logger.LogInformation($"Create job for team {team.Name}");
       }
     }

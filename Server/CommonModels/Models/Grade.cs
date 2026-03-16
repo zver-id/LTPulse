@@ -16,7 +16,7 @@ public class Grade : IHasId
   /// <summary>
   /// Текст оценки.
   /// </summary>
-  public virtual string Text { get; set; }
+  public virtual string? Text { get; set; }
   
   /// <summary>
   /// Результат.
