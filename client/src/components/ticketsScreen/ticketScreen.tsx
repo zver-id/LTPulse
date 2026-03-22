@@ -1,7 +1,8 @@
 import { Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { useGetTicketsQuery } from '../../storage/services/tickets-api.ts'
 
-interface ITicket {
+export interface ITicket {
     key: number;
     name: string;
     state: string;
@@ -10,7 +11,25 @@ interface ITicket {
     hyperlink: string;
 }
 
-function TicketScreen() {
+export interface ITicketScreenProps {
+    teamId: number;
+    ticketType: string;
+}
+
+function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
+
+    const getCurrentDate = (): string => {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+
+        return `${day}.${month}.${year}`;
+    };
+
+    const date = getCurrentDate();
+
+    const { data: tickets } = useGetTicketsQuery({teamId, date, ticketType});
     const columns: ColumnsType<ITicket> = [
         {
             title: 'Номер обращения',
@@ -64,15 +83,9 @@ function TicketScreen() {
         }
     ];
 
-    const dataSource: ITicket[] = [
-        { key: 1, name: 'Тикет 1 Какой то гигааааааааааааааааааааааааааааааантский текст для примера, потому что тут будет очень много всякого',
-            state: 'At work', employee: 'Человек 1', timeInWork: 3.2, hyperlink: 'https://google.com' },
-        { key: 2, name: 'Тикет 2', state: 'Await', employee: 'Человек 2', timeInWork: 12, hyperlink: 'https://google.com'  },
-    ];
-
     return (
         <>
-            <Table dataSource={dataSource} columns={columns} />
+            <Table dataSource={tickets} columns={columns} />
         </>
     )
 }

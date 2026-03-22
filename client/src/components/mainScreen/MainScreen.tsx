@@ -10,6 +10,7 @@ function Main() {
     const [team, setTeam] = useState(1)
     const [dayCount, setDayCount] = useState(14)
     const [viewMode, setViewMode] = useState('charts')
+    const [ticketsType, setTicketsType] = useState('')
 
     const colors = ['#3CB44B', '#F5DEB3', '#FFD700', '#E6194B'];
     const zoneColorSimple: zonesColor[] = [ {name: '0-8', color: colors[0]},
@@ -30,10 +31,31 @@ function Main() {
                         Графики
                     </button>
                     <button
-                        className={`${styles.toggleButton} ${viewMode === 'tickets' ? styles.activeButton : ''}`}
-                        onClick={() => setViewMode('tickets')}
+                        className={`${styles.toggleButton} ${viewMode === 'tickets' && ticketsType === 'incidents' ? styles.activeButton : ''}`}
+                        onClick={() => {
+                            setViewMode('tickets');
+                            setTicketsType("incidents");
+                        }}
                     >
-                        Тикеты
+                        Инциденты
+                    </button>
+                    <button
+                        className={`${styles.toggleButton} ${viewMode === 'tickets' && ticketsType === 'consultations' ? styles.activeButton : ''}`}
+                        onClick={() => {
+                            setViewMode('tickets');
+                            setTicketsType("consultations");
+                        }}
+                    >
+                        Консультации
+                    </button>
+                    <button
+                        className={`${styles.toggleButton} ${viewMode === 'tickets' && ticketsType === 'requests' ? styles.activeButton : ''}`}
+                        onClick={() => {
+                            setViewMode('tickets');
+                            setTicketsType("requests");
+                        }}
+                    >
+                        Запросы
                     </button>
                 </div>
             </header>
@@ -49,7 +71,7 @@ function Main() {
             )}
 
             {viewMode === 'tickets' && (
-                <TicketScreen />
+                <TicketScreen teamId={team} ticketType={ticketsType} />
             )}
         </>
     )
