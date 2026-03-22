@@ -4,6 +4,7 @@ import MonthLineChart from "../lineChart/monthLineChart.jsx";
 import {useState} from "react";
 import ZonesChart from "../areaChart/ZonesChart.tsx";
 import type {zonesColor} from "../../types/zones-chart-props.ts";
+import TicketScreen from "../ticketsScreen/ticketScreen.tsx";
 
 function Main() {
     const [team, setTeam] = useState(1)
@@ -19,6 +20,7 @@ function Main() {
             <header>
                 <h1 className={styles.siteTitle}>Статистика</h1>
                 <Navigation onChangeTeam={setTeam} days={dayCount} onChangeDays={setDayCount} />
+                <TicketScreen />
             </header>
 
             <MonthLineChart teamId={team} dayCount={dayCount} filter={"month"} />
