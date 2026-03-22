@@ -9,6 +9,7 @@ import TicketScreen from "../ticketsScreen/ticketScreen.tsx";
 function Main() {
     const [team, setTeam] = useState(1)
     const [dayCount, setDayCount] = useState(14)
+    const [viewMode, setViewMode] = useState('charts')
 
     const colors = ['#3CB44B', '#F5DEB3', '#FFD700', '#E6194B'];
     const zoneColorSimple: zonesColor[] = [ {name: '0-8', color: colors[0]},
@@ -20,14 +21,36 @@ function Main() {
             <header>
                 <h1 className={styles.siteTitle}>Статистика</h1>
                 <Navigation onChangeTeam={setTeam} days={dayCount} onChangeDays={setDayCount} />
-                <TicketScreen />
+
+                <div className={styles.buttonGroup}>
+                    <button
+                        className={`${styles.toggleButton} ${viewMode === 'charts' ? styles.activeButton : ''}`}
+                        onClick={() => setViewMode('charts')}
+                    >
+                        Графики
+                    </button>
+                    <button
+                        className={`${styles.toggleButton} ${viewMode === 'tickets' ? styles.activeButton : ''}`}
+                        onClick={() => setViewMode('tickets')}
+                    >
+                        Тикеты
+                    </button>
+                </div>
             </header>
 
-            <MonthLineChart teamId={team} dayCount={dayCount} filter={"month"} />
-            <MonthLineChart teamId={team} dayCount={dayCount} filter={"Older3Week"} />
-            <MonthLineChart teamId={team} dayCount={dayCount} filter={"tail"} />
-            <MonthLineChart teamId={team} dayCount={dayCount} filter={"snowball"} />
-            <ZonesChart teamId={team} dayCount={dayCount} filter={"ColorZones"} zoneColor={zoneColorSimple} />
+            {viewMode === 'charts' && (
+                <>
+                    <MonthLineChart teamId={team} dayCount={dayCount} filter={"month"} />
+                    <MonthLineChart teamId={team} dayCount={dayCount} filter={"Older3Week"} />
+                    <MonthLineChart teamId={team} dayCount={dayCount} filter={"tail"} />
+                    <MonthLineChart teamId={team} dayCount={dayCount} filter={"snowball"} />
+                    <ZonesChart teamId={team} dayCount={dayCount} filter={"ColorZones"} zoneColor={zoneColorSimple} />
+                </>
+            )}
+
+            {viewMode === 'tickets' && (
+                <TicketScreen />
+            )}
         </>
     )
 }
