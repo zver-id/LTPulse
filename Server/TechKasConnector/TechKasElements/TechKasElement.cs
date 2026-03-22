@@ -2,7 +2,7 @@ using TechKasConnector.Requisites;
 
 namespace TechKasConnector;
 
-public class TechKasElement : TechKasReferenceRecord
+internal class TechKasElement : TechKasReferenceRecord
 {
   /// <summary>
   /// Признак, что элемент является простым и не имеет вложенных коллекций.

@@ -17,4 +17,13 @@ public abstract class TechKasReferenceRecord
     }
     return string.Empty;
   }
+
+  public string GetRequisiteWithOpen(string requisite, RequisitesMode mode)
+  {
+    this.Element.OpenRecord();
+    var value = this.GetRequisite(requisite, mode);
+    this.Element.Cancel();
+    this.Element.CloseRecord();
+    return value;
+  }
 }

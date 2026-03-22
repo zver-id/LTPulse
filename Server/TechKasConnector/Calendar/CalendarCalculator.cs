@@ -42,7 +42,10 @@ public class CalendarCalculator
         currentDay = currentDay.AddDays(-1);
       }
     }
-    return previousDates.Select(d => d.ToString("dd.MM.yyyy")).ToList();
+    return previousDates
+      .OrderBy(day => day.Date)
+      .Select(d => d.ToString("dd.MM.yyyy"))
+      .ToList();
   }
 
   /// <summary>
@@ -74,6 +77,25 @@ public class CalendarCalculator
       current = current.AddMinutes(1);
     }
     return result;
+  }
+
+  /// <summary>
+  /// Получить следующий рабочий день.
+  /// </summary>
+  /// <param name="startDate">Время начала отсчета.</param>
+  /// <param name="interval">Интервал времени.</param>
+  /// <returns>Дата следующего рабочего дня. Время то же что и в начале.</returns>
+  public DateTime AddTimeSpanWithHolidays(DateTime startDate, TimeSpan interval)
+  {
+    while (true)
+    {
+      startDate = startDate.Add(interval);
+      if (this.isWorkingHoliday(startDate.Date))
+        return startDate;
+      if (this.isHoliday(startDate.Date) || startDate.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+        continue;
+      return startDate;
+    }
   }
 
   public CalendarCalculator(IRepository repository)

@@ -2,7 +2,7 @@ using System.Collections;
 
 namespace TechKasConnector;
 
-public class TechKasElementDetail : TechKasReferenceRecord, IEnumerable<TechKasElement>
+internal class TechKasElementDetail : TechKasReferenceRecord, IEnumerable<TechKasElement>
 {
   public TechKasElementDetail(dynamic detail)
   {

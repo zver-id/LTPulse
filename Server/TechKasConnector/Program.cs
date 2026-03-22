@@ -27,9 +27,11 @@ public static class Program
     builder.Services.AddScoped<IRepository, DbRepository>();
     
     builder.Services.AddHostedService<MetricsCalculatorService>();
+    builder.Services.AddHostedService<SchedulerService>();
     builder.Services.AddScoped<MetricCalculator>();
     builder.Services.AddScoped<CalendarCalculator>();
     builder.Services.AddScoped<GradeListGenerator>();
+    builder.Services.AddScoped<JobScheduler>();
 
     var host = builder.Build();
     host.Run();
