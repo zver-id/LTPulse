@@ -5,10 +5,11 @@ import {useState} from "react";
 import ZonesChart from "../areaChart/ZonesChart.tsx";
 import type {zonesColor} from "../../types/zones-chart-props.ts";
 import TicketScreen from "../ticketsScreen/ticketScreen.tsx";
+import { useLocalStorageState } from "../../storage/useLocalStorageState.ts"
 
 function Main() {
-    const [team, setTeam] = useState(1)
-    const [dayCount, setDayCount] = useState(14)
+    const [team, setTeam] = useLocalStorageState("team", 1)
+    const [dayCount, setDayCount] = useLocalStorageState("dayCount", 140)
     const [viewMode, setViewMode] = useState('charts')
     const [ticketsType, setTicketsType] = useState('')
 
@@ -21,7 +22,7 @@ function Main() {
     return (<>
             <header>
                 <h1 className={styles.siteTitle}>Статистика</h1>
-                <Navigation onChangeTeam={setTeam} days={dayCount} onChangeDays={setDayCount} />
+                <Navigation onChangeTeam={setTeam} days={dayCount} onChangeDays={setDayCount} teamId={team}/>
 
                 <div className={styles.buttonGroup}>
                     <button
