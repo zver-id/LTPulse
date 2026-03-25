@@ -9,6 +9,11 @@ export interface ITicket {
     employee: string;
     timeInWork: number;
     hyperlink: string;
+    timeStampedOnDay: number;
+    incomingDate: string;
+    priority: string;
+    organization: string;
+    type: string
 }
 
 export interface ITicketScreenProps {
@@ -24,7 +29,7 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const year = now.getFullYear();
 
-        return `${day}.${month}.${year}`;
+        return `${year}-${month}-${day}`;
     };
 
     const date = getCurrentDate();
