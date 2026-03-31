@@ -1,6 +1,9 @@
-import { Table, Tag } from 'antd';
+import {Card, DatePicker, Table, Tag, Typography} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useGetTicketsQuery } from '../../storage/services/tickets-api.ts'
+import {useState} from "react";
+import { Dayjs } from 'dayjs';
+
 
 export interface ITicket {
     key: number;
@@ -32,9 +35,11 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
         return `${year}-${month}-${day}`;
     };
 
-    const date = getCurrentDate();
+    const [dateJs, setDateJs] = useState<Dayjs | null>(null);
+    const date = dateJs?.format('YYYY-MM-DD') || getCurrentDate();
 
     const { data: tickets } = useGetTicketsQuery({teamId, date, ticketType});
+
     const columns: ColumnsType<ITicket> = [
         {
             title: 'Номер обращения',
@@ -89,9 +94,23 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
     ];
 
     return (
-        <>
-            <Table dataSource={tickets} columns={columns} />
-        </>
+        <div>
+            <DatePicker
+                value={dateJs}
+                onChange={(newDate) => setDateJs(newDate)}
+                format="DD-MM-YYYY"
+                style={{ width: 200 }}
+            />
+            {(!tickets || tickets.length === 0) &&
+                <Card>
+                    <Typography>Обращений за эту дату нет. Похоже расчет не производился.</Typography>
+                </Card>
+            }
+            {
+                tickets && tickets.length > 0 &&
+                <Table dataSource={tickets} columns={columns} />
+            }
+        </div>
     )
 }
 
