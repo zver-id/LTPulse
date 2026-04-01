@@ -15,10 +15,13 @@ const ViewRouter =  ({team, dayCount} :IViewRouterProps )=> {
     const [ticketsType, setTicketsType] = useState('')
 
     const buttons = [
-        { label: 'Графики', mode: 'charts', type: null },
-        { label: 'Инциденты', mode: 'tickets', type: 'incidents' },
-        { label: 'Консультации', mode: 'tickets', type: 'consultations' },
-        { label: 'Запросы', mode: 'tickets', type: 'requests' }
+        { label: 'Графики', mode: 'charts', type: '' },
+        { label: 'Инциденты', mode: 'tickets', type: 'Инцидент' },
+        { label: 'Консультации', mode: 'tickets', type: 'Консультация' },
+        { label: 'Запросы', mode: 'tickets', type: 'Запрос' },
+        { label: 'Старше 4 недель', mode: 'tickets', type: 'Старше 4 недель'},
+        { label: 'Старше 3 недель', mode: 'tickets', type: 'Старше 3 недель'},
+        { label: 'Старше 2 недель', mode: 'tickets', type: 'Старше 2 недель'}
     ];
 
     const colors = ['#3CB44B', '#F5DEB3', '#FFD700', '#E6194B'];
@@ -31,13 +34,13 @@ const ViewRouter =  ({team, dayCount} :IViewRouterProps )=> {
         <>
         <div className={styles.buttonGroup}>
             {
-                buttons.map(({label, mode})=>(
+                buttons.map(({label, mode, type})=>(
                     <button
                         key={label}
-                        className={`${styles.toggleButton} ${viewMode === mode && ticketsType === label ? styles.activeButton : ''}`}
+                        className={`${styles.toggleButton} ${viewMode === mode && ticketsType === type ? styles.activeButton : ''}`}
                         onClick={() => {
                             setViewMode(mode);
-                            setTicketsType(label);
+                            setTicketsType(type);
                         }}
                     >
                         {label}
