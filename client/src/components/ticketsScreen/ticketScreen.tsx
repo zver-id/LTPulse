@@ -1,8 +1,10 @@
-import {Card, DatePicker, Table, Tag, Typography} from 'antd';
+import {Button, Card, DatePicker, Space, Table, Tag, Typography} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useGetTicketsQuery } from '../../storage/services/tickets-api.ts'
 import {useState} from "react";
 import { Dayjs } from 'dayjs';
+import { EditOutlined } from '@ant-design/icons';
+import EditTicketModal from '../editTicketModal/editTicketModal.tsx'
 
 
 export interface ITicket {
@@ -38,7 +40,38 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
     const [dateJs, setDateJs] = useState<Dayjs | null>(null);
     const date = dateJs?.format('YYYY-MM-DD') || getCurrentDate();
 
-    const { data: tickets } = useGetTicketsQuery({teamId, date, ticketType});
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedTicket, setSelectedTicket] = useState<ITicket | null>(null);
+    const [saving, setSaving] = useState(false);
+
+    //const { data: tickets } = useGetTicketsQuery({teamId, date, ticketType});
+
+    const handleEdit = (record: ITicket) => {
+        setSelectedTicket(record);
+        setModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setModalOpen(false);
+        setSelectedTicket(null);
+        setSaving(false);
+    };
+
+    const tickets: ITicket[] = [
+        {
+            key: 121,
+            name: "Some name",
+            state: "At work",
+            employee: "Vasya",
+            timeInWork: 12.2,
+            hyperlink: "string",
+            timeStampedOnDay: 21.3,
+            incomingDate: "12-12-2231",
+            priority: "Low",
+            organization: "kek",
+            type: "Request"
+        }
+    ]
 
     const columns: ColumnsType<ITicket> = [
         {
@@ -90,6 +123,23 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
                 }
                 return <Tag color={color}>{timeInWork}</Tag>;
             }
+        },
+        {
+            title: '',
+            key: 'action',
+            fixed: 'right',
+            width: 120,
+            render: (_, record) => (
+                <Space size="small">
+                    <Button
+                        type="link"
+                        icon={<EditOutlined/>}
+                        onClick={() => handleEdit(record)}
+                    >
+                        Edit
+                    </Button>
+                </Space>
+            ),
         }
     ];
 
@@ -108,7 +158,16 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
             }
             {
                 tickets && tickets.length > 0 &&
-                <Table dataSource={tickets} columns={columns} />
+                <>
+                    <Table dataSource={tickets} columns={columns} />
+                    <EditTicketModal isOpen={modalOpen}
+                                     ticket={selectedTicket}
+                                     loading={saving}
+                                     onClose={handleCloseModal}
+                                     onSuccess={handleEdit}/>
+                </>
+
+
             }
         </div>
     )
