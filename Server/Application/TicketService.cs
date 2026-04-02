@@ -14,7 +14,7 @@ public class TicketService
       {
         switch (ticketType)
         {
-          case "Инцидент" or "Консультация":
+          case "Инцидент" or "Консультация" or "Запрос на обслуживание":
             var totalDayMetric = this.Repository
               .Get<Metric>(m =>
                 m.Team.Id == teamId && m.Date.Date == date.Date && m.MetricType.Name == MetricTypes.Tail)

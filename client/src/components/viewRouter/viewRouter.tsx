@@ -18,7 +18,7 @@ const ViewRouter =  ({team, dayCount} :IViewRouterProps )=> {
         { label: 'Графики', mode: 'charts', type: '' },
         { label: 'Инциденты', mode: 'tickets', type: 'Инцидент' },
         { label: 'Консультации', mode: 'tickets', type: 'Консультация' },
-        { label: 'Запросы', mode: 'tickets', type: 'Запрос' },
+        { label: 'Запросы', mode: 'tickets', type: 'Запрос на обслуживание' },
         { label: 'Старше 4 недель', mode: 'tickets', type: 'Старше 4 недель'},
         { label: 'Старше 3 недель', mode: 'tickets', type: 'Старше 3 недель'},
         { label: 'Старше 2 недель', mode: 'tickets', type: 'Старше 2 недель'}
