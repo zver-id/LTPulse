@@ -18,7 +18,8 @@ export interface ITicket {
     incomingDate: string;
     priority: string;
     organization: string;
-    type: string
+    type: string;
+    comment: string;
 }
 
 export interface ITicketScreenProps {
@@ -69,7 +70,8 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
             incomingDate: "12-12-2231",
             priority: "Low",
             organization: "kek",
-            type: "Request"
+            type: "Request",
+            comment: "Что то происходит"
         }
     ]
 
@@ -166,8 +168,6 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
                                      onClose={handleCloseModal}
                                      onSuccess={handleEdit}/>
                 </>
-
-
             }
         </div>
     )

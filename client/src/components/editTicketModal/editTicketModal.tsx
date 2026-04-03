@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Modal, Form, Input, message } from 'antd';
 import type {ITicket} from '../ticketsScreen/ticketScreen.tsx';
 import TextArea from "antd/es/input/TextArea";
+import { useUpdateTicketMutation } from "../../storage/services/tickets-api.ts"
 
 interface EditUserModalProps {
     isOpen: boolean;
@@ -13,15 +14,12 @@ interface EditUserModalProps {
 
 const EditTicketModal: React.FC<EditUserModalProps> = ({ isOpen, ticket, loading, onClose, onSuccess}) => {
 
+    const [ updateTicket ] = useUpdateTicketMutation();
     const [form] = Form.useForm();
 
     useEffect(() => {
         if (ticket && isOpen) {
-            form.setFieldsValue({
-                number: ticket.key,
-                name: ticket.name,
-                org: ticket.organization,
-            });
+            form.setFieldsValue({ ...ticket });
         } else if (!isOpen) {
             form.resetFields();
         }
@@ -29,24 +27,17 @@ const EditTicketModal: React.FC<EditUserModalProps> = ({ isOpen, ticket, loading
 
     const handleSubmit = async () => {
         try {
-            const values = await form.validateFields();
+            const formValues = await form.validateFields();
+            const values = { ...ticket, ...formValues };
 
-            // Имитация API запроса (замените на реальный)
-            const response = await fetch(`/api/users/${ticket?.key}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(values),
-            });
+            await updateTicket(values).unwrap();
+            message.success('Комментарий успешно обновлен');
 
-            if (!response.ok) throw new Error('Ошибка сохранения');
-
-            message.success('Пользователь успешно обновлен!');
             onSuccess(); // Обновляем таблицу
             onClose();   // Закрываем окно
 
         } catch (error) {
-            console.error('Ошибка:', error);
-            message.error('Не удалось сохранить изменения');
+            message.error(`Не удалось сохранить изменения ${error}`);
         }
     };
 
@@ -60,7 +51,7 @@ const EditTicketModal: React.FC<EditUserModalProps> = ({ isOpen, ticket, loading
             okText="Сохранить"
             cancelText="Отмена"
             width={600}
-            destroyOnClose // Уничтожает содержимое при закрытии
+            destroyOnHidden
         >
             <Form
                 form={form}
@@ -71,11 +62,11 @@ const EditTicketModal: React.FC<EditUserModalProps> = ({ isOpen, ticket, loading
                     <Input disabled />
                 </Form.Item>
 
-                <Form.Item name="org" label="Организация">
+                <Form.Item name="organization" label="Организация">
                     <Input disabled />
                 </Form.Item>
 
-                <Form.Item name="email" label="Комментарий">
+                <Form.Item name="comment" label="Комментарий">
                     <TextArea autoSize/>
                 </Form.Item>
 
