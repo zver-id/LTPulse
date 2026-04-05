@@ -73,4 +73,9 @@ public class Ticket : IHasId
   /// Гиперссылка.
   /// </summary>
   public virtual string Hyperlink { get; set; }
+  
+  /// <summary>
+  /// Комментарий.
+  /// </summary>
+  public virtual string Comment { get; set; }
 }

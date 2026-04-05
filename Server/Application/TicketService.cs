@@ -42,6 +42,14 @@ public class TicketService
     );
   }
 
+  public async Task UpdateTicket(Ticket ticket)
+  {
+    await Task.Run(() =>
+    {
+      this.Repository.AddOrUpdate(ticket);
+    });
+  }
+
   public TicketService(IRepository repository)
   {
     this.Repository = repository;
