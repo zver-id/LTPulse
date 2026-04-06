@@ -17,7 +17,8 @@ export const ticketsApi = createApi({
                 url: 'Tickets',
                 method: 'POST',
                 body: ticket
-            })
+            }),
+            invalidatesTags: ['tickets']
         })
     })
 });

@@ -41,7 +41,12 @@ public class TicketsController : ControllerBase
     try
     {
       var service = new TicketService(this.repository);
-      var ticket = this.mapper.Map<TicketDTO, Ticket>(ticketDTO);
+      var ticket = this.repository.GetById<Ticket>(ticketDTO.Key);
+      if  (ticket == null)
+        return this.BadRequest("Этого обращения нет на сервере");
+      
+      // маппим только простые поля так как по сути нужно обновить только комментарий.
+      this.mapper.Map(ticketDTO, ticket);
       await service.UpdateTicket(ticket);
       return this.Ok(ticketDTO);
     }

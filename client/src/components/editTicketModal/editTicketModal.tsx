@@ -7,9 +7,9 @@ import { useUpdateTicketMutation } from "../../storage/services/tickets-api.ts"
 interface EditUserModalProps {
     isOpen: boolean;
     ticket: ITicket | null;
-    loading: boolean;           // Состояние загрузки при сохранении
-    onClose: () => void;        // Функция закрытия окна
-    onSuccess: () => void;      // Функция успешного сохранения (обновляет таблицу)
+    loading: boolean;
+    onClose: () => void;
+    onSuccess: (record: ITicket) => void;   
 }
 
 const EditTicketModal: React.FC<EditUserModalProps> = ({ isOpen, ticket, loading, onClose, onSuccess}) => {
@@ -33,8 +33,8 @@ const EditTicketModal: React.FC<EditUserModalProps> = ({ isOpen, ticket, loading
             await updateTicket(values).unwrap();
             message.success('Комментарий успешно обновлен');
 
-            onSuccess(); // Обновляем таблицу
-            onClose();   // Закрываем окно
+            onSuccess(values);
+            onClose();
 
         } catch (error) {
             message.error(`Не удалось сохранить изменения ${error}`);
