@@ -9,7 +9,7 @@ interface EditUserModalProps {
     ticket: ITicket | null;
     loading: boolean;
     onClose: () => void;
-    onSuccess: (record: ITicket) => void;   
+    onSuccess: (record: ITicket) => void;
 }
 
 const EditTicketModal: React.FC<EditUserModalProps> = ({ isOpen, ticket, loading, onClose, onSuccess}) => {
