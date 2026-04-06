@@ -18,7 +18,6 @@ export const ticketsApi = createApi({
                 method: 'POST',
                 body: ticket
             }),
-            //TODO надо сделать, чтобы один тикет обновлялся из ответа, а не запрашивать весь список
             invalidatesTags: ['tickets']
         })
     })
