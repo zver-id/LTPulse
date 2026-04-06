@@ -13,7 +13,6 @@ function Main() {
                 <Navigation onChangeTeam={setTeam} days={dayCount} onChangeDays={setDayCount} teamId={team}/>
             </header>
             <ViewRouter team={team} dayCount={dayCount}/>
-
         </>
     )
 }

@@ -2,28 +2,16 @@ import {CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis, Text } fr
 import type {LineChartProps} from "../../types/monthLineChart.ts";
 import { useGetFilteredMetricsQuery } from "../../storage/services/metrics-api.ts"
 import getAllLines from "../../helpers/getAllLines.ts"
+import loadingOrErrorScreen from "../../helpers/loadingOrErrorScreen.tsx"
 
 function MonthLineChart ({teamId, dayCount, filter} :LineChartProps) {
 
     const { data, isLoading, isError }
         = useGetFilteredMetricsQuery({teamId: teamId, dayCount: dayCount, filter: filter});
 
-    if (isLoading) {
-        return(
-            <div>
-                <video width="30%" autoPlay muted loop>
-                    <source src='/videos/cat.mp4' type='video/mp4'/>
-                </video>
-            </div>);
-    }
-    if (isError) {
-        return(
-            <div>
-                <h2> Данные не загрузились </h2>
-                <video width="30%" autoPlay muted loop>
-                    <source src='/videos/cat.mp4' type='video/mp4'/>
-                </video>
-            </div>);
+    const loadingOrErrorResult = loadingOrErrorScreen({isLoading, isError})
+    if (loadingOrErrorResult) {
+        return loadingOrErrorResult;
     }
 
     const allMonths = getAllLines(data)

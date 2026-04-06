@@ -2,6 +2,7 @@ import styles from "../mainScreen/MainScreen.module.css";
 import {useState} from "react";
 import MonthLineChart from "../lineChart/monthLineChart.tsx";
 import ZonesChart from "../areaChart/ZonesChart.tsx";
+import MetricBarChart from "../barChart/barChart.tsx"
 import TicketScreen from "../ticketsScreen/ticketScreen.tsx";
 import type {zonesColor} from "../../types/zones-chart-props.ts";
 
@@ -56,6 +57,7 @@ const ViewRouter =  ({team, dayCount} :IViewRouterProps )=> {
                     <MonthLineChart teamId={team} dayCount={dayCount} filter={"tail"} />
                     <MonthLineChart teamId={team} dayCount={dayCount} filter={"snowball"} />
                     <ZonesChart teamId={team} dayCount={dayCount} filter={"ColorZones"} zoneColor={zoneColorSimple} />
+                    <MetricBarChart teamId={team} dayCount={dayCount} filter={"NegativeGrades"} />
                 </>
             )}
 
