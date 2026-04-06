@@ -17,7 +17,9 @@ export const ticketsApi = createApi({
                 url: 'Tickets',
                 method: 'POST',
                 body: ticket
-            })
+            }),
+            //TODO надо сделать, чтобы один тикет обновлялся из ответа, а не запрашивать весь список
+            invalidatesTags: ['tickets']
         })
     })
 });

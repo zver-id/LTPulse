@@ -20,6 +20,10 @@ public class ObjectToDTO : Profile
       .ForMember(dest => dest.Priority, 
         opt => opt.MapFrom(src => src.Priority.Name))
       .ForMember(dest => dest.State, 
-        opt => opt.MapFrom(src => src.State.State));
+        opt => opt.MapFrom(src => src.State.State))
+      .ReverseMap()
+      .ForMember(dest => dest.Priority, opt => opt.Ignore())  
+      .ForMember(dest => dest.State, opt => opt.Ignore())   
+      .ForMember(dest => dest.Id, opt => opt.Ignore());
   }
 }

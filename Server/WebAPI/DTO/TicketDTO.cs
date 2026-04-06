@@ -57,5 +57,10 @@ public class TicketDTO
   /// <summary>
   /// Гиперссылка.
   /// </summary>
-  public  string Hyperlink { get; set; }
+  public string Hyperlink { get; set; }
+  
+  /// <summary>
+  /// Комментарий.
+  /// </summary>
+  public string Comment { get; set; }
 }
