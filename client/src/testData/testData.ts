@@ -1,3 +1,6 @@
+import type {ColumnsType} from "antd/es/table";
+import type {ITicket} from "../components/ticketsScreen/ticketScreen.tsx";
+
 type DynamicMonthKeys = `${
     | 'January'
     | 'February'
@@ -69,3 +72,20 @@ export function getData(team: string):(Array<dayData>) {
             return atlas
     }
 }
+
+export const tickets: ITicket[] = [
+    {
+        key: 121,
+        name: "Some name",
+        state: "At work",
+        employee: "Vasya",
+        timeInWork: 12.2,
+        hyperlink: "string",
+        timeStampedOnDay: 21.3,
+        incomingDate: "12-12-2231",
+        priority: "Low",
+        organization: "kek",
+        type: "Request",
+        comment: "Что то происходит"
+    }
+]
