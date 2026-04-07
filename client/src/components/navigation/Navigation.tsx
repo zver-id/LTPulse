@@ -1,10 +1,16 @@
 import styles from "./navigation.module.css"
-import type {NavigationProps} from "../../types/navigation.ts";
 import { useGetAllTeamsQuery } from "../../storage/services/teams-api.ts"
 
-function Navigation (props: NavigationProps){
+export interface INavigationProps {
+    onChangeTeam: (teams: number) => void;
+    days: number;
+    onChangeDays: (days: number) => void;
+    teamId: number;
+}
 
-    const { onChangeDays, days, onChangeTeam } = props
+function Navigation (props: INavigationProps){
+
+    const { onChangeDays, days, onChangeTeam, teamId } = props
     const {data} = useGetAllTeamsQuery()
 
     const handleChangeTeam = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -21,6 +27,7 @@ function Navigation (props: NavigationProps){
             <select className={styles.selectBar}
                     id={"teamSelection"}
                     name={"teams"}
+                    value={teamId}
                     onChange={handleChangeTeam}>
                 {data?.map((team) =>
                     <option
