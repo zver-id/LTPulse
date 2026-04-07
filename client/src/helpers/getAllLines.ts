@@ -1,4 +1,4 @@
-import type { TeamData } from "../../types/team-data.ts"
+import type { TeamData } from "../types/team-data.ts"
 
 /**
  * Возвращает список линий для графиков.

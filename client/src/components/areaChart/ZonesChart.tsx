@@ -65,13 +65,13 @@ function ZonesChart ({teamId, dayCount, filter, zoneColor} :ZonesChartProps) {
                     >
                         <LabelList
                             dataKey={zone.name}
-                            position="top"
+                            position="center"
                             style={{ fontSize: '12px', fill: '#333' }}
                             content={(props) => {
                                 const { x, y, value } = props;
                                 if (value === 0) return null;
                                 return (
-                                    <text x={x} y={Number(y) - 8} textAnchor="middle" fill="#666" fontSize={14}>
+                                    <text x={x} y={Number(y) + 15} textAnchor="middle" fill="#666" fontSize={14}>
                                         {value}
                                     </text>
                                 );
