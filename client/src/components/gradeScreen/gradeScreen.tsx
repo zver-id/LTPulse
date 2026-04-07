@@ -1,43 +1,38 @@
-import {Button, Card, DatePicker, Space, Table, Tag, Typography} from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { useGetTicketsQuery } from '../../storage/services/tickets-api.ts'
 import {useState} from "react";
-import dayjs, { Dayjs } from 'dayjs';
-import { EditOutlined } from '@ant-design/icons';
-import EditTicketModal from '../editTicketModal/editTicketModal.tsx'
+import dayjs, {Dayjs} from "dayjs";
+import type {ColumnsType} from "antd/es/table";
+import {Button, Card, DatePicker, Space, Table, Tag, Typography} from "antd";
+import {EditOutlined} from "@ant-design/icons";
+import EditTicketModal from "../editTicketModal/editTicketModal.tsx";
+import {useGetGradesQuery} from "../../storage/services/grade-api.ts";
 
-
-export interface ITicket {
-    key: number;
-    name: string;
-    state: string;
-    employee: string;
-    timeInWork: number;
-    hyperlink: string;
-    timeStampedOnDay: number;
-    incomingDate: string;
-    priority: string;
-    organization: string;
-    type: string;
-    comment: string;
+export interface IGrade {
+    key: number,
+    text: string,
+    score: string,
+    date: string,
+    isResearched: boolean,
 }
 
-export interface ITicketScreenProps {
+export interface IGradeScreenProps {
     teamId: number;
-    ticketType: string;
+
 }
 
-function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
+function GradeScreen({teamId} :IGradeScreenProps) {
 
     const [dateJs, setDateJs] = useState<Dayjs | null>(dayjs());
     const date = dateJs?.format('YYYY-MM-DD') ||
         new Date().toISOString().split('T')[0];
 
+    const [onlyUnresearched, setOnlyUnresearched] = useState(false);
+    const [onlyNegative, setOnlyNegative] = useState(false);
+
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedTicket, setSelectedTicket] = useState<ITicket | null>(null);
+    const [selectedGrade, setSelectedGrade] = useState<IGrade | null>(null);
     const [saving, setSaving] = useState(false);
 
-    const { data: tickets } = useGetTicketsQuery({teamId, date, ticketType});
+    const { data: grades } = useGetGradesQuery({teamId, date, onlyUnresearched, onlyNegative});
 
     const handleEdit = (record: ITicket) => {
         setSelectedTicket(record);
@@ -59,7 +54,7 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
             render: (text: string, record: ITicket) => {
                 return <a href={record.hyperlink} target="_blank">
                     {text}
-                </a>;
+                    </a>;
             }
         },
         {
@@ -109,44 +104,44 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
             width: 120,
             render: (_, record) => (
                 <Space size="small">
-                    <Button
-                        type="link"
-                        icon={<EditOutlined/>}
-                        onClick={() => handleEdit(record)}
-                    >
-                        Edit
-                    </Button>
-                </Space>
-            ),
-        }
-    ];
+                <Button
+                    type="link"
+            icon={<EditOutlined/>}
+        onClick={() => handleEdit(record)}
+>
+    Edit
+    </Button>
+    </Space>
+),
+}
+];
 
     return (
         <div>
             <DatePicker
                 value={dateJs}
-                onChange={(newDate) => setDateJs(newDate)}
-                format="DD-MM-YYYY"
-                style={{ width: 200 }}
-            />
-            {(!tickets || tickets.length === 0) &&
-                <Card>
-                    <Typography>Обращений за эту дату и с этой характеристикой нет.</Typography>
-                </Card>
-            }
-            {
-                tickets && tickets.length > 0 &&
-                <>
-                    <Table dataSource={tickets} columns={columns} />
-                    <EditTicketModal isOpen={modalOpen}
-                                     ticket={selectedTicket}
-                                     loading={saving}
-                                     onClose={handleCloseModal}
-                                     onSuccess={handleEdit}/>
-                </>
-            }
-        </div>
-    )
+    onChange={(newDate) => setDateJs(newDate)}
+    format="DD-MM-YYYY"
+    style={{ width: 200 }}
+    />
+    {(!tickets || tickets.length === 0) &&
+    <Card>
+        <Typography>Обращений за эту дату и с этой характеристикой нет.</Typography>
+    </Card>
+    }
+    {
+        tickets && tickets.length > 0 &&
+        <>
+            <Table dataSource={tickets} columns={columns} />
+    <EditTicketModal isOpen={modalOpen}
+        ticket={selectedTicket}
+        loading={saving}
+        onClose={handleCloseModal}
+        onSuccess={handleEdit}/>
+    </>
+    }
+    </div>
+)
 }
 
 export default TicketScreen;

@@ -4,17 +4,17 @@ import type { ITicket } from "../../components/ticketsScreen/ticketScreen.tsx";
 
 export const ticketsApi = createApi({
     reducerPath: "tickets",
-    baseQuery: fetchBaseQuery({baseUrl: `${apiUrl}/api`}),
+    baseQuery: fetchBaseQuery({baseUrl: `${apiUrl}/api/Tickets`}),
     tagTypes: ['tickets'],
     endpoints: (builder) => ({
         getTickets: builder.query<ITicket[], { teamId: number, date: string, ticketType: string}>({
             query: ({teamId, date, ticketType})=>
-                `Tickets?teamId=${teamId}&date=${date}&ticketType=${ticketType}`,
+                `?teamId=${teamId}&date=${date}&ticketType=${ticketType}`,
             providesTags: ['tickets']
         }),
         updateTicket: builder.mutation({
             query: (ticket: ITicket) =>({
-                url: 'Tickets',
+                url: '',
                 method: 'POST',
                 body: ticket
             }),
