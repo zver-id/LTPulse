@@ -103,7 +103,7 @@ public class MetricCalculator
     this.CreateMetric("Проблемы", t => t.Type == TicketType.ProblemFull && t.IncomingDate.Date == DateTime.Now.Date);
     this.CreateMetric("Поступило всего", t => t.IncomingDate.Date == DateTime.Now.Date);
     this.CreateMetric("Всего в работе", t => t.State.State.Equals(TicketStatus.InWorkFullString));
-    this.CreateGradeMetric("Поступившие", g => g.Date.Date == DateTime.Now.Date && g.Score == 4 );
+    this.CreateGradeMetric("Поступившие", g => g.Date.Date == DateTime.Now.Date && g.Score == 2 );
     this.CreateSpentTimeMetric("Затрачено в часах", t => t.Type == TicketType.RequestFull);
     this.logger.LogInformation($"Метрики для команды {this.team.Name} рассчитаны");
   }

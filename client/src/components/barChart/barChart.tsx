@@ -2,6 +2,7 @@ import { useGetFilteredMetricsQuery } from "../../storage/services/metrics-api.t
 import loadingOrErrorScreen from "../../helpers/loadingOrErrorScreen.tsx";
 import {Bar, BarChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis} from "recharts";
 import { RechartsDevtools } from '@recharts/devtools';
+import getAllLines from "../../helpers/getAllLines.ts";
 
 interface IBarChartProps {
     teamId: number;
@@ -19,9 +20,11 @@ function MetricBarChart({teamId, dayCount, filter}: IBarChartProps) {
         return loadingOrErrorResult;
     }
 
+    const categories = getAllLines(data)
+
     return (
         <BarChart
-            style={{width: '100%', maxWidth: '700px', maxHeight: '70vh', aspectRatio: 1.618}}
+            style={{ width: '80%', aspectRatio: 1.618, maxHeight: '40vh' }}
             responsive
             data={data}
             margin={{
@@ -36,8 +39,15 @@ function MetricBarChart({teamId, dayCount, filter}: IBarChartProps) {
             <YAxis width="auto"/>
             <Tooltip/>
             <Legend/>
-            <Bar dataKey="Поступившие" fill="#8884d8" activeBar={{fill: 'pink', stroke: 'blue'}} radius={[10, 10, 0, 0]}/>
-            <Bar dataKey="Проработанные" fill="#82ca9d" activeBar={{fill: 'gold', stroke: 'purple'}} radius={[10, 10, 0, 0]}/>
+            {
+                categories?.map((category) =>{
+                    return (
+                        <Bar
+                            key={category}
+                            dataKey={category} fill="#8884d8" activeBar={{fill: 'pink', stroke: 'blue'}}/>
+                    )
+                })
+            }
             <RechartsDevtools/>
         </BarChart>
     )
