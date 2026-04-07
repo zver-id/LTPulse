@@ -92,6 +92,7 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
             dataIndex: 'timeInWork',
             key: 'timeInWork',
             sorter: (a, b) => a.timeInWork - b.timeInWork,
+            defaultSortOrder: 'descend',
             render: (timeInWork: number) =>{
                 let color: string = ''
                 if (timeInWork <= 8){
