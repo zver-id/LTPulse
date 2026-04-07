@@ -5,7 +5,8 @@ import {
     Legend,
     CartesianGrid,
     AreaChart,
-    Area
+    Area,
+    LabelList
 } from 'recharts';
 
 import type {ZonesChartProps} from "../../types/zones-chart-props.ts";
@@ -61,7 +62,22 @@ function ZonesChart ({teamId, dayCount, filter, zoneColor} :ZonesChartProps) {
                         stroke={zone.color}
                         fill={zone.color}
                         stackId="1"
-                    />
+                    >
+                        <LabelList
+                            dataKey={zone.name}
+                            position="top"
+                            style={{ fontSize: '12px', fill: '#333' }}
+                            content={(props) => {
+                                const { x, y, value } = props;
+                                if (value === 0) return null;
+                                return (
+                                    <text x={x} y={Number(y) - 8} textAnchor="middle" fill="#666" fontSize={14}>
+                                        {value}
+                                    </text>
+                                );
+                            }}
+                        />
+                    </Area>
                 ))}
                 <Legend
                     layout="vertical"

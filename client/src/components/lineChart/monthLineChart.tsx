@@ -1,4 +1,4 @@
-import {CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis, Text } from "recharts";
+import {CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis, Text, LabelList} from "recharts";
 import type {LineChartProps} from "../../types/monthLineChart.ts";
 import { useGetFilteredMetricsQuery } from "../../storage/services/metrics-api.ts"
 import getAllLines from "../../helpers/getAllLines.ts"
@@ -36,8 +36,23 @@ function MonthLineChart ({teamId, dayCount, filter} :LineChartProps) {
                           dataKey={month}
                           stroke={colors[index % colors.length]}
                           type="monotone"
+                    >
+                        <LabelList
+                            dataKey={month}
+                            position="top"
+                            style={{ fontSize: '12px', fill: '#333' }}
+                            content={(props) => {
+                                const { x, y, value } = props;
+                                if (value === 0) return null;
+                                return (
+                                    <text x={x} y={Number(y) - 8} textAnchor="middle" fill="#666" fontSize={14}>
+                                        {value}
+                                    </text>
+                                );
+                            }}
+                        />
+                    </Line>
 
-                    />
                 )
             })}
             <Legend />
