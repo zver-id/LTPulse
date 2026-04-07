@@ -9,3 +9,5 @@ Server/LTPulse.sln.DotSettings.user
 Server/DBCore/settings.json
 
 *.xlsx
+
+client/.env
