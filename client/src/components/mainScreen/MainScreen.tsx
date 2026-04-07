@@ -12,7 +12,9 @@ function Main() {
                 <h1 className={styles.siteTitle}>Статистика</h1>
                 <Navigation onChangeTeam={setTeam} days={dayCount} onChangeDays={setDayCount} teamId={team}/>
             </header>
-            <ViewRouter team={team} dayCount={dayCount}/>
+            <main>
+                <ViewRouter team={team} dayCount={dayCount}/>
+            </main>
         </>
     )
 }
