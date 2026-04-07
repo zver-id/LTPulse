@@ -92,6 +92,7 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
             dataIndex: 'timeInWork',
             key: 'timeInWork',
             sorter: (a, b) => a.timeInWork - b.timeInWork,
+            defaultSortOrder: 'descend',
             render: (timeInWork: number) =>{
                 let color: string = ''
                 if (timeInWork <= 8){
@@ -138,7 +139,7 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
             />
             {(!tickets || tickets.length === 0) &&
                 <Card>
-                    <Typography>Обращений за эту дату нет. Похоже расчет не производился.</Typography>
+                    <Typography>Обращений за эту дату и с этой характеристикой нет.</Typography>
                 </Card>
             }
             {
