@@ -99,7 +99,7 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
                     color = 'green'
                 }
                 else if (8 < timeInWork && timeInWork <= 16){
-                    color = '#f4e5c2' //Песочный цвет
+                    color = '#c2a56d' //Песочный цвет
                 }
                 else if (16 < timeInWork && timeInWork <= 24){
                     color = 'yellow'
@@ -107,7 +107,7 @@ function TicketScreen({teamId, ticketType} :ITicketScreenProps) {
                 else {
                     color = 'red'
                 }
-                return <Tag color={color}>{timeInWork}</Tag>;
+                return <Tag color={color} >{timeInWork.toFixed(2)}</Tag>;
             }
         },
         {

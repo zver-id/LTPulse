@@ -3,6 +3,7 @@ import type {LineChartProps} from "../../types/monthLineChart.ts";
 import { useGetFilteredMetricsQuery } from "../../storage/services/metrics-api.ts"
 import getAllLines from "../../helpers/getAllLines.ts"
 import loadingOrErrorScreen from "../../helpers/loadingOrErrorScreen.tsx"
+import getMaxValue from "../../helpers/getMaxValue.ts";
 
 function MonthLineChart ({teamId, dayCount, filter} :LineChartProps) {
 
@@ -15,6 +16,8 @@ function MonthLineChart ({teamId, dayCount, filter} :LineChartProps) {
     }
 
     const allMonths = getAllLines(data)
+    const yAxisMax = data ? Math.ceil(getMaxValue(data) * 1.1) : 0
+
     const colors = [ '#E6194B', '#3CB44B', '#4363D8', '#F58231', '#911EB4', '#42D4F4',
         '#F032E6', '#BFEF45', '#FABED4', '#469990', '#DCBEFF', '#9A6324', '#800000'];
 
@@ -28,7 +31,8 @@ function MonthLineChart ({teamId, dayCount, filter} :LineChartProps) {
                 Заголовок графика
             </Text>
             <XAxis dataKey="day" />
-            <YAxis width="auto" />
+            <YAxis width="auto"
+                domain={[0, yAxisMax]}/>
             <CartesianGrid stroke="#aaa" strokeDasharray="5 5" />
             {allMonths?.map((month, index) =>{
                 return(
