@@ -84,7 +84,8 @@ public class GradeListGenerator
       Text = element.GetRequisiteWithOpen(TechKasRequisites.GradeText, RequisitesMode.AsString),
       Date = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.GradeDate, RequisitesMode.AsString),
         "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture),
-      Ticket = this.GetRelatedTicket(id)
+      Ticket = this.GetRelatedTicket(id),
+      isResearched = false
     };
   }
 

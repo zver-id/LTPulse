@@ -45,7 +45,7 @@ public class JobScheduler
           Name = $"generate_report_{team.Name}",
           Team = team,
           StartProcess = DateTime.Now,
-          RepeatInterval = TimeSpan.FromDays(1)
+          RepeatInterval = TimeSpan.FromMinutes(180)
         };
         this.Repository.AddOrUpdate(newJob);
         this.Jobs.Add(newJob);

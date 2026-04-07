@@ -32,4 +32,9 @@ public class Grade : IHasId
   /// Обращение по которому поступила оценка.
   /// </summary>
   public virtual Ticket Ticket { get; set; }
+  
+  /// <summary>
+  /// Признак проработанности.
+  /// </summary>
+  public virtual bool isResearched { get; set; }
 }
