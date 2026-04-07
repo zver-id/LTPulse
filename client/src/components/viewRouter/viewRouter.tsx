@@ -2,6 +2,7 @@ import styles from "../mainScreen/MainScreen.module.css";
 import {useState} from "react";
 import MonthLineChart from "../lineChart/monthLineChart.tsx";
 import ZonesChart from "../areaChart/ZonesChart.tsx";
+import MetricBarChart from "../barChart/barChart.tsx"
 import TicketScreen from "../ticketsScreen/ticketScreen.tsx";
 import type {zonesColor} from "../../types/zones-chart-props.ts";
 
@@ -30,6 +31,11 @@ const ViewRouter =  ({team, dayCount} :IViewRouterProps )=> {
         {name: '16-24', color: colors[2]},
         {name: '>24', color: colors[3]}]
 
+    const zoneColorPriority: zonesColor[] = [ {name: '<0.25', color: colors[0]},
+        {name: '0.25-0.5', color: colors[1]},
+        {name: '0.5-0.75', color: colors[2]},
+        {name: '>0.75', color: colors[3]}]
+
     return(
         <>
         <div className={styles.buttonGroup}>
@@ -56,6 +62,11 @@ const ViewRouter =  ({team, dayCount} :IViewRouterProps )=> {
                     <MonthLineChart teamId={team} dayCount={dayCount} filter={"tail"} />
                     <MonthLineChart teamId={team} dayCount={dayCount} filter={"snowball"} />
                     <ZonesChart teamId={team} dayCount={dayCount} filter={"ColorZones"} zoneColor={zoneColorSimple} />
+                    <ZonesChart teamId={team} dayCount={dayCount} filter={"ColorZonesPriority"} zoneColor={zoneColorPriority} />
+                    <MetricBarChart teamId={team} dayCount={dayCount} filter={"NegativeGrades"} />
+                    <MetricBarChart teamId={team} dayCount={dayCount} filter={"ExternalMessages"} />
+                    <MonthLineChart teamId={team} dayCount={dayCount} filter={"IncomingTypes"} />
+                    <MonthLineChart teamId={team} dayCount={dayCount} filter={"SpentForRequests"} />
                 </>
             )}
 
