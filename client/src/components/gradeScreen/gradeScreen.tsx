@@ -119,15 +119,15 @@ function GradeScreen({teamId}: IGradeScreenProps) {
         format="DD-MM-YYYY"
         style={{width: 200}}
       />
-      {(!tickets || tickets.length === 0) &&
+      {(!grades || grades.length === 0) &&
         <Card>
-          <Typography>Обращений за эту дату и с этой характеристикой нет.</Typography>
+          <Typography>Оценок за эту дату нет.</Typography>
         </Card>
       }
       {
-        tickets && tickets.length > 0 &&
+        grades && grades.length > 0 &&
         <>
-          <Table dataSource={tickets} columns={columns}/>
+          <Table dataSource={grades} columns={columns}/>
           <EditTicketModal isOpen={modalOpen}
                            ticket={selectedTicket}
                            loading={saving}
@@ -139,4 +139,4 @@ function GradeScreen({teamId}: IGradeScreenProps) {
   )
 }
 
-export default TicketScreen;
+export default GradeScreen;
