@@ -1,4 +1,4 @@
-header{
+header {
     position: fixed;
     top: 0;
     left: 0;
@@ -6,7 +6,7 @@ header{
     height: 120px;
     background: white;
     z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 main {
@@ -14,7 +14,7 @@ main {
     padding: 20px;
 }
 
-.siteTitle{
+.siteTitle {
     font-family: Arial, serif;
     font-size: 30px;
     font-weight: 500;
