@@ -104,7 +104,7 @@ function TicketScreen({teamId, ticketType}: ITicketScreenProps) {
       }
     },
     {
-      title: '',
+      title: 'Комментарий',
       key: 'action',
       fixed: 'right',
       width: 120,
@@ -115,7 +115,6 @@ function TicketScreen({teamId, ticketType}: ITicketScreenProps) {
             icon={<EditOutlined/>}
             onClick={() => handleEdit(record)}
           >
-            Edit
           </Button>
         </Space>
       ),
