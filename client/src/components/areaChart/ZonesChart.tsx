@@ -80,9 +80,9 @@ function ZonesChart ({teamId, dayCount, filter, zoneColor} :ZonesChartProps) {
                     </Area>
                 ))}
                 <Legend
-                    layout="vertical"
-                    verticalAlign="middle"
-                    align="right"
+                    layout="horizontal"
+                    verticalAlign="bottom"
+                    align="center"
                     wrapperStyle={{ paddingLeft: 10 }}
                 />
             </g>

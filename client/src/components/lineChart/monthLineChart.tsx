@@ -22,46 +22,48 @@ function MonthLineChart ({teamId, dayCount, filter} :LineChartProps) {
         '#F032E6', '#BFEF45', '#FABED4', '#469990', '#DCBEFF', '#9A6324', '#800000'];
 
     return (
-        <LineChart
-            style={{ width: '80%', aspectRatio: 1.618, maxHeight: '40vh' }}
-            margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-            responsive
-            data={data}>
+        <>
             <Text x={250} y={20} textAnchor="middle" dominantBaseline="middle">
                 Заголовок графика
             </Text>
-            <XAxis dataKey="day" />
-            <YAxis width="auto"
-                domain={[0, yAxisMax]}/>
-            <CartesianGrid stroke="#aaa" strokeDasharray="5 5" />
-            {allMonths?.map((month, index) =>{
-                return(
-                    <Line key={month}
-                          dataKey={month}
-                          stroke={colors[index % colors.length]}
-                          type="monotone"
-                    >
-                        <LabelList
-                            dataKey={month}
-                            position="top"
-                            style={{ fontSize: '12px', fill: '#333' }}
-                            content={(props) => {
-                                const { x, y, value } = props;
-                                if (value === 0) return null;
-                                return (
-                                    <text x={x} y={Number(y) - 8} textAnchor="middle" fill="#666" fontSize={14}>
-                                        {value}
-                                    </text>
-                                );
-                            }}
-                        />
-                    </Line>
+            <LineChart
+                style={{ width: '80%', aspectRatio: 1.618, maxHeight: '40vh' }}
+                margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+                responsive
+                data={data}>
 
-                )
-            })}
-            <Legend />
-            <Tooltip />
-        </LineChart>
+                <XAxis dataKey="day" />
+                <YAxis width="auto"
+                    domain={[0, yAxisMax]}/>
+                <CartesianGrid stroke="#aaa" strokeDasharray="5 5" />
+                {allMonths?.map((month, index) =>{
+                    return(
+                        <Line key={month}
+                              dataKey={month}
+                            stroke={colors[index % colors.length]}
+                            type="monotone"
+                        >
+                            <LabelList
+                                dataKey={month}
+                                position="top"
+                                style={{ fontSize: '12px', fill: '#333' }}
+                                content={(props) => {
+                                    const { x, y, value } = props;
+                                    if (value === 0) return null;
+                                    return (
+                                        <text x={x} y={Number(y) - 8} textAnchor="middle" fill="#666" fontSize={14}>
+                                            {value}
+                                        </text>
+                                    );
+                                }}
+                            />
+                        </Line>
+                    )
+                })}
+                <Legend />
+                <Tooltip />
+            </LineChart>
+        </>
     );
 }
 

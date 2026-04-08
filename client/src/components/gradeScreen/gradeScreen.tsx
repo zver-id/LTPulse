@@ -9,9 +9,11 @@ import {useGetGradesQuery} from "../../storage/services/grade-api.ts";
 export interface IGrade {
     key: number,
     text: string,
-    score: string,
+    score: number,
     date: string,
     isResearched: boolean,
+    ticketHyperlink: string,
+    employee: string
 }
 
 export interface IGradeScreenProps {
@@ -45,34 +47,42 @@ function GradeScreen({teamId} :IGradeScreenProps) {
         setSaving(false);
     };
 
-    const columns: ColumnsType<ITicket> = [
+    const columns: ColumnsType<IGrade> = [
         {
             title: 'Номер обращения',
             dataIndex: 'key',
             key: 'key',
             sorter: (a, b) => a.key - b.key,
-            render: (text: string, record: ITicket) => {
-                return <a href={record.hyperlink} target="_blank">
+            render: (text: string, record: IGrade) => {
+                return <a href={record.ticketHyperlink} target="_blank">
                     {text}
                     </a>;
             }
         },
         {
-            title: 'Описание',
-            dataIndex: 'name',
-            key: 'name'
+            title: 'Текст оценки',
+            dataIndex: 'text',
+            key: 'text'
         },
         {
-            title: 'Состояние обращения',
-            dataIndex: 'state',
-            key: 'state',
-            sorter: (a, b) => a.state.localeCompare(b.state)
+            title: 'Оценка',
+            dataIndex: 'score',
+            key: 'score',
+            render: (record: IGrade) =>{
+                return <span>{record.score === 2 ? "Плохо" : "Хорошо"}</span>;
+            }
         },
         {
             title: 'Ответственный',
             dataIndex: 'employee',
             key: 'employee',
             sorter: (a, b) => a.employee.localeCompare(b.employee)
+        },
+        {
+            title: 'Проработано',
+            dataIndex: 'isResearched',
+            key: 'isResearched',
+            sorter: (a, b) => Number(a.isResearched) - Number(b.isResearched)
         },
         {
             title: 'Время в работе',
