@@ -71,6 +71,10 @@ function TicketScreen({teamId, ticketType}: ITicketScreenProps) {
       title: 'Состояние обращения',
       dataIndex: 'state',
       key: 'state',
+      filters: Array.from(new Set(tickets?.map((item: ITicket):string => item.state)))
+        .sort((a:string, b:string) => a.localeCompare(b))
+        .map(state => ({text: state, value: state})),
+      onFilter: (value, record) => record.state === value,
       sorter: (a, b) => a.state.localeCompare(b.state)
     },
     {

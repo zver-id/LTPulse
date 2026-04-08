@@ -5,6 +5,7 @@ import {Button, Card, DatePicker, Space, Table, Tag, Typography} from "antd";
 import {EditOutlined} from "@ant-design/icons";
 import EditTicketModal from "../editTicketModal/editTicketModal.tsx";
 import {useGetGradesQuery} from "../../storage/services/grade-api.ts";
+import type {ITicket} from "../ticketsScreen/ticketScreen.tsx";
 
 export interface IGrade {
   key: number,
@@ -68,6 +69,10 @@ function GradeScreen({teamId}: IGradeScreenProps) {
       title: 'Оценка',
       dataIndex: 'score',
       key: 'score',
+      filters: Array.from(new Set(grades?.map((item) => item.score)))
+        .sort((a, b) => a - b )
+        .map(score => ({text: score === 2 ? "Плохо" : "Хорошо", value: score})),
+      onFilter: (value, record) => record.score === value,
       render: (record: IGrade) => {
         return <span>{record.score === 2 ? "Плохо" : "Хорошо"}</span>;
       }
@@ -82,27 +87,10 @@ function GradeScreen({teamId}: IGradeScreenProps) {
       title: 'Проработано',
       dataIndex: 'isResearched',
       key: 'isResearched',
+      filters: Array.from(new Set(grades?.map((item) => item.isResearched)))
+        .map(isResearched => ({text: isResearched ? "Проработана" : "Не проработана", value: isResearched})),
+      onFilter: (value, record) => record.isResearched === value,
       sorter: (a, b) => Number(a.isResearched) - Number(b.isResearched)
-    },
-    {
-      title: 'Время в работе',
-      dataIndex: 'timeInWork',
-      key: 'timeInWork',
-      sorter: (a, b) => a.timeInWork - b.timeInWork,
-      defaultSortOrder: 'descend',
-      render: (timeInWork: number) => {
-        let color: string = ''
-        if (timeInWork <= 8) {
-          color = 'green'
-        } else if (8 < timeInWork && timeInWork <= 16) {
-          color = '#c2a56d' //Песочный цвет
-        } else if (16 < timeInWork && timeInWork <= 24) {
-          color = 'yellow'
-        } else {
-          color = 'red'
-        }
-        return <Tag color={color}>{timeInWork.toFixed(2)}</Tag>;
-      }
     },
     {
       title: '',
