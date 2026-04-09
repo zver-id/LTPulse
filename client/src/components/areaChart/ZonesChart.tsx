@@ -2,6 +2,7 @@ import {Area, AreaChart, CartesianGrid, LabelList, Legend, Tooltip, XAxis, YAxis
 
 import type {ZonesChartProps} from "../../types/zones-chart-props.ts";
 import {useGetFilteredMetricsQuery} from "../../storage/services/metrics-api.ts"
+import calculateVisualDataForZoneChart from "../../helpers/calculateVisualDataForZoneChart.ts";
 
 function ZonesChart({teamId, dayCount, filter, zoneColor}: ZonesChartProps) {
 
@@ -15,70 +16,57 @@ function ZonesChart({teamId, dayCount, filter, zoneColor}: ZonesChartProps) {
     return <h1>Error...</h1>;
   }
 
+  const visualData = calculateVisualDataForZoneChart(data, zoneColor);
+
   return (
-    <AreaChart
-      style={{width: '80%', aspectRatio: 1.618, maxHeight: '40vh'}}
-      responsive
-      data={data}
-      stackOffset="expand"
-      margin={{top: 10, right: 20, left: 0, bottom: 0}}
-    >
-      <defs>
-        {/* Показываем только верхние 40% */}
-        <clipPath id="cut40">
-          <rect x="0" y="0" width="100%" height="40%"/>
-        </clipPath>
-      </defs>
-
-      {/*
-       transform-origin: top
-       scaleY(2.5) = 1 / 0.4  → растягиваем оставшиеся 40% на 100%
-    */}
-      <g
-        clipPath="url(#cut40)"
-        style={{
-          transform: "scaleY(2.5)",
-          transformOrigin: "top"
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3"/>
-        <XAxis dataKey="day" orientation="top"/>
-        <YAxis width="auto" domain={[0, 1]}/>
-        <Tooltip/>
-        {zoneColor?.map((zone) => (
-          <Area
-            key={zone.name}
-            dataKey={zone.name}
-            type="monotone"
-            stroke={zone.color}
-            fill={zone.color}
-            stackId="1"
-          >
-            <LabelList
+        <AreaChart
+          style={{width: '80%', aspectRatio: 1.618, maxHeight: '40vh'}}
+          responsive
+          data={visualData}
+          stackOffset="expand"
+          margin={{top: 10, right: 20, left: 0, bottom: 0}}
+        >
+          <CartesianGrid strokeDasharray="3 3"/>
+          <XAxis dataKey="day" orientation="top"/>
+          <YAxis width="auto" />
+          <Tooltip
+            formatter={(_value, name, props) => {
+              const originalValue = props.payload[`original_${name}`];
+              return `${originalValue}`;
+            }}
+          />
+          {zoneColor?.reverse().map((zone) => (
+            <Area
+              key={zone.name}
               dataKey={zone.name}
-              position="center"
-              style={{fontSize: '12px', fill: '#333'}}
-              content={(props) => {
-                const {x, y, value} = props;
-                if (value === 0) return null;
-                return (
-                  <text x={x} y={Number(y) + 15} textAnchor="middle" fill="#666" fontSize={14}>
-                    {value}
-                  </text>
-                );
-              }}
-            />
-          </Area>
-        ))}
-        <Legend
-          layout="horizontal"
-          verticalAlign="bottom"
-          align="center"
-          wrapperStyle={{paddingLeft: 10}}
-        />
-      </g>
-    </AreaChart>
-
+              type="monotone"
+              stroke={zone.color}
+              fill={zone.color}
+              stackId="1"
+            >
+              <LabelList
+                dataKey={`original_${zone.name}`}
+                position="center"
+                style={{fontSize: '12px', fill: '#333'}}
+                content={(props) => {
+                  const {x, y, value} = props;
+                  if (value === 0) return null;
+                  return (
+                    <text x={x} y={Number(y) + 15} textAnchor="middle" fill="#666" fontSize={14}>
+                      {value}
+                    </text>
+                  );
+                }}
+              />
+            </Area>
+          ))}
+          <Legend
+            layout="horizontal"
+            verticalAlign="bottom"
+            align="center"
+            wrapperStyle={{paddingLeft: 10}}
+          />
+        </AreaChart>
   );
 }
 

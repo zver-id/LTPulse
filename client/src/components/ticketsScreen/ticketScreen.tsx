@@ -84,6 +84,12 @@ function TicketScreen({teamId, ticketType}: ITicketScreenProps) {
       sorter: (a, b) => a.employee.localeCompare(b.employee)
     },
     {
+      title: 'Организация',
+      dataIndex: 'organization',
+      key: 'organization',
+      sorter: (a, b) => a.employee.localeCompare(b.employee)
+    },
+    {
       title: 'Время в работе',
       dataIndex: 'timeInWork',
       key: 'timeInWork',

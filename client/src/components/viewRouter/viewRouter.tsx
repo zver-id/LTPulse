@@ -26,15 +26,19 @@ const ViewRouter = ({team, dayCount}: IViewRouterProps) => {
   ];
 
   const colors = ['#3CB44B', '#F5DEB3', '#FFD700', '#E6194B'];
-  const zoneColorSimple: zonesColor[] = [{name: '0-8', color: colors[0]},
-    {name: '8-16', color: colors[1]},
-    {name: '16-24', color: colors[2]},
-    {name: '>24', color: colors[3]}]
+  const zoneColorSimple: zonesColor[] = [
+     {name: '>24', color: colors[3]},
+     {name: '16-24', color: colors[2]},
+     {name: '8-16', color: colors[1]},
+     {name: '0-8', color: colors[0]}
+ ]
 
-  const zoneColorPriority: zonesColor[] = [{name: '<0.25', color: colors[0]},
-    {name: '0.25-0.5', color: colors[1]},
-    {name: '0.5-0.75', color: colors[2]},
-    {name: '>0.75', color: colors[3]}]
+  const zoneColorPriority: zonesColor[] = [
+     {name: '>0.75', color: colors[3]},
+     {name: '0.5-0.75', color: colors[2]},
+     {name: '0.25-0.5', color: colors[1]},
+     {name: '<0.25', color: colors[0]}
+ ]
 
   return (
     <>
