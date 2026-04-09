@@ -27,8 +27,8 @@ function ZonesChart({teamId, dayCount, filter, zoneColor}: ZonesChartProps) {
           margin={{top: 10, right: 20, left: 0, bottom: 0}}
         >
           <CartesianGrid strokeDasharray="3 3"/>
-          <XAxis dataKey="day" orientation="top"/>
-          <YAxis width="auto" />
+          <XAxis dataKey="day" orientation="bottom"/>
+          <YAxis width="auto" tick={false} />
           <Tooltip
             formatter={(_value, name, props) => {
               const originalValue = props.payload[`original_${name}`];
