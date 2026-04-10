@@ -137,7 +137,12 @@ function TicketScreen({teamId, ticketType}: ITicketScreenProps) {
       />
       {(!tickets || tickets.length === 0) &&
         <Card>
-          <Typography>Обращений за эту дату и с этой характеристикой нет.</Typography>
+          <Typography>Здесь ничего нет.</Typography>
+            <img
+              src="/gif/where.gif"
+              width={400}
+              height={300}
+            />
         </Card>
       }
       {

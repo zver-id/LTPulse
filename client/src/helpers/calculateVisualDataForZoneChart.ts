@@ -16,7 +16,7 @@ function calculateVisualDataForZoneChart(data: TeamData[], zonesColor: zonesColo
     }, 0) * MAX_HEIGHT;
 
     const result: VisualDataForZoneChart = {
-      day: teamData.day as string,  // Добавляем day
+      day: teamData.day as string,
       ...zonesColor.reduce<Record<string, number>>((acc, { name }) => {
         acc[`original_${name}`] = teamData[name];
         const currentValue = teamData[name] as number;
