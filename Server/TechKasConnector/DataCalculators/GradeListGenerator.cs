@@ -54,7 +54,7 @@ public class GradeListGenerator
       try
       {
         Grade newGrade = this.GetOrCreateGrade(grade);
-        this.Repository.Add(newGrade);
+        this.Repository.AddOrUpdate(newGrade);
         if (listOfEmployeeNames.Contains(newGrade.Ticket.Employee))
           this.Grades.Add(newGrade);
       }

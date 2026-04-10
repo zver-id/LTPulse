@@ -29,7 +29,7 @@ public class ObjectToDTO : Profile
 
     this.CreateMap<Grade, GradeDTO>()
       .ForMember(dest => dest.Key,
-        opt => opt.MapFrom(src => src.Id))
+        opt => opt.MapFrom(src => src.Ticket.Id))
       .ForMember(dest => dest.Hyperlink,
         opt => opt.MapFrom(src => src.Ticket.Hyperlink))
       .ForMember(dest => dest.Employee,

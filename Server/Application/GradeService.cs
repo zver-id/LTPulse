@@ -35,7 +35,7 @@ public class GradeService : GenericService
       .Select(employee => employee.Name);
     return this.repository.Get<Grade>(grade =>
       employees.Contains(grade.Ticket.Employee) && 
-      grade.Date.Date > startDate.Date && grade.Date.Date < endDate.Date);
+      grade.Date.Date <= startDate.Date && grade.Date.Date >= endDate.Date);
   }
   
   public GradeService(IRepository repository) : base(repository)

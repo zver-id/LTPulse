@@ -22,7 +22,7 @@ public class GradeController : ControllerBase
   private readonly IMapper mapper;
 
   [HttpGet]
-  public async Task<ActionResult<Response>> GetGrades(int teamId, DateTime date, bool? onlyUnresearched, bool? onlyNegative)
+  public async Task<ActionResult<Response<GradeDTO>>> GetGrades(int teamId, DateTime date, bool? onlyUnresearched, bool? onlyNegative)
   {
     var gradeService = new GradeService(this.repository);
     var team = this.repository.GetById<Team>(teamId);
@@ -33,9 +33,9 @@ public class GradeController : ControllerBase
     }
     else
     {
-      grades = gradeService.GetAllGrades(team, date - TimeSpan.FromDays(1), date);
+      grades = gradeService.GetAllGrades(team, date, date - TimeSpan.FromDays(1));
     }
-    return this.BadRequest(new Response
+    return this.Ok(new Response<GradeDTO>
     {
       Data = this.mapper.Map<List<GradeDTO>>(grades),
       Schema = typeof(Grade).GetProperties()
