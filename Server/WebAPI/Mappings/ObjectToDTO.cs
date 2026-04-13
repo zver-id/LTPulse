@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using AutoMapper;
 using CommonModels.Models;
 using WebAPI.DTO;
@@ -13,7 +12,9 @@ public class ObjectToDTO : Profile
   public ObjectToDTO()
   {
     this.CreateMap<Team, TeamDTO>().ReverseMap();
+    
     this.CreateMap<Metric, MetricDTO>().ReverseMap();
+    
     this.CreateMap<Ticket, TicketDTO>()
       .ForMember(dest => dest.Key,
         opt => opt.MapFrom(src => src.Id))
@@ -25,5 +26,14 @@ public class ObjectToDTO : Profile
       .ForMember(dest => dest.Priority, opt => opt.Ignore())  
       .ForMember(dest => dest.State, opt => opt.Ignore())   
       .ForMember(dest => dest.Id, opt => opt.Ignore());
+
+    this.CreateMap<Grade, GradeDTO>()
+      .ForMember(dest => dest.Key,
+        opt => opt.MapFrom(src => src.Ticket.Id))
+      .ForMember(dest => dest.Hyperlink,
+        opt => opt.MapFrom(src => src.Ticket.Hyperlink))
+      .ForMember(dest => dest.Employee,
+        opt => opt.MapFrom(src => src.Ticket.Employee))
+      .ReverseMap();
   }
 }

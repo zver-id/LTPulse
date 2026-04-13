@@ -19,14 +19,13 @@ public class MetricsService : GenericService
   /// <returns>Список метрик.</returns>
   public Task<List<Dictionary<string, object>>> GetMetrics(Expression<Func<Metric, bool>> filter)
   {
-    
     return Task.Run(() =>
     {
       List<Metric> metrics = this.repository.Get<Metric>(filter);
       var result = new List<Dictionary<string, object>>();
-
       
-      var groupedByDate = metrics.GroupBy(m => m.Date.Date);
+      var groupedByDate = metrics.GroupBy(m => m.Date.Date)
+        .OrderBy(group => group.Key);
       foreach (var group in groupedByDate)
       {
         var dayData = new Dictionary<string, object>();

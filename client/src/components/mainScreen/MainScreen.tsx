@@ -1,22 +1,22 @@
 import styles from "./MainScreen.module.css"
 import Navigation from "../navigation/Navigation.tsx";
-import { useLocalStorageState } from "../../storage/useLocalStorageState.ts"
+import {useLocalStorageState} from "../../storage/useLocalStorageState.ts"
 import ViewRouter from "../viewRouter/viewRouter.tsx";
 
 function Main() {
-    const [team, setTeam] = useLocalStorageState("team", 1)
-    const [dayCount, setDayCount] = useLocalStorageState("dayCount", 140)
+  const [team, setTeam] = useLocalStorageState("team", 1)
+  const [dayCount, setDayCount] = useLocalStorageState("dayCount", 140)
 
-    return (<>
-            <header>
-                <h1 className={styles.siteTitle}>Статистика</h1>
-                <Navigation onChangeTeam={setTeam} days={dayCount} onChangeDays={setDayCount} teamId={team}/>
-            </header>
-            <main>
-                <ViewRouter team={team} dayCount={dayCount}/>
-            </main>
-        </>
-    )
+  return (<>
+      <header>
+        <h1 className={styles.siteTitle}>Статистика</h1>
+        <Navigation onChangeTeam={setTeam} days={dayCount} onChangeDays={setDayCount} teamId={team}/>
+      </header>
+      <main>
+        <ViewRouter team={team} dayCount={dayCount}/>
+      </main>
+    </>
+  )
 }
 
 export default Main

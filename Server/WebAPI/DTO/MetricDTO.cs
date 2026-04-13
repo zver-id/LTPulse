@@ -1,4 +1,5 @@
 using System;
+using CommonModels.Interfaces;
 
 namespace WebAPI.DTO;
 

@@ -54,7 +54,7 @@ public class GradeListGenerator
       try
       {
         Grade newGrade = this.GetOrCreateGrade(grade);
-        this.Repository.Add(newGrade);
+        this.Repository.AddOrUpdate(newGrade);
         if (listOfEmployeeNames.Contains(newGrade.Ticket.Employee))
           this.Grades.Add(newGrade);
       }
@@ -84,7 +84,8 @@ public class GradeListGenerator
       Text = element.GetRequisiteWithOpen(TechKasRequisites.GradeText, RequisitesMode.AsString),
       Date = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.GradeDate, RequisitesMode.AsString),
         "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture),
-      Ticket = this.GetRelatedTicket(id)
+      Ticket = this.GetRelatedTicket(id),
+      isResearched = false
     };
   }
 

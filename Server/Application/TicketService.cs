@@ -4,10 +4,8 @@ using CommonModels.Models;
 
 namespace Application;
 
-public class TicketService
+public class TicketService : GenericService
 {
-  private IRepository Repository { get; }
-  
   public async Task<List<Ticket>> GetTickets(int teamId, DateTime date, string ticketType)
   {
     return await Task.Run(() =>
@@ -15,7 +13,7 @@ public class TicketService
         switch (ticketType)
         {
           case "Инцидент" or "Консультация" or "Запрос на обслуживание":
-            var totalDayMetric = this.Repository
+            var totalDayMetric = this.repository
               .Get<Metric>(m =>
                 m.Team.Id == teamId && m.Date.Date == date.Date && m.MetricType.Name == MetricTypes.Tail)
               .FirstOrDefault();
@@ -27,7 +25,7 @@ public class TicketService
           default:
             try
             {
-              return this.Repository.Get<Metric>(m =>
+              return this.repository.Get<Metric>(m =>
                   m.Date.Date == date.Date && m.Team.Id == teamId && m.MetricType.Name == ticketType)
                 .First()
                 .Tickets
@@ -46,12 +44,11 @@ public class TicketService
   {
     await Task.Run(() =>
     {
-      this.Repository.AddOrUpdate(ticket);
+      this.repository.AddOrUpdate(ticket);
     });
   }
-
-  public TicketService(IRepository repository)
+  
+  public TicketService(IRepository repository) : base(repository)
   {
-    this.Repository = repository;
   }
 }

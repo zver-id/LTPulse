@@ -1,8 +1,9 @@
 using System;
+using CommonModels.Interfaces;
 
 namespace WebAPI.DTO;
 
-public class TicketDTO
+public class TicketDTO : IDto
 {
   /// <summary>
   /// ID тикета.
