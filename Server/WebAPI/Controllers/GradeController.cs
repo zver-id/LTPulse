@@ -10,22 +10,22 @@ using CommonModels.Interfaces;
 using CommonModels.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using WebAPI.Controllers;
 using WebAPI.DTO;
+
+namespace WebAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class GradeController : ControllerBase
+public class GradeController(IRepository repository, ILogger<GradeController> logger, IMapper mapper)
+  : ControllerBase
 {
-  private readonly ILogger<GradeController> logger;
-  private readonly IRepository repository;
-  private readonly IMapper mapper;
+  private readonly ILogger<GradeController> logger = logger;
 
   [HttpGet]
   public async Task<ActionResult<Response<GradeDTO>>> GetGrades(int teamId, DateTime date, bool? onlyUnresearched, bool? onlyNegative)
   {
-    var gradeService = new GradeService(this.repository);
-    var team = this.repository.GetById<Team>(teamId);
+    var gradeService = new GradeService(repository);
+    var team = repository.GetById<Team>(teamId);
     List<Grade> grades;
     if (onlyNegative == true)
     {
@@ -37,17 +37,10 @@ public class GradeController : ControllerBase
     }
     return this.Ok(new Response<GradeDTO>
     {
-      Data = this.mapper.Map<List<GradeDTO>>(grades),
-      Schema = typeof(Grade).GetProperties()
+      Data = mapper.Map<List<GradeDTO>>(grades),
+      Schema = typeof(GradeDTO).GetProperties()
         .ToDictionary(p => p.Name,
           p => p.GetCustomAttribute<DisplayAttribute>()?.Name ?? p.Name)
     });
-  }
-  
-  public GradeController(IRepository repository, ILogger<GradeController> logger, IMapper mapper)
-  {
-    this.repository = repository;
-    this.logger = logger;
-    this.mapper = mapper;
   }
 }

@@ -5,6 +5,7 @@ import ZonesChart from "../areaChart/ZonesChart.tsx";
 import MetricBarChart from "../barChart/barChart.tsx"
 import TicketScreen from "../ticketsScreen/ticketScreen.tsx";
 import type {zonesColor} from "../../types/zones-chart-props.ts";
+import GradeScreen from "../gradeScreen/gradeScreen.tsx";
 
 export interface IViewRouterProps {
   team: number;
@@ -22,7 +23,8 @@ const ViewRouter = ({team, dayCount}: IViewRouterProps) => {
     {label: 'Запросы', mode: 'tickets', type: 'Запрос на обслуживание'},
     {label: 'Старше 4 недель', mode: 'tickets', type: 'Старше 4 недель'},
     {label: 'Старше 3 недель', mode: 'tickets', type: 'Старше 3 недель'},
-    {label: 'Старше 2 недель', mode: 'tickets', type: 'Старше 2 недель'}
+    {label: 'Старше 2 недель', mode: 'tickets', type: 'Старше 2 недель'},
+    {label: 'Оценки', mode: 'grades', type: ''}
   ];
 
   const colors = ['#3CB44B', '#F5DEB3', '#FFD700', '#E6194B'];
@@ -77,6 +79,11 @@ const ViewRouter = ({team, dayCount}: IViewRouterProps) => {
         {viewMode === 'tickets' && (
           <TicketScreen teamId={team} ticketType={ticketsType}/>
         )}
+
+        {viewMode === 'grades' && (
+          <GradeScreen teamId={team} />
+        )
+        }
       </div>
     </>
   )

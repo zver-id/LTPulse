@@ -2,12 +2,17 @@ import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react'
 import apiUrl from "./api-url.ts";
 import type {IGrade} from "../../components/gradeScreen/gradeScreen.tsx";
 
+export interface GradeResponse {
+  schema: Record<string, string>;
+  data: IGrade[]
+}
+
 export const gradeApi = createApi({
   reducerPath: "grade",
-  baseQuery: fetchBaseQuery({baseUrl: `${apiUrl}/api/Grades`}),
+  baseQuery: fetchBaseQuery({baseUrl: `${apiUrl}/api/Grade`}),
   tagTypes: ['grades'],
   endpoints: (builder) => ({
-    getGrades: builder.query<IGrade[], {
+    getGrades: builder.query<GradeResponse, {
       teamId: number,
       date: string | null,
       onlyUnresearched: boolean,
