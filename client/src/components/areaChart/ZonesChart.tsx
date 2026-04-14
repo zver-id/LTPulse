@@ -16,7 +16,7 @@ function ZonesChart({teamId, dayCount, filter, zoneColor}: ZonesChartProps) {
     return <h1>Error...</h1>;
   }
 
-  const visualData = calculateVisualDataForZoneChart(data, zoneColor);
+  const visualData = calculateVisualDataForZoneChart(data ?? [], zoneColor);
 
   return (
         <AreaChart

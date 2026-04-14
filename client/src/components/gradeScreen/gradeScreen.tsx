@@ -1,9 +1,9 @@
 import {useState} from "react";
 import dayjs, {Dayjs} from "dayjs";
 import type {ColumnsType, ColumnType} from "antd/es/table";
-import {Button, Card, DatePicker, Space, Table, Typography} from "antd";
+import {Button, Card, Checkbox, DatePicker, Space, Table, Typography} from "antd";
 import {EditOutlined} from "@ant-design/icons";
-import EditTicketModal from "../editTicketModal/editTicketModal.tsx";
+import EditItemModal from "../editItemModal/editItemModal.tsx";
 import {useGetGradesQuery} from "../../storage/services/grade-api.ts";
 
 
@@ -121,12 +121,18 @@ function GradeScreen({teamId}: IGradeScreenProps) {
       {
         grades && grades.data.length > 0 &&
         <>
+          <Checkbox onChange={(e) => setOnlyUnresearched(e.target.checked)} checked={onlyUnresearched}>
+            Только непроработанные
+          </Checkbox>
+          <Checkbox onChange={(e) => setOnlyNegative(e.target.checked)} checked={onlyNegative}>
+            Только негативные
+          </Checkbox>
           <Table dataSource={grades.data} columns={columns}/>
-          <EditTicketModal isOpen={modalOpen}
-                           grade={selectedGrade}
-                           loading={saving}
-                           onClose={handleCloseModal}
-                           onSuccess={handleEdit}/>
+          <EditItemModal<IGrade> isOpen={modalOpen}
+                                 item={selectedGrade}
+                                 loading={saving}
+                                 onClose={handleCloseModal}
+                                 onSuccess={handleEdit}/>
         </>
       }
     </div>

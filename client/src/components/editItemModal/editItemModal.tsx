@@ -1,34 +1,35 @@
-import React, {useEffect} from 'react';
+import {useEffect} from 'react';
 import {Form, Input, message, Modal} from 'antd';
 import type {ITicket} from '../ticketsScreen/ticketScreen.tsx';
 import TextArea from "antd/es/input/TextArea";
 import {useUpdateTicketMutation} from "../../storage/services/tickets-api.ts"
+import type {IGrade} from "../gradeScreen/gradeScreen.tsx";
 
-interface EditUserModalProps {
+interface EditItemModalProps<T = ITicket | IGrade> {
   isOpen: boolean;
-  ticket: ITicket | null;
+  item: T | null;
   loading: boolean;
   onClose: () => void;
-  onSuccess: (record: ITicket) => void;
+  onSuccess: (record: T) => void;
 }
 
-const EditTicketModal: React.FC<EditUserModalProps> = ({isOpen, ticket, loading, onClose, onSuccess}) => {
+function EditItemModal<T extends ITicket | IGrade> ({isOpen, item, loading, onClose, onSuccess}: EditItemModalProps<T>) {
 
   const [updateTicket] = useUpdateTicketMutation();
   const [form] = Form.useForm();
 
   useEffect(() => {
-    if (ticket && isOpen) {
-      form.setFieldsValue({...ticket});
+    if (item && isOpen) {
+      form.setFieldsValue({...item});
     } else if (!isOpen) {
       form.resetFields();
     }
-  }, [ticket, isOpen, form]);
+  }, [item, isOpen, form]);
 
   const handleSubmit = async () => {
     try {
       const formValues = await form.validateFields();
-      const values = {...ticket, ...formValues};
+      const values = {...item, ...formValues};
 
       await updateTicket(values).unwrap();
       message.success('Комментарий успешно обновлен');
@@ -43,7 +44,7 @@ const EditTicketModal: React.FC<EditUserModalProps> = ({isOpen, ticket, loading,
 
   return (
     <Modal
-      title={`Обращение ${ticket?.key}`}
+      title={`Обращение ${item?.key}`}
       open={isOpen}
       onOk={handleSubmit}
       onCancel={onClose}
@@ -75,4 +76,4 @@ const EditTicketModal: React.FC<EditUserModalProps> = ({isOpen, ticket, loading,
   );
 };
 
-export default EditTicketModal;
+export default EditItemModal;
