@@ -1,10 +1,12 @@
 ﻿import type {TeamData} from "../types/team-data.ts";
 import type {zonesColor} from "../types/zones-chart-props.ts";
 
-export interface VisualDataForZoneChart {
+type VisualDataForZoneChart = {
   day: string;
-  [key: string]: number;
+} & {
+  [key: string]: number | string;
 }
+
 
 function calculateVisualDataForZoneChart(data: TeamData[], zonesColor: zonesColor[]) {
   const MAX_HEIGHT = 0.4;

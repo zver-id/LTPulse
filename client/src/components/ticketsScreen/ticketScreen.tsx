@@ -4,7 +4,7 @@ import {useGetTicketsQuery} from '../../storage/services/tickets-api.ts'
 import {useState} from "react";
 import dayjs, {Dayjs} from 'dayjs';
 import {EditOutlined} from '@ant-design/icons';
-import EditTicketModal from '../editTicketModal/editTicketModal.tsx'
+import EditItemModal from '../editItemModal/editItemModal.tsx'
 
 
 export interface ITicket {
@@ -149,11 +149,11 @@ function TicketScreen({teamId, ticketType}: ITicketScreenProps) {
         tickets && tickets.length > 0 &&
         <>
           <Table dataSource={tickets} columns={columns}/>
-          <EditTicketModal isOpen={modalOpen}
-                           ticket={selectedTicket}
-                           loading={saving}
-                           onClose={handleCloseModal}
-                           onSuccess={handleEdit}/>
+          <EditItemModal isOpen={modalOpen}
+                         item={selectedTicket}
+                         loading={saving}
+                         onClose={handleCloseModal}
+                         onSuccess={handleEdit}/>
         </>
       }
     </div>
