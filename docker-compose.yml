@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:  
+  webserver:
+    build:
+      context: ./Server
+      dockerfile: Dockerfile
+    container_name: webserver
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+    networks:
+      - app-network
+
+  webclient:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: webclient
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks:
+      - app-network
+    depends_on:
+      - webserver
+      - webclient
+    healthcheck:
+      test: ["CMD", "haproxy", "-f", "/usr/local/etc/haproxy/haproxy.cfg", "-c"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  app-network:
+    driver: bridge
+    

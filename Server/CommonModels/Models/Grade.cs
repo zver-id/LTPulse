@@ -1,0 +1,40 @@
+using System;
+using CommonModels.Interfaces;
+
+namespace CommonModels.Models;
+
+/// <summary>
+/// Оценка обращения.
+/// </summary>
+public class Grade : IHasId
+{
+  /// <summary>
+  /// ID.
+  /// </summary>
+  public virtual int Id { get; set; }
+  
+  /// <summary>
+  /// Текст оценки.
+  /// </summary>
+  public virtual string? Text { get; set; }
+  
+  /// <summary>
+  /// Результат.
+  /// </summary>
+  public virtual int Score { get; set; }
+  
+  /// <summary>
+  /// Дата.
+  /// </summary>
+  public virtual DateTime Date { get; set; }
+  
+  /// <summary>
+  /// Обращение по которому поступила оценка.
+  /// </summary>
+  public virtual Ticket Ticket { get; set; }
+  
+  /// <summary>
+  /// Признак проработанности.
+  /// </summary>
+  public virtual bool isResearched { get; set; }
+}
