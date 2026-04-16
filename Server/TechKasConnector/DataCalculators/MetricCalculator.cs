@@ -1,6 +1,8 @@
 ﻿using System.Globalization;
 using CommonModels.Interfaces;
 using CommonModels.Models;
+using DBCore;
+using NHibernate.Infrastructure;
 using TechKasConnector.Calendar;
 using TechKasConnector.Requisites;
 
@@ -41,9 +43,14 @@ public class MetricCalculator
   private readonly ILogger<MetricCalculator> logger;
   
   /// <summary>
-  /// Логгер.
+  /// Календарь.
   /// </summary>
   private CalendarCalculator calendar;
+  
+  /// <summary>
+  /// Калькулятор баллов внешних сообщений.
+  /// </summary>
+  private ExternalMessageCalculator externalMessageCalculator;
   
   #endregion
   
@@ -52,7 +59,7 @@ public class MetricCalculator
   /// <summary>
   /// Рассчитать все метрики.
   /// </summary>
-  public void ProcessAllMetrics()
+  public async Task ProcessAllMetrics()
   {
     this.logger.LogInformation($"Начало записи метрик для команды {this.team.Name}");
     this.CreateMonthMetrics();
@@ -105,6 +112,7 @@ public class MetricCalculator
     this.CreateMetric("Всего в работе", t => t.State.State.Equals(TicketStatus.InWorkFullString));
     this.CreateGradeMetric("Поступившие", g => g.Date.Date == DateTime.Now.Date && g.Score == 2 );
     this.CreateSpentTimeMetric("Затрачено в часах", t => t.Type == TicketType.RequestFull);
+    await this.CreateExternalMessageMetric("Внешние сообщения");
     this.logger.LogInformation($"Метрики для команды {this.team.Name} рассчитаны");
   }
 
@@ -187,6 +195,39 @@ public class MetricCalculator
     metric.Grades = grades;
  
     this.repository.AddOrUpdate(metric);
+  }
+
+  /// <summary>
+  /// Рассчитать метрику баллов внешних сообщений.
+  /// </summary>
+  /// <param name="nameOfMetricType">Имя метрики.</param>
+  private async Task CreateExternalMessageMetric(string nameOfMetricType)
+  {
+    try
+    {
+      var metricType = this.repository.Get<MetricType>(mt => mt.Name == nameOfMetricType).First();
+      var metric = this.GetOrCreateMetric(DateTime.Today, metricType);
+      var employees = this.team.Employees
+        .Select(e => e.Name)
+        .ToList();
+      
+      var totalScore = 0;
+      var scores = await this.externalMessageCalculator.GetEmployeeScores();
+      foreach (KeyValuePair<string, int> empScore in scores)
+      {
+        if (employees.Contains(empScore.Key))
+        {
+          totalScore += empScore.Value;
+        }
+      }
+
+      metric.Value = totalScore;
+      this.repository.AddOrUpdate(metric);
+    }
+    catch (Exception ex)
+    {
+      this.logger.LogError(ex, "Error creating metric: {nameOfMetricType}", nameOfMetricType);
+    }
   }
   
   /// <summary>
@@ -314,13 +355,13 @@ public class MetricCalculator
   /// Конструктор.
   /// </summary>
   public MetricCalculator(IRepository repository, ILogger<MetricCalculator> logger, CalendarCalculator calendar,
-    GradeListGenerator gradeListGenerator)
+    GradeListGenerator gradeListGenerator, ExternalMessageCalculator externalMessageCalculator)
   {
     this.repository = repository;
     this.logger = logger;
     this.calendar = calendar;
     this.GradeListGenerator = gradeListGenerator;
+    this.externalMessageCalculator = externalMessageCalculator;
   }
-  
   #endregion
 }

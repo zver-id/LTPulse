@@ -28,10 +28,14 @@ public static class Program
     
     builder.Services.AddHostedService<MetricsCalculatorService>();
     builder.Services.AddHostedService<SchedulerService>();
+    
     builder.Services.AddScoped<MetricCalculator>();
     builder.Services.AddScoped<CalendarCalculator>();
     builder.Services.AddScoped<GradeListGenerator>();
     builder.Services.AddScoped<JobScheduler>();
+    builder.Services.Configure<ClubDetailsOptions>(
+      builder.Configuration.GetSection("ClubDetails"));
+    builder.Services.AddScoped<ExternalMessageCalculator>();
 
     var host = builder.Build();
     host.Run();

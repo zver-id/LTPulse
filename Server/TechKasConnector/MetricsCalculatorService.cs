@@ -11,11 +11,29 @@ using TechKasConnector.DataCalculators;
 
 namespace TechKasConnectService;
 
+/// <summary>
+/// Сервис расчета метрик.
+/// </summary>
 public class MetricsCalculatorService : BackgroundService
 {
-  private readonly ILogger<MetricsCalculatorService> logger;
-  private RabbitMQClient rabbitMQProducer;
+  #region Поля и свойства
+  /// <summary>
+  /// Логгер.
+  /// </summary>
+  private ILogger<MetricsCalculatorService> Logger { get; set; }
+  
+  /// <summary>
+  /// Точка доступа в RabbitMQ.
+  /// </summary>
+  private RabbitMQClient RabbitMqProducer { get; set; }
+  
+  /// <summary>
+  /// Точка получения Scope.
+  /// </summary>
   private IServiceScopeFactory serviceScopeFactory;
+  
+  #endregion
+
   
   /// <summary>
   /// Конфигурация.
@@ -24,14 +42,14 @@ public class MetricsCalculatorService : BackgroundService
 
   protected override async Task ExecuteAsync(CancellationToken stoppingToken)
   {
-    this.logger.LogInformation("MetricsCalculatorService running at: {time}", DateTimeOffset.Now);
-    this.rabbitMQProducer = await RabbitMQClient.CreateAsync(this.Config.GetConnectionString("RabbitMQ"));
-    var rabbitMQConsumer = new AsyncEventingBasicConsumer(this.rabbitMQProducer.channel);
+    this.Logger.LogInformation("MetricsCalculatorService running at: {time}", DateTimeOffset.Now);
+    this.RabbitMqProducer = await RabbitMQClient.CreateAsync(this.Config.GetConnectionString("RabbitMQ"));
+    var rabbitMQConsumer = new AsyncEventingBasicConsumer(this.RabbitMqProducer.channel);
     
     var maxConcurrentMessages  = Environment.ProcessorCount - 1;
     var messageSemaphore = new SemaphoreSlim(maxConcurrentMessages);
     
-    await this.rabbitMQProducer.channel.BasicQosAsync(
+    await this.RabbitMqProducer.channel.BasicQosAsync(
       prefetchSize: 0, 
       prefetchCount: (ushort)maxConcurrentMessages, 
       global: false
@@ -48,11 +66,11 @@ public class MetricsCalculatorService : BackgroundService
           var message = Encoding.UTF8.GetString(body);
           var correlationId = ea.BasicProperties.CorrelationId;
           var replyTo = ea.BasicProperties.ReplyTo;
-          this.ProcessMessage(message);
+          await this.ProcessMessage(message);
         }
         catch (Exception e)
         {
-          this.logger.LogError(e, "Error processing message");
+          this.Logger.LogError(e, "Error processing message");
           throw;
         }
         finally
@@ -60,38 +78,40 @@ public class MetricsCalculatorService : BackgroundService
           messageSemaphore.Release();
         }
         //TODO нужно перенаправлять ошибочные сообщения в другую очередь
-        await this.rabbitMQProducer.channel.BasicAckAsync(ea.DeliveryTag, false);
+        await this.RabbitMqProducer.channel.BasicAckAsync(ea.DeliveryTag, false);
       });
     };
 
-    this.rabbitMQProducer.channel.BasicConsumeAsync(
+    this.RabbitMqProducer.channel.BasicConsumeAsync(
       queue: "task_queue",
       consumer: rabbitMQConsumer,
       autoAck: false
     );
   }
 
-  private string ProcessMessage(string message)
+  private async Task<string> ProcessMessage(string message)
   {
-    this.logger.LogInformation("Processing message: {message}", message);
+    this.Logger.LogInformation("Processing message: {message}", message);
     var messageBody = JsonSerializer.Deserialize<GenerateTeamReportRequest>(message);
     if (messageBody == null)
     {
-      this.logger.LogError($"Received null message: {message}");
+      this.Logger.LogError($"Received null message: {message}");
       throw new ArgumentException("Invalid message body");
     }
       
     using var scope = this.serviceScopeFactory.CreateScope();
     var metricCreator = scope.ServiceProvider.GetRequiredService<MetricCalculator>();
     metricCreator.Init(messageBody.Team);
-    metricCreator.ProcessAllMetrics();
+    await metricCreator.ProcessAllMetrics();
     return string.Empty;
   }
   
-  public MetricsCalculatorService(ILogger<MetricsCalculatorService> logger,
-    IServiceScopeFactory serviceScopeFactory, IConfiguration configuration)
+  public MetricsCalculatorService(
+    ILogger<MetricsCalculatorService> logger,
+    IServiceScopeFactory serviceScopeFactory,
+    IConfiguration configuration)
   {
-    this.logger = logger;
+    this.Logger = logger;
     this.serviceScopeFactory = serviceScopeFactory;
     this.Config = configuration;
   }
