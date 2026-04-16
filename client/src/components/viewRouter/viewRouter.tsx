@@ -6,6 +6,7 @@ import MetricBarChart from "../barChart/barChart.tsx"
 import TicketScreen from "../ticketsScreen/ticketScreen.tsx";
 import type {zonesColor} from "../../types/zones-chart-props.ts";
 import GradeScreen from "../gradeScreen/gradeScreen.tsx";
+import {type IMetricGroup, useGetMetricGroupsQuery} from "../../storage/services/metricGroups-api.ts";
 
 export interface IViewRouterProps {
   team: number;
@@ -15,6 +16,7 @@ export interface IViewRouterProps {
 const ViewRouter = ({team, dayCount}: IViewRouterProps) => {
   const [viewMode, setViewMode] = useState('charts')
   const [ticketsType, setTicketsType] = useState('')
+  const { data: metricGroups } = useGetMetricGroupsQuery()
 
   const buttons = [
     {label: 'Графики', mode: 'charts', type: ''},
@@ -63,6 +65,11 @@ const ViewRouter = ({team, dayCount}: IViewRouterProps) => {
       <div>
         {viewMode === 'charts' && (
           <>
+            {
+              metricGroups?.map(({key, name, nameOfChart, typeOfChart}: IMetricGroup) => {
+                
+              })
+            }
             <MonthLineChart teamId={team} dayCount={dayCount} filter={"month"}/>
             <MonthLineChart teamId={team} dayCount={dayCount} filter={"Older3Week"}/>
             <MonthLineChart teamId={team} dayCount={dayCount} filter={"tail"}/>
