@@ -66,20 +66,22 @@ const ViewRouter = ({team, dayCount}: IViewRouterProps) => {
         {viewMode === 'charts' && (
           <>
             {
-              metricGroups?.map(({key, name, nameOfChart, typeOfChart}: IMetricGroup) => {
-                
+              metricGroups?.map(({id, name, nameOfChart, chartType}: IMetricGroup) => {
+                if (chartType === 'Line') {
+                  return (
+                      <MonthLineChart teamId={team} dayCount={dayCount} filter={name}/>
+                  )
+                }
+                else return <div>{name}</div>;
+
               })
             }
-            <MonthLineChart teamId={team} dayCount={dayCount} filter={"month"}/>
-            <MonthLineChart teamId={team} dayCount={dayCount} filter={"Older3Week"}/>
-            <MonthLineChart teamId={team} dayCount={dayCount} filter={"tail"}/>
-            <MonthLineChart teamId={team} dayCount={dayCount} filter={"snowball"}/>
+
             <ZonesChart teamId={team} dayCount={dayCount} filter={"ColorZones"} zoneColor={zoneColorSimple}/>
             <ZonesChart teamId={team} dayCount={dayCount} filter={"ColorZonesPriority"} zoneColor={zoneColorPriority}/>
             <MetricBarChart teamId={team} dayCount={dayCount} filter={"NegativeGrades"}/>
             <MetricBarChart teamId={team} dayCount={dayCount} filter={"ExternalMessages"}/>
-            <MonthLineChart teamId={team} dayCount={dayCount} filter={"IncomingTypes"}/>
-            <MonthLineChart teamId={team} dayCount={dayCount} filter={"SpentForRequests"}/>
+
           </>
         )}
 
