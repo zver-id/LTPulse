@@ -21,5 +21,5 @@ public class Team : IHasId
   /// <summary>
   /// Участники команды.
   /// </summary>
-  public virtual IList<Employee> Employees { get; set; }
+  public virtual IList<Employee> Employees { get; set; } = new List<Employee>();
 }

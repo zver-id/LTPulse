@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CommonModels.Interfaces;
 
 namespace CommonModels.Models;
@@ -26,4 +27,9 @@ public class Employee : IHasId
   /// Номер карточки в ТехКАС.
   /// </summary>
   public virtual string TechKASNumber { get; set; }
+  
+  /// <summary>
+  /// Список команд.
+  /// </summary>
+  public virtual IList<Team> Teams { get; set; } = new List<Team>();
 }
