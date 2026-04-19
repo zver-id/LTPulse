@@ -35,5 +35,7 @@ public class ObjectToDTO : Profile
       .ForMember(dest => dest.Employee,
         opt => opt.MapFrom(src => src.Ticket.Employee))
       .ReverseMap();
+
+    this.CreateMap<MetricGroup, MetricGroupDTO>();
   }
 }

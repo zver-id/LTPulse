@@ -2,7 +2,7 @@ export interface ZonesChartProps {
   teamId: number;
   dayCount: number;
   filter: string;
-  zoneColor: zonesColor[];
+  nameOfChart: string
 }
 
 export type zonesColor = {
