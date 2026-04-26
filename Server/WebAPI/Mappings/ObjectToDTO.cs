@@ -37,5 +37,10 @@ public class ObjectToDTO : Profile
       .ReverseMap();
 
     this.CreateMap<MetricGroup, MetricGroupDTO>();
+
+    this.CreateMap<EmployeeDTO, Employee>()
+      .ForMember(dest => dest.PersonnelNumber, opt => opt.Ignore())
+      .ForMember(dest => dest.TechKASNumber, opt => opt.Ignore())
+      .ReverseMap();
   }
 }

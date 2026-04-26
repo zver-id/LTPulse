@@ -1,6 +1,4 @@
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Xml;
 using CommonModels.Attributes;
 using CommonModels.Interfaces;
 using CommonModels.Models;
@@ -18,7 +16,7 @@ public class ReportGenerator
   /// <summary>
   /// Репозиторий.
   /// </summary>
-  public IRepository Repository { get; }
+  private IRepository Repository { get; }
   
   /// <summary>
   /// Команда.
@@ -36,7 +34,7 @@ public class ReportGenerator
   private int CurrentChartRow { get; set; } = 1;
 
   /// <summary>
-  /// Высота графика в ячеках.
+  /// Высота графика в ячейках.
   /// </summary>
   private const int ChartHeightInRows = 30;
   
@@ -64,47 +62,46 @@ public class ReportGenerator
   /// </summary>
   /// <param name="team"></param>
   /// <returns></returns>
-  public byte[] GenerateForTeam(Team team)
+  public async Task<byte[]> GenerateForTeam(Team team)
   {
     this.Team = team;
     var chartList = this.ExcelPackage.Workbook.Worksheets["Графики"];
-    this.FillMetricData();
-    var metricGroups = this.Repository.Get<MetricGroup>(mg => true);
-    var count = 0;
+    await this.FillMetricData();
+    var metricGroups = await this.Repository.GetAsync<MetricGroup>(mg => true);
+    
     foreach (var metricGroup in metricGroups)
     {
       // у графика по месяцам меняются месяцы, поэтому нужно именно новый
       if (metricGroup.Name == "Month")
       {
-        this.GenerateChart(metricGroup, eChartType.Line);
+        await this.GenerateChart(metricGroup, eChartType.Line);
       }
       else if (chartList.Drawings[metricGroup.NameOfChart] is ExcelChart chart)
       {
-        this.RefreshChartSeries(chart, metricGroup);
+        await this.RefreshChartSeries(chart, metricGroup);
       }
     }
-    var allTicketsMetric = this.Repository.Get<Metric>(m => m.Team == team).First();
+    var allTicketsMetric = await this.Repository.GetFirstAsync<Metric>(m => m.Team == team);
     this.AddListWithItems("Инциденты", allTicketsMetric);
-    return this.ExcelPackage.GetAsByteArray();
+    return await this.ExcelPackage.GetAsByteArrayAsync();
   }
 
   /// <summary>
   /// Получить все метрики команды.
   /// </summary>
   /// <returns></returns>
-  private List<Metric> GetAllMetricsForTeam()
+  private async Task<List<Metric>> GetAllMetricsForTeam()
   {
-    return this.Repository.Get<Metric>(m => m.Team == this.Team);
+    return await this.Repository.GetAsync<Metric>(m => m.Team == this.Team);
   }
 
   /// <summary>
   /// Записать все метрики в отдельный лист.
   /// </summary>
-  /// <param name="team"></param>
   /// <returns></returns>
-  private void FillMetricData()
+  private async Task FillMetricData()
   {
-    List<Metric> metrics = this.GetAllMetricsForTeam();
+    List<Metric> metrics = await this.GetAllMetricsForTeam();
     var groupedMetrics = metrics.GroupBy(m => m.Date)
       .OrderBy(g => g.Key)
       .Select(group => new
@@ -133,13 +130,13 @@ public class ReportGenerator
   /// </summary>
   /// <param name="chart">График.</param>
   /// <param name="metricGroup">Группа метрик.</param>
-  private void RefreshChartSeries(ExcelChart chart, MetricGroup metricGroup)
+  private async Task RefreshChartSeries(ExcelChart chart, MetricGroup metricGroup)
   {
     var dataWorksheet = this.ExcelPackage.Workbook.Worksheets["tables"];
     var lastColumn = dataWorksheet.Dimension.End.Column;
     var series = chart.Series;
-    var metrics = this.Repository.Get<MetricGroup>(mg => mg.Id == metricGroup.Id)
-      .SelectMany(mg => mg.MetricTypes);
+    var metricGroups = await this.Repository.GetAsync<MetricGroup>(mg => mg.Id == metricGroup.Id);
+    var metrics = metricGroups.SelectMany(mg => mg.MetricTypes);
     var startColumn = this.GetStartColumn(lastColumn);
     foreach (var metric in metrics)
     {
@@ -158,7 +155,7 @@ public class ReportGenerator
   /// <param name="metricGroup">Группа метрик.</param>
   /// <param name="chartType">Тип графика.</param>
   /// <exception cref="NullReferenceException"></exception>
-  private void GenerateChart(MetricGroup metricGroup, eChartType chartType)
+  private async Task GenerateChart(MetricGroup metricGroup, eChartType chartType)
   {
     var chartWorksheet = this.ExcelPackage.Workbook.Worksheets["Графики"];
     var chart = chartWorksheet.Drawings.AddChart(metricGroup.NameOfChart, chartType);
@@ -172,7 +169,8 @@ public class ReportGenerator
       throw new NullReferenceException("Изначально нужно заполнить лист с данными");
     var lastColumn = dataWorksheet.Dimension.End.Column;
     var startColumn = this.GetStartColumn(lastColumn);
-    var seriesRowsNums = this.Repository.Get<MetricGroup>(mg => mg.Id == metricGroup.Id)
+    var metricGroups = await this.Repository.GetAsync<MetricGroup>(mg => mg.Id == metricGroup.Id);
+    var seriesRowsNums = metricGroups
       .SelectMany(mg => mg.MetricTypes)
       .Select(m => m.Id);
     foreach (var seriesNum in seriesRowsNums)
@@ -219,7 +217,7 @@ public class ReportGenerator
   }
 
   /// <summary>
-  /// Возвращает номер стартового столбца диапозона.
+  /// Возвращает номер стартового столбца диапазона.
   /// </summary>
   /// <param name="lastColumn">Номер последнего столбца.</param>
   /// <returns>Номер первого столбца.</returns>
@@ -250,8 +248,8 @@ public class ReportGenerator
     {
       for (var prop = 0; prop != propNames.Count; prop++)
       {
-        itemList.Cells[ticket + 2, prop + 1].Value = propNames.
-          ElementAt(prop).Value
+        itemList.Cells[ticket + 2, prop + 1].Value = propNames
+          .ElementAt(prop).Value
           .GetValue(metric.Tickets[ticket])
           .ToString();
       }

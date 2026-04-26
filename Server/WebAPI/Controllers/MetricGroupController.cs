@@ -32,7 +32,7 @@ public class MetricGroupController(
   [HttpGet]
   public async Task<ActionResult<List<MetricGroupDTO>>> GetMetricGroup()
   {
-    var metricGroups = this.Repository.Get<MetricGroup>(mg => true);
+    var metricGroups = await this.Repository.GetAsync<MetricGroup>(mg => true);
     return this.Ok(this.Mapper.Map<List<MetricGroupDTO>>(metricGroups));
   }
 }

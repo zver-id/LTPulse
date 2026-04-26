@@ -38,9 +38,9 @@ public class CRUDTests
       Name = "Имя 22тестовое",
       Organization = "Имя организации",
       Employee = "Имя сотрудника",
-      Priority = this.repository.Get<Priority>(x => x.Name == "Низкий").First(),
+      Priority = this.repository.GetAsync<Priority>(x => x.Name == "Низкий").First(),
       IncomingDate = DateTime.Now,
-      State = this.repository.Get<TicketState>(s =>
+      State = this.repository.GetAsync<TicketState>(s =>
         s.State == "В работе").First(),
       TimeInWork = 0,
       Hyperlink = "нет ничо"
@@ -58,8 +58,8 @@ public class CRUDTests
     var metric = new Metric
     {
       Date = DateTime.Today,
-      MetricType = this.repository.Get<MetricType>(x => x.Name == "Всего в работе").First(),
-      Team = this.repository.Get<Team>(x => x.Name == "ОГВ").First(),
+      MetricType = this.repository.GetAsync<MetricType>(x => x.Name == "Всего в работе").First(),
+      Team = this.repository.GetAsync<Team>(x => x.Name == "ОГВ").First(),
       Value = 1
     };
 
@@ -68,8 +68,8 @@ public class CRUDTests
     var metric2 = new Metric
     {
       Date = DateTime.Today,
-      MetricType = this.repository.Get<MetricType>(x => x.Name == "Всего в работе").First(),
-      Team = this.repository.Get<Team>(x => x.Name == "ОГВ").First(),
+      MetricType = this.repository.GetAsync<MetricType>(x => x.Name == "Всего в работе").First(),
+      Team = this.repository.GetAsync<Team>(x => x.Name == "ОГВ").First(),
       Value = 4
     };
     
@@ -86,9 +86,9 @@ public class CRUDTests
       Name = "Имя 22тестовое",
       Organization = "Имя организации",
       Employee = "Имя сотрудника",
-      Priority = this.repository.Get<Priority>(x => x.Name == "Низкий").First(),
+      Priority = this.repository.GetAsync<Priority>(x => x.Name == "Низкий").First(),
       IncomingDate = DateTime.Now,
-      State = this.repository.Get<TicketState>(s =>
+      State = this.repository.GetAsync<TicketState>(s =>
         s.State == "В работе").First(),
       TimeInWork = 0,
       Hyperlink = "нет ничо"
@@ -97,8 +97,8 @@ public class CRUDTests
     var metric = new Metric
     {
       Date = DateTime.Today,
-      MetricType = this.repository.Get<MetricType>(x => x.Name == "Всего в работе").First(),
-      Team = this.repository.Get<Team>(x => x.Name == "ОГВ").First(),
+      MetricType = this.repository.GetAsync<MetricType>(x => x.Name == "Всего в работе").First(),
+      Team = this.repository.GetAsync<Team>(x => x.Name == "ОГВ").First(),
       Value = 1
     };
     
@@ -106,7 +106,7 @@ public class CRUDTests
     this.repository.AddOrUpdate(ticket);
     this.repository.AddOrUpdate(metric);
     
-    var existMetric = this.repository.Get<Metric>(x => x.Date == DateTime.Today).First();
+    var existMetric = this.repository.GetAsync<Metric>(x => x.Date == DateTime.Today).First();
     Assert.AreEqual(existMetric.Tickets.Count, 1);
   }
 

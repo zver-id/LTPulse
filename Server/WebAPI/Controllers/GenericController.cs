@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers;
 
-public class GenericController(IRepository repository, IMapper mapper) : ControllerBase
+public abstract class GenericController(IRepository repository, IMapper mapper) : ControllerBase
 {
   /// <summary>
   /// Репозиторий.

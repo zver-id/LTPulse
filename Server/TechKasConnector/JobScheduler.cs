@@ -31,11 +31,13 @@ public class JobScheduler
   /// <summary>
   /// Создает задачи для новых команд.
   /// </summary>
-  public void CreateJobsForNewTeams()
+  public async Task CreateJobsForNewTeams()
   {
     this.Logger.LogInformation("Create jobs for new teams.");
-    var teams = this.Repository.Get<Team>(t => true);
-    var jobs = this.Repository.Get<Job>(j => true);
+    var teams = await this.Repository.GetAsync<Team>(t => true);
+    if (teams.Count == 0)
+      throw new InvalidOperationException("В базе данных нет команд.");
+    var jobs = await this.Repository.GetAsync<Job>(j => true);
     foreach (var team in teams)
     {
       if (jobs.All(j => j.Team.Id != team.Id))
@@ -47,7 +49,7 @@ public class JobScheduler
           StartProcess = DateTime.Now,
           RepeatInterval = TimeSpan.FromMinutes(180)
         };
-        this.Repository.AddOrUpdate(newJob);
+        await this.Repository.AddOrUpdate(newJob);
         this.Jobs.Add(newJob);
         this.Logger.LogInformation($"Create job for team {team.Name}");
       }
@@ -63,6 +65,8 @@ public class JobScheduler
     if (rabbitMqConnectionString == null)
       throw new ConfigurationErrorsException("RabbitMQ connection string not found");
     var rabbitMqClient = await RabbitMQClient.CreateAsync(rabbitMqConnectionString);
+    if (this.Jobs == null)
+      await this.CreateJobsForNewTeams();
     foreach (var job in this.Jobs)
     {
       if (job.StartProcess == null || job.StartProcess < DateTime.Now)
@@ -73,8 +77,8 @@ public class JobScheduler
           Team = job.Team,
         };
         await rabbitMqClient.SendMessage(message);
-        job.StartProcess = this.Calendar.AddTimeSpanWithHolidays(DateTime.Now, job.RepeatInterval);
-        this.Repository.AddOrUpdate(job);
+        job.StartProcess = await this.Calendar.AddTimeSpanWithHolidays(DateTime.Now, job.RepeatInterval);
+        await this.Repository.AddOrUpdate(job);
         this.Logger.LogInformation($"Push message for start job for team {job.Team.Name}");
       }
     }
@@ -98,7 +102,6 @@ public class JobScheduler
     this.Configuration = configuration;
     this.Logger = logger;
     this.Calendar = calendar;
-    this.Jobs = this.Repository.Get<Job>(j => true);
   }
   #endregion
 }

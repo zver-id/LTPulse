@@ -12,32 +12,37 @@ namespace WebAPI.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]
-public class MetricsController : ControllerBase
+public class MetricsController(
+  IMapper mapper,
+  MetricsService metricsService,
+  TeamService teamService,
+  ILogger<MetricsController> logger)
+  : ControllerBase
 {
   /// <summary>
   /// Маппер.
   /// </summary>
-  private readonly IMapper mapper;
+  private readonly IMapper mapper = mapper;
   
   /// <summary>
   /// Сервис команд.
   /// </summary>
-  private readonly TeamService teamService;
+  private readonly TeamService teamService = teamService;
   
   /// <summary>
   /// Сервис метрик.
   /// </summary>
-  private readonly MetricsService metricsService;
+  private readonly MetricsService metricsService = metricsService;
   
   /// <summary>
   /// Логгер.
   /// </summary>
-  private ILogger logger { get; }
+  private ILogger logger { get; } = logger;
 
   [HttpGet]
   public async Task<ActionResult<List<Dictionary<string, object>>>> Get(int teamId, int dayCount)
   {
-    this.logger.LogInformation("Get Team Metrics");
+    this.logger.LogInformation("Get team metrics");
     var team = await this.teamService.GetTeamById(teamId);
     if (team == null)
       return this.BadRequest("Team not found");
@@ -63,13 +68,5 @@ public class MetricsController : ControllerBase
         (x.Team.Equals(team)) &&
         (x.MetricType.MetricGroup.Name.ToLower().Equals(filterSing.ToLower()))));
     return this.Ok(response);
-  }
-
-  public MetricsController(IMapper mapper, MetricsService metricsService, TeamService teamService, ILogger<MetricsController> logger)
-  {
-    this.mapper = mapper;
-    this.metricsService = metricsService;
-    this.teamService = teamService;
-    this.logger = logger;
   }
 }

@@ -125,12 +125,11 @@ public class BaseTypeInitializer
   /// <param name="fileName">Имя файла с данными.</param>
   /// <param name="sheetName">Имя листа с данными.</param>
   /// <param name="teamName">Имя команды.</param>
-  /// <exception cref="ArgumentException">Переданная команда не существует.</exception>
-  public void AddTeamMetricsFromExcel(string fileName, string sheetName, string teamName)
+  /// <exception cref="InvalidOperationException">Переданная команда не существует.</exception>
+  public async Task AddTeamMetricsFromExcel(string fileName, string sheetName, string teamName)
   {
-    var team = this.dbRepository.Get<Team>(x=>x.Name == teamName).FirstOrDefault();
-    if (team == null)
-      throw new ArgumentException("Team not found");
+    var team = await this.dbRepository.GetFirstAsync<Team>(x=>x.Name == teamName);
+
     var metricDict = ExcelParser.ParseExcelToDictionaries(fileName,  sheetName);
     foreach (var dayMetric in metricDict)
     {
@@ -138,10 +137,14 @@ public class BaseTypeInitializer
       {
         if (metric.Value == 0)
           continue;
-        var metricType = this.dbRepository.Get<MetricType>(x => x.Name == metric.Key).FirstOrDefault();
-        if (metricType == null)
+        MetricType metricType;
+        try
         {
-          var metricGroup = this.dbRepository.Get<MetricGroup>(x => x.Name == "Month").FirstOrDefault();
+          metricType = await this.dbRepository.GetFirstAsync<MetricType>(x => x.Name == metric.Key);
+        }
+        catch (InvalidOperationException)
+        {
+          var metricGroup = await this.dbRepository.GetFirstAsync<MetricGroup>(x => x.Name == "Month");
           metricType = new MetricType { Name = metric.Key,  MetricGroup = metricGroup! };
           this.dbRepository.Add(metricType);
         }

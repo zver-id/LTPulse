@@ -11,19 +11,16 @@ namespace WebAPI.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]
-public class FileReportController : ControllerBase
+public class FileReportController(IRepository repository, IMapper mapper) : GenericController(repository, mapper)
 {
-  private readonly IMapper mapper;
-  public IRepository Repository { get; }
-
   [HttpGet]
   public async Task<ActionResult> GenerateReport(int teamId)
   {
     var reportWriter = new ReportGenerator(this.Repository);
-    var team = this.Repository.Get<Team>(t => t.Id == teamId).First();
+    var team = await this.Repository.GetFirstAsync<Team>(t => t.Id == teamId);
     try
     {
-      var reportBytes = reportWriter.GenerateForTeam(team);
+      var reportBytes = await reportWriter.GenerateForTeam(team);
       //System.IO.File.WriteAllBytes(@"C:\Temp\Report.csv", reportBytes);
       return this.File(reportBytes, 
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
@@ -34,11 +31,4 @@ public class FileReportController : ControllerBase
       return this.Problem();
     }
   }
-
-  public FileReportController(IRepository repository, IMapper mapper)
-  {
-    this.mapper = mapper;
-    this.Repository = repository;
-  }
-  
 }

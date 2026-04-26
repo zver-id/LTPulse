@@ -1,15 +1,13 @@
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using CommonModels.Interfaces;
 using CommonModels.Models;
-using DBCore;
 using TechKasConnector.Calendar;
 using TechKasConnector.Requisites;
 
 namespace TechKasConnector.DataCalculators;
 
 /// <summary>
-/// Класс для работы с "цветными" зонами.
+/// Генератор списка обращений.
 /// </summary>
 internal class TicketListGenerator
 {
@@ -56,31 +54,32 @@ internal class TicketListGenerator
   /// Получить список обращений с вычисленным временем в работе.
   /// </summary>
   /// <param name="ticketType">Тип обращений.</param>
-  private void GetTicketList(string? ticketType = null, int daysAgo = 0)
+  public async Task InitTicketList(string? ticketType = null, int daysAgo = 0)
   {
     using var filter = new ReferenceFilterManager(this.tickets);
     if (ticketType != null)
       filter.AddFilter(TechKasRequisites.TicketType, ticketType);
     
     int activeStatusFilterId = filter.AddFilter(TechKasRequisites.TicketStatus, TicketStatus.Active);
-    this.AddTechKasElementsToTickets();
+    await this.AddTechKasElementsToTickets();
     
     filter.RemoveFilter(activeStatusFilterId);
-    filter.AddFilter(TechKasRequisites.ClosedDate, this.Calendar.GetPreviousDates(daysAgo).First());
-    this.AddTechKasElementsToTickets();
+    var previousDates = await this.Calendar.GetPreviousDates(daysAgo);
+    filter.AddFilter(TechKasRequisites.ClosedDate, previousDates.First());
+    await this.AddTechKasElementsToTickets();
   }
 
   /// <summary>
   /// Добавить обращения справочника в список.
   /// </summary>
-  private void AddTechKasElementsToTickets()
+  private async Task AddTechKasElementsToTickets()
   {
     foreach (var ticket in this.tickets)
     {
-      var spentTime = this.GetSpentTimeByMinutes(ticket);
+      var spentTime = await this.GetSpentTimeByMinutes(ticket);
       var stampedTime = this.GetTimeStamp(ticket);
       
-      var ticketRecord = this.GetTicket(ticket);
+      var ticketRecord = await this.GetTicket(ticket);
       ticketRecord.TimeInWork = (float)spentTime / 60;
       ticketRecord.TimeStampedOnDay = stampedTime;
       this.AddToTickets(ticketRecord);
@@ -92,7 +91,7 @@ internal class TicketListGenerator
   /// </summary>
   /// <param name="ticket">Элемент обращения ТехКас.</param>
   /// <returns>Затраченное время в минутах.</returns>
-  private int GetSpentTimeByMinutes(TechKasElement ticket)
+  private async Task<int> GetSpentTimeByMinutes(TechKasElement ticket)
   {
     Autoclicker.ClickYes();
     var detail = ticket.GetDetail(4);
@@ -129,7 +128,7 @@ internal class TicketListGenerator
 
       if (hasStart && hasEnd)
       {
-        spentTime += this.Calendar.GetDifferenceInMinutes(startOfIteration, endOfIteration);
+        spentTime += await this.Calendar.GetDifferenceInMinutes(startOfIteration, endOfIteration);
         hasStart = false;
         hasEnd = false;
       }
@@ -170,49 +169,38 @@ internal class TicketListGenerator
   /// </summary>
   /// <param name="element">Элемент ТехКас.</param>
   /// <returns>Обращение.</returns>
-  private Ticket GetTicket(TechKasElement element)
+  private async Task<Ticket> GetTicket(TechKasElement element)
   {
     var id = int.Parse(element.GetRequisite(TechKasRequisites.Id, RequisitesMode.AsString).Trim());
     
-    Ticket ticket = this.repository.GetById<Ticket>(id);
+    Ticket ticket = await this.repository.GetById<Ticket>(id);
     var name = element.GetRequisite(TechKasRequisites.Name, RequisitesMode.AsString);
     var type = element.GetRequisite(TechKasRequisites.TicketType, RequisitesMode.AsString);
     var organization = element.GetRequisite(TechKasRequisites.Organization, RequisitesMode.DisplayText);
     var employee = element.GetRequisite(TechKasRequisites.Employee, RequisitesMode.DisplayText);
-    var priority = this.repository
-      .Get<Priority>(x =>
-        x.Name == element.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString)).First();
+    var priority = await this.repository
+      .GetFirstAsync<Priority>(x =>
+        x.Name == element.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString));
     var incomingDate = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString),
       "dd.MM.yyyy", CultureInfo.InvariantCulture);
-    var state = this.repository.Get<TicketState>(s =>
-      s.State == element.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString)).First();
+    var state = await this.repository.GetFirstAsync<TicketState>(s =>
+      s.State == element.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString));
     var timeInWork = 0;
     var hyperlink = element.Hyperlink;
-    if (ticket != null)
-    {
-      ticket.Name = name;
-      ticket.Type = type;
-      ticket.Organization = organization;
-      ticket.Employee = employee;
-      ticket.Priority = priority;
-      ticket.IncomingDate = incomingDate;
-      ticket.State = state;
-      ticket.TimeInWork = timeInWork;
-      ticket.Hyperlink = hyperlink;
-      return ticket;
-    }
-    return new Ticket
-      {
-        Id = id,
-        Name = name,
-        Type = type,
-        Organization = organization,
-        Employee = employee,
-        Priority = priority,
-        IncomingDate = incomingDate,
-        State = state,
-        Hyperlink = hyperlink
-      };
+    if (ticket == null)
+      ticket = new Ticket();
+
+    ticket.Id = id;
+    ticket.Name = name;
+    ticket.Type = type;
+    ticket.Organization = organization;
+    ticket.Employee = employee;
+    ticket.Priority = priority;
+    ticket.IncomingDate = incomingDate;
+    ticket.State = state;
+    ticket.TimeInWork = timeInWork;
+    ticket.Hyperlink = hyperlink;
+    return ticket;
   }
 
   /// <summary>
@@ -225,7 +213,5 @@ internal class TicketListGenerator
     this.repository = repository;
     this.tickets = tickets;
     this.Team = team;
-    this.Calendar = new CalendarCalculator(this.repository);
-    this.GetTicketList(ticketType);
   }
 }

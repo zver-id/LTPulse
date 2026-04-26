@@ -34,12 +34,12 @@ public class DbRepository : IRepository
   /// Обновить свойства объекта в базе данных
   /// </summary>
   /// <param name="item">Объект свойства, которого будут обновляться</param>
-  public void AddOrUpdate(IHasId item)
+  public async Task AddOrUpdate(IHasId item)
   {
     using (ITransaction transaction = this.Session.BeginTransaction())
     {
-      this.Session.SaveOrUpdate(item);
-      transaction.Commit();
+      await this.Session.SaveOrUpdateAsync(item);
+      await transaction.CommitAsync();
     }
   }
   /// <summary>
@@ -48,20 +48,20 @@ public class DbRepository : IRepository
   /// <param name="id">ID объекта</param>
   /// <typeparam name="T">Тип объекта</typeparam>
   /// <returns></returns>
-  public T GetById<T>(int id)  where T : IHasId
+  public async Task<T> GetById<T>(int id)  where T : IHasId
   {
-    return this.Session.Get<T>(id);
+    return await this.Session.GetAsync<T>(id);
   }
 
   /// <summary>
   /// Удалить сущность из БД.
   /// </summary>
   /// <param name="item">Сущность.</param>
-  public void Delete(IHasId item)
+  public async Task Delete(IHasId item)
   {
     using ITransaction transaction = this.Session.BeginTransaction();
-    this.Session.Delete(item);
-    transaction.Commit();
+    await this.Session.DeleteAsync(item);
+    await transaction.CommitAsync();
   }
 
   /// <summary>
@@ -82,15 +82,31 @@ public class DbRepository : IRepository
   /// Вернуть список сущностей по условию.
   /// </summary>
   /// <param name="predicate">Условие в виде предиката.</param>
+  /// <param name="cancellationToken">Токен отмены.</param>
   /// <typeparam name="T">Класс объекта.</typeparam>
   /// <returns>Список сущностей, удовлетворяющих критерию.</returns>
-  public List<T> Get<T>(Expression<Func<T, bool>> predicate) where T : IHasId
+  public async Task<List<T>> GetAsync<T>(Expression<Func<T, bool>> predicate,
+    CancellationToken cancellationToken = default) where T : IHasId
   {
-    return this.Session.Query<T>()
+    return await this.Session.Query<T>()
         .Where(predicate)
-        .ToList();
+        .ToListAsync(cancellationToken);
   }
-
+  
+  /// <summary>
+  /// Получить первое значение.
+  /// </summary>
+  /// <param name="predicate">Условие в виде предиката.</param>
+  /// <param name="cancellationToken">Токен отмены.</param>
+  /// <typeparam name="T">Класс объекта.</typeparam>
+  /// <returns>Первая сущность, удовлетворяющее условию.</returns>
+  public async Task<T> GetFirstAsync<T>(Expression<Func<T, bool>> predicate,
+    CancellationToken cancellationToken = default) where T : IHasId
+  {
+    return await this.Session.Query<T>()
+      .Where(predicate)
+      .FirstAsync(cancellationToken);
+  }
 
 
   /// <summary>
