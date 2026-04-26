@@ -29,4 +29,10 @@ public interface IRepository: IDisposable
   /// </summary>
   /// <param name="item">Сущность.</param>
   public Task Delete(IHasId item);
+  
+  /// <summary>
+  /// Обновить сущность в БД.
+  /// </summary>
+  /// <param name="item">Сущность.</param>
+  public Task Update(IHasId item);
 }

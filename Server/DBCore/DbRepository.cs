@@ -42,6 +42,18 @@ public class DbRepository : IRepository
       await transaction.CommitAsync();
     }
   }
+  
+  /// <summary>
+  /// Обновить свойства объекта в базе данных.
+  /// </summary>
+  /// <param name="item">Объект свойства, которого будут обновляться</param>
+  public async Task Update(IHasId item)
+  {
+    using ITransaction transaction = this.Session.BeginTransaction();
+    await this.Session.UpdateAsync(item);
+    await transaction.CommitAsync();
+  }
+  
   /// <summary>
   /// Получить объект по ID
   /// </summary>
