@@ -4,6 +4,6 @@ namespace Application.RabbitMQRequests;
 
 public class GenerateTeamReportRequest
 {
-  public Team Team { get; set; }
+  public int TeamId { get; set; }
   public int? DaysAgo { get; set; }
 }

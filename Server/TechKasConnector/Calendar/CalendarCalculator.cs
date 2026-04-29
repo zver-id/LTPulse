@@ -106,7 +106,7 @@ public class CalendarCalculator
     }
   }
 
-  private CalendarCalculator(IRepository repository)
+  public CalendarCalculator(IRepository repository)
   {
     this.Repository = repository;
     this.lazyHolidays = new Lazy<Task<List<SpecialDate>>>(() => this.Repository.GetAsync<SpecialDate>(date => date.IsHoliday));

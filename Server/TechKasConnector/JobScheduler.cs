@@ -37,10 +37,10 @@ public class JobScheduler
     var teams = await this.Repository.GetAsync<Team>(t => true);
     if (teams.Count == 0)
       throw new InvalidOperationException("В базе данных нет команд.");
-    var jobs = await this.Repository.GetAsync<Job>(j => true);
+    this.Jobs = await this.Repository.GetAsync<Job>(j => true);
     foreach (var team in teams)
     {
-      if (jobs.All(j => j.Team.Id != team.Id))
+      if (this.Jobs.All(j => j.Team.Id != team.Id))
       {
         var newJob = new Job
         {
@@ -74,7 +74,7 @@ public class JobScheduler
         var message = new GenerateTeamReportRequest
         {
           DaysAgo = 0,
-          Team = job.Team,
+          TeamId = job.Team.Id,
         };
         await rabbitMqClient.SendMessage(message);
         job.StartProcess = await this.Calendar.AddTimeSpanWithHolidays(DateTime.Now, job.RepeatInterval);

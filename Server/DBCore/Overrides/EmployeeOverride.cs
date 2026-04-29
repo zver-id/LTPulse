@@ -19,8 +19,6 @@ public class EmployeeOverride : IAutoMappingOverride<Employee>
     
     mapping.HasManyToMany(x => x.Teams)
       .Table("Employee_Teams")
-      .ParentKeyColumn("EmployeeId")
-      .ChildKeyColumn("TeamId")
       .Cascade.SaveUpdate()
       .AsBag();
   }

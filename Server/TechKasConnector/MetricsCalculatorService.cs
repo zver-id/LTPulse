@@ -99,17 +99,31 @@ public class MetricsCalculatorService : BackgroundService
       throw new ArgumentException("Invalid message body");
     }
       
-    using var scope = this.serviceScopeFactory.CreateScope();
-    var metricCreator = scope.ServiceProvider.GetRequiredService<MetricCalculator>();
-    metricCreator.Init(messageBody.Team);
-    await metricCreator.ProcessAllMetrics();
-    return string.Empty;
+    IServiceScope scope = this.serviceScopeFactory.CreateScope();
+    try
+    {
+      var metricCreator = scope.ServiceProvider.GetRequiredService<MetricCalculator>();
+      await metricCreator.Init(messageBody.TeamId);
+      await metricCreator.ProcessAllMetrics();
+      return string.Empty;
+    }
+    catch (Exception ex)
+    {
+      this.Logger.LogError(ex, "Error processing message");
+      throw;
+    }
+    finally
+    {
+      await Task.Delay(100);
+      scope.Dispose();
+    }
   }
   
   public MetricsCalculatorService(
     ILogger<MetricsCalculatorService> logger,
     IServiceScopeFactory serviceScopeFactory,
-    IConfiguration configuration)
+    IConfiguration configuration
+    )
   {
     this.Logger = logger;
     this.serviceScopeFactory = serviceScopeFactory;

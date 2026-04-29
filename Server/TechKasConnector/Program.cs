@@ -26,8 +26,8 @@ public static class Program
     builder.Services.AddSingleton<NhibernateHelper>(service => new NhibernateHelper(dataBaseConnectionString));
     builder.Services.AddScoped<IRepository, DbRepository>();
     
-    builder.Services.AddHostedService<MetricsCalculatorService>();
     builder.Services.AddHostedService<SchedulerService>();
+    builder.Services.AddHostedService<MetricsCalculatorService>();
     
     builder.Services.AddScoped<MetricCalculator>();
     builder.Services.AddScoped<GradeListGenerator>();

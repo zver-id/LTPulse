@@ -208,10 +208,11 @@ internal class TicketListGenerator
   /// </summary>
   /// <param name="repository">Репозиторий.</param>
   /// <param name="tickets">Справочник обращений.</param>
-  public TicketListGenerator(IRepository repository, TechKasReference tickets, Team team, string? ticketType = null)
+  public TicketListGenerator(IRepository repository, TechKasReference tickets, CalendarCalculator calendar, Team team, string? ticketType = null)
   {
     this.repository = repository;
     this.tickets = tickets;
     this.Team = team;
+    this.Calendar = calendar;
   }
 }

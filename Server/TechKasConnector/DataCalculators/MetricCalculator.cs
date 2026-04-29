@@ -47,6 +47,11 @@ public class MetricCalculator
   /// </summary>
   private ExternalMessageCalculator ExternalMessages { get; }
   
+  /// <summary>
+  /// Календарь рабочего времени.
+  /// </summary>
+  private CalendarCalculator Calendar {get; init;}
+  
   #endregion
   
   # region Методы
@@ -124,7 +129,7 @@ public class MetricCalculator
       await this.repository.Delete(metric);
     }
     var culture = new CultureInfo("ru-RU");
-    var monthGroupedTickets = this.TicketListGenerator.Tickets
+    Dictionary<string, List<Ticket>> monthGroupedTickets = this.TicketListGenerator.Tickets
       .Where(t=> t.State.State.Equals(TicketStatus.InWorkFullString))
       .GroupBy(t => culture.TextInfo.ToTitleCase(t.IncomingDate.ToString("MMMM yyyy", culture)))
       .ToDictionary(g => g.Key, g => g.ToList());
@@ -163,8 +168,8 @@ public class MetricCalculator
   private async Task CreateSpentTimeMetric(string nameOfMetricType, Predicate<Ticket> predicate)
   {
     var metricType = await this.repository.GetFirstAsync<MetricType>(mt => mt.Name == nameOfMetricType);
-    var metric = await this.GetOrCreateMetric(DateTime.Today, metricType);
-    var relatedTickets = this.TicketListGenerator.Tickets
+    Metric metric = await this.GetOrCreateMetric(DateTime.Today, metricType);
+    List<Ticket> relatedTickets = this.TicketListGenerator.Tickets
       .Where (t => predicate(t))
       .ToList();
     metric.Value = relatedTickets
@@ -182,8 +187,8 @@ public class MetricCalculator
   private async Task CreateGradeMetric(string nameOfMetricType, Predicate<Grade> predicate)
   {
     var metricType = await this.repository.GetFirstAsync<MetricType>(mt => mt.Name == nameOfMetricType);
-    var metric = await this.GetOrCreateMetric(DateTime.Today, metricType);
-    var grades = this.GradeListGenerator.Grades
+    Metric metric = await this.GetOrCreateMetric(DateTime.Today, metricType);
+    List<Grade> grades = this.GradeListGenerator.Grades
       .Where (t => predicate(t))
       .ToList();
     metric.Value = grades.Count;
@@ -201,8 +206,8 @@ public class MetricCalculator
     try
     {
       var metricType = await this.repository.GetFirstAsync<MetricType>(mt => mt.Name == nameOfMetricType);
-      var metric = await this.GetOrCreateMetric(DateTime.Today, metricType);
-      var employees = this.team.Employees
+      Metric metric = await this.GetOrCreateMetric(DateTime.Today, metricType);
+      List<string> employees = this.team.Employees
         .Select(e => e.Name)
         .ToList();
       
@@ -276,15 +281,15 @@ public class MetricCalculator
   /// <summary>
   /// Инициализация калькулятора.
   /// </summary>
-  /// <param name="team">Команда, по которой производится расчет.</param>
-  public async Task Init(Team team)
+  /// <param name="targetTeam">Команда, по которой производится расчет.</param>
+  public async Task Init(int teamId)
   {
-    this.logger.LogInformation($"Initializing metric calculator for team: {team.Name}");
-    this.team = await this.repository.GetById<Team>(team.Id);
+    this.team = await this.repository.GetById<Team>(teamId);
+    this.logger.LogInformation($"Initializing metric calculator for team: {this.team.Name}");
     this.tickets = new TechKasReference("ПДД");
     await this.SetInitFilters();
     this.SetEmployeeFilters();
-    this.TicketListGenerator = new TicketListGenerator(this.repository, this.tickets, this.team);
+    this.TicketListGenerator = new TicketListGenerator(this.repository, this.tickets, this.Calendar, this.team);
     await this.TicketListGenerator.InitTicketList();
     await this.GradeListGenerator.GenerateForTeam(this.team);
     this.logger.LogInformation($"Finish initialize metric calculator for team: {team.Name}");
@@ -315,7 +320,7 @@ public class MetricCalculator
         f => f.Select(filter => filter.Value).ToList()
       );
 
-    foreach (var filter in excludeFilters)
+    foreach (KeyValuePair<string, List<string>> filter in excludeFilters)
     {
       if (filter.Value.Count == 1)
       {
@@ -354,12 +359,13 @@ public class MetricCalculator
   /// Конструктор.
   /// </summary>
   public MetricCalculator(IRepository repository, ILogger<MetricCalculator> logger, 
-    GradeListGenerator gradeListGenerator, ExternalMessageCalculator externalMessages)
+    GradeListGenerator gradeListGenerator, ExternalMessageCalculator externalMessages, CalendarCalculator calendar)
   {
     this.repository = repository;
     this.logger = logger;
     this.GradeListGenerator = gradeListGenerator;
     this.ExternalMessages = externalMessages;
+    this.Calendar = calendar;
   }
   #endregion
 }
