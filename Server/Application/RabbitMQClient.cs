@@ -14,12 +14,18 @@ public class RabbitMQClient
   /// <summary>
   /// Соединение.
   /// </summary>
-  private IConnection connection { get; set;}
+  private IConnection Connection { get; set;}
   
   /// <summary>
   /// Канал.
   /// </summary>
-  public IChannel channel { get; private set;}
+  //public IChannel Channel { get; private set;}
+  
+  /// <summary>
+  /// Канал.
+  /// </summary>
+  private readonly Lazy<Task<IChannel>> lazyChannel;
+  public async Task<IChannel> Channel() => await this.lazyChannel.Value;
   
   /// <summary>
   /// Очередь получения сообщений.
@@ -47,6 +53,7 @@ public class RabbitMQClient
   /// <param name="message">Строка для отправки.</param>
   public async Task SendMessage(string message)
   {
+    var channel = await this.Channel();
     await channel.QueueDeclareAsync(queue: this.requestQueueName,
       durable: false,
       exclusive: false,
@@ -62,24 +69,13 @@ public class RabbitMQClient
       basicProperties: new BasicProperties(),
       body: body);
   }
-  
-  /// <summary>
-  /// Создать экземпляр. 
-  /// </summary>
-  /// <param name="connectionString">Строка подключения.</param>
-  /// <returns>Экземпляр подключения.</returns>
-  public static async Task<RabbitMQClient> CreateAsync(string connectionString)
-  {
-    var instance = new RabbitMQClient();
-    var factory = new ConnectionFactory();
-    factory.Uri = new Uri(connectionString);
-    instance.connection = await factory.CreateConnectionAsync();
-    instance.channel = await instance.connection.CreateChannelAsync();
-    return instance;
-  }
-  
+
   /// <summary>
   /// Конструктор.
   /// </summary>
-  private RabbitMQClient() { }
+  public RabbitMQClient(RabbitMqConnection connection)
+  {
+    this.Connection = connection.Connection;
+    this.lazyChannel = new Lazy<Task<IChannel>>(() => this.Connection.CreateChannelAsync());
+  }
 }

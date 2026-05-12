@@ -1,4 +1,3 @@
-using System.Configuration;
 using Application;
 using Application.RabbitMQRequests;
 using CommonModels.Interfaces;
@@ -18,6 +17,7 @@ public class JobScheduler
   private IConfiguration Configuration { get; }
   private ILogger<JobScheduler> Logger { get; }
   private CalendarCalculator Calendar { get; }
+  private RabbitMQClient RabbitMQClient { get; }
   
   /// <summary>
   /// Список задач.
@@ -61,10 +61,6 @@ public class JobScheduler
   /// </summary>
   public async Task StartJobs()
   {
-    string? rabbitMqConnectionString = this.Configuration.GetConnectionString("RabbitMQ");
-    if (rabbitMqConnectionString == null)
-      throw new ConfigurationErrorsException("RabbitMQ connection string not found");
-    var rabbitMqClient = await RabbitMQClient.CreateAsync(rabbitMqConnectionString);
     if (this.Jobs == null)
       await this.CreateJobsForNewTeams();
     foreach (var job in this.Jobs)
@@ -76,7 +72,7 @@ public class JobScheduler
           DaysAgo = 0,
           TeamId = job.Team.Id,
         };
-        await rabbitMqClient.SendMessage(message);
+        await this.RabbitMQClient.SendMessage(message);
         job.StartProcess = await this.Calendar.AddTimeSpanWithHolidays(DateTime.Now, job.RepeatInterval);
         await this.Repository.AddOrUpdate(job);
         this.Logger.LogInformation($"Push message for start job for team {job.Team.Name}");
@@ -87,7 +83,7 @@ public class JobScheduler
   #endregion
 
   #region Консутркторы
-  
+
   /// <summary>
   /// Конструктор.
   /// </summary>
@@ -95,13 +91,15 @@ public class JobScheduler
   /// <param name="configuration"></param>
   /// <param name="logger"></param>
   /// <param name="calendar"></param>
+  /// <param name="rabbitMQClient"></param>
   public JobScheduler(IRepository repository, IConfiguration configuration,
-    ILogger<JobScheduler> logger, CalendarCalculator calendar)
+    ILogger<JobScheduler> logger, CalendarCalculator calendar, RabbitMQClient rabbitMQClient)
   {
     this.Repository = repository;
     this.Configuration = configuration;
     this.Logger = logger;
     this.Calendar = calendar;
+    this.RabbitMQClient = rabbitMQClient;
   }
   #endregion
 }
