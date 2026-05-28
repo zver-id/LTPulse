@@ -10,7 +10,7 @@ namespace NHibernate.Infrastructure;
 
 public class NhibernateHelper
 {
-  private ISessionFactory SessionFactory { get; }
+  internal ISessionFactory SessionFactory { get; }
   
   private void Expose(Configuration configuration)
   {

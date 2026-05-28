@@ -11,10 +11,10 @@ public interface IRepository: IDisposable
   public void Add(IHasId item);
   public Task AddOrUpdate (IHasId item);
   public Task<List<T>> GetAsync<T>(Expression<Func<T, bool>> predicate,
-    CancellationToken cancellationToken = default) where T : IHasId;
+    CancellationToken cancellationToken = default) where T : class, IHasId;
 
   public Task<T> GetFirstAsync<T>(Expression<Func<T, bool>> predicate,
-    CancellationToken cancellationToken = default) where T : IHasId;
+    CancellationToken cancellationToken = default) where T : class, IHasId;
   
   /// <summary>
   /// Получить объект по ИД.

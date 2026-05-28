@@ -13,35 +13,36 @@ namespace DBCore;
 public class DbRepository : IRepository
 {
   /// <summary>
-  /// Сессия репозитория.
+  /// Маппинг объектов к сессиям.
   /// </summary>
-  private ISession Session { get;set; }
-  
+  private Dictionary<string, ISession> Sessions { get; set; } = new ();
+
+  private readonly ISessionFactory sessionFactory;
+
   /// <summary>
   /// Добавление в базу данных нового объекта
   /// </summary>
   /// <param name="item">Добавляемый объект</param>
   public void Add(IHasId item)
   {
-    using (ITransaction  transaction = this.Session.BeginTransaction())
-    {
-      this.Session.Save(item);
-      transaction.Commit();
-    }
-
+    ISession session = this.GetSessionForItem(item);
+    using ITransaction transaction = session.BeginTransaction();
+    session.Save(item);
+    transaction.Commit();
   }
+
   /// <summary>
   /// Обновить свойства объекта в базе данных
   /// </summary>
   /// <param name="item">Объект свойства, которого будут обновляться</param>
   public async Task AddOrUpdate(IHasId item)
   {
-    using (ITransaction transaction = this.Session.BeginTransaction())
-    {
-      await this.Session.SaveOrUpdateAsync(item);
-      await transaction.CommitAsync();
-    }
+    ISession session = this.GetSessionForItem(item);
+    using ITransaction transaction = session.BeginTransaction();
+    await session.SaveOrUpdateAsync(item);
+    await transaction.CommitAsync();
   }
+
   
   /// <summary>
   /// Обновить свойства объекта в базе данных.
@@ -49,8 +50,9 @@ public class DbRepository : IRepository
   /// <param name="item">Объект свойства, которого будут обновляться</param>
   public async Task Update(IHasId item)
   {
-    using ITransaction transaction = this.Session.BeginTransaction();
-    await this.Session.UpdateAsync(item);
+    ISession session = this.GetSessionForItem(item);
+    using ITransaction transaction = session.BeginTransaction();
+    await session.UpdateAsync(item);
     await transaction.CommitAsync();
   }
   
@@ -60,9 +62,20 @@ public class DbRepository : IRepository
   /// <param name="id">ID объекта</param>
   /// <typeparam name="T">Тип объекта</typeparam>
   /// <returns></returns>
-  public async Task<T> GetById<T>(int id)  where T : IHasId
+  public async Task<T?> GetById<T>(int id)  where T : IHasId
   {
-    return await this.Session.GetAsync<T>(id);
+    var session = this.GetSessionForItem(typeof(T), id);
+    var result =  await session.GetAsync<T>(id);
+    if (result != null)
+    {
+      this.AddSessionToList(result, session);
+    }
+    else
+    {
+      session.Close();
+      session.Dispose();
+    }
+    return result;
   }
 
   /// <summary>
@@ -71,8 +84,9 @@ public class DbRepository : IRepository
   /// <param name="item">Сущность.</param>
   public async Task Delete(IHasId item)
   {
-    using ITransaction transaction = this.Session.BeginTransaction();
-    await this.Session.DeleteAsync(item);
+    ISession session = this.GetSessionForItem(item);
+    using ITransaction transaction = session.BeginTransaction();
+    await session.DeleteAsync(item);
     await transaction.CommitAsync();
   }
 
@@ -83,11 +97,14 @@ public class DbRepository : IRepository
   /// <param name="value">Значение свойства</param>
   /// <typeparam name="T">Класс объекта</typeparam>
   /// <returns></returns>
-  public T GetByField<T>(string fieldName, object value)
+  public T GetByField<T>(string fieldName, object value) where T : class, IHasId
   {
-    ICriteria criteria = this.Session.CreateCriteria(typeof(T));
+    ISession session = this.sessionFactory.OpenSession();
+    ICriteria criteria = session.CreateCriteria(typeof(T));
     criteria.Add(Restrictions.Eq(fieldName, value));
-    return (T)criteria.UniqueResult();
+    var result =  (T)criteria.UniqueResult();
+    this.AddSessionToList(result, session);
+    return result;
   }
 
   /// <summary>
@@ -98,11 +115,14 @@ public class DbRepository : IRepository
   /// <typeparam name="T">Класс объекта.</typeparam>
   /// <returns>Список сущностей, удовлетворяющих критерию.</returns>
   public async Task<List<T>> GetAsync<T>(Expression<Func<T, bool>> predicate,
-    CancellationToken cancellationToken = default) where T : IHasId
+    CancellationToken cancellationToken = default) where T : class, IHasId
   {
-    return await this.Session.Query<T>()
+    var session = this.sessionFactory.OpenSession();
+    var results = await session.Query<T>()
         .Where(predicate)
         .ToListAsync(cancellationToken);
+    this.AddSessionToList(results, session);
+    return results;
   }
   
   /// <summary>
@@ -113,14 +133,95 @@ public class DbRepository : IRepository
   /// <typeparam name="T">Класс объекта.</typeparam>
   /// <returns>Первая сущность, удовлетворяющее условию.</returns>
   public async Task<T> GetFirstAsync<T>(Expression<Func<T, bool>> predicate,
-    CancellationToken cancellationToken = default) where T : IHasId
+    CancellationToken cancellationToken = default) where T : class, IHasId
   {
-    return await this.Session.Query<T>()
+    ISession? session = this.sessionFactory.OpenSession();
+    T? result = await session.Query<T>()
       .Where(predicate)
       .FirstAsync(cancellationToken);
+    this.AddSessionToList(result, session);
+    return result;
   }
 
+  /// <summary>
+  /// Получить сессию для объекта.
+  /// </summary>
+  /// <param name="item">Объект.</param>
+  /// <returns>Сессия.</returns>
+  private ISession GetSessionForItem(IHasId item)
+  {
+    string id = this.GetIdentifierForSessionByItem(item);
+    if (this.Sessions.TryGetValue(id, out var session))
+    {
+      if (session.IsOpen)
+        return session;
+    }
+    ISession newSession = this.sessionFactory.OpenSession();
+    this.AddSessionToList(item, newSession);
+    return newSession;
+  }
+  
+  private ISession GetSessionForItem(Type itemType, int id)
+  {
+    string identifier = this.GetIdentifierForSessionByItem(itemType, id);
+    if (this.Sessions.TryGetValue(identifier, out ISession? session))
+    {
+      if (session.IsOpen)
+        return session;
+    }
+    ISession newSession = this.sessionFactory.OpenSession();
+    this.AddSessionToList(itemType, id, newSession);
+    return newSession;
+  }
 
+  /// <summary>
+  /// Получить строковый идентификатор для сессии по объекту.
+  /// </summary>
+  /// <param name="item">Объект.</param>
+  /// <returns>Идентификатор.</returns>
+  private string GetIdentifierForSessionByItem(IHasId item)
+  {
+    return $"{item.GetType()}_{item.Id}";
+  }
+  
+    /// <summary>
+    /// Получить строковый идентификатор для сессии по объекту.
+    /// </summary>
+    /// <param name="item">Объект.</param>
+    /// <returns>Идентификатор.</returns>
+    private string GetIdentifierForSessionByItem(Type itemType, int id)
+    {
+      return $"{itemType.FullName}_{id}";
+    }
+
+  /// <summary>
+  /// Добавить сессию по объектам к списку.
+  /// </summary>
+  /// <param name="items">Список объектов.</param>
+  /// <param name="session">Сессия.</param>
+  private void AddSessionToList(IEnumerable<IHasId> items, ISession session)
+  {
+    foreach (var item in items)
+    {
+      var id = this.GetIdentifierForSessionByItem(item);
+      if (this.Sessions.TryGetValue(id, out var oldSession))
+      {
+        oldSession.SaveOrUpdate(item);
+        oldSession.Evict(item);
+      }
+      this.Sessions[this.GetIdentifierForSessionByItem(item)] = session;
+    } 
+  }
+  private void AddSessionToList(Type itemType, int id, ISession session)
+  {
+    this.Sessions[this.GetIdentifierForSessionByItem(itemType, id)] = session;
+  }
+  
+  private void AddSessionToList(IHasId item, ISession session)
+  {
+    this.Sessions[this.GetIdentifierForSessionByItem(item)] = session;
+  }
+  
   /// <summary>
   /// Проверка существования объекта в БД по уникальным полям
   /// </summary>
@@ -148,22 +249,21 @@ public class DbRepository : IRepository
   
   public void Dispose()
   {
-    if (this.Session != null)
-    { 
+    foreach (var session in this.Sessions.Values)
+    {
       try
       {
-        if (this.Session.IsOpen)
+        if (session.IsOpen)
         {
-          var transaction = this.Session.GetCurrentTransaction();
+          var transaction = session.GetCurrentTransaction();
           if (transaction?.IsActive == true)
             transaction.Rollback();
-          this.Session.Close();
+          session.Close();
         }
       }
       finally
       {
-        this.Session.Dispose(); 
-        this.Session = null;
+        session.Dispose();
       }
     }
     GC.SuppressFinalize(this);
@@ -177,7 +277,7 @@ public class DbRepository : IRepository
   /// </summary>
   public DbRepository(NhibernateHelper nhibernateHelper)
   {
-    this.Session = nhibernateHelper.OpenSession();
+    this.sessionFactory = nhibernateHelper.SessionFactory;
   }
 
   /// <summary>
