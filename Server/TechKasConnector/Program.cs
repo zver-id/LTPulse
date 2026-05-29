@@ -20,6 +20,11 @@ public static class Program
     
     builder.Logging.ClearProviders();
     builder.Logging.AddNLog();
+
+    builder.Services.AddWindowsService(options =>
+    {
+      options.ServiceName = "TechKasConnector";
+    });
     
     var dataBaseConnectionString = builder.Configuration.GetConnectionString("PostgreSQL");
     if (string.IsNullOrEmpty(dataBaseConnectionString))
