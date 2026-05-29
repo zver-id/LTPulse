@@ -13,23 +13,20 @@ namespace WebAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TicketsController : ControllerBase
+public class TicketsController(IRepository repository, IMapper mapper, ILogger<TicketsController> logger)
+  : ControllerBase
 {
-  private readonly IRepository repository;
-  private readonly IMapper mapper;
-  private readonly ILogger<TicketsController> logger;
-  
   [HttpGet]
   public async Task<ActionResult<List<TicketDTO>>> GetTickets(int teamId, DateTime date, string ticketType)
   {
     try
     {
-      var service = new TicketService(this.repository);
+      var service = new TicketService(repository);
       var ticketList = await service.GetTickets(teamId, date, ticketType);
-      var result = this.mapper.Map<List<TicketDTO>>(ticketList);
+      var result = mapper.Map<List<TicketDTO>>(ticketList);
       return this.Ok(result);
     }
-    catch (ArgumentException ex)
+    catch (InvalidOperationException ex)
     {
         return this.NoContent();
     }
@@ -40,28 +37,21 @@ public class TicketsController : ControllerBase
   {
     try
     {
-      var service = new TicketService(this.repository);
-      var ticket = this.repository.GetById<Ticket>(ticketDTO.Key);
+      var service = new TicketService(repository);
+      var ticket = await repository.GetById<Ticket>(ticketDTO.Key);
       if  (ticket == null)
         return this.BadRequest("Этого обращения нет на сервере");
       
       // маппим только простые поля так как по сути нужно обновить только комментарий.
-      this.mapper.Map(ticketDTO, ticket);
-      await service.UpdateTicket(ticket);
+      mapper.Map(ticketDTO, ticket);
+      await service.AddOrUpdateTicket(ticket);
       return this.Ok(ticketDTO);
     }
     catch (Exception ex)
     {
-      this.logger.LogError(ex, ex.Message);
+      logger.LogError(ex, ex.Message);
       return this.BadRequest("Ошибка при обработке запроса");
     }
     
-  }
-
-  public TicketsController(IRepository repository, IMapper mapper, ILogger<TicketsController> logger)
-  {
-    this.repository = repository;
-    this.mapper = mapper;
-    this.logger = logger;
   }
 }

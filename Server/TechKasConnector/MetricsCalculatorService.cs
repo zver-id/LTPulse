@@ -42,14 +42,16 @@ public class MetricsCalculatorService : BackgroundService
 
   protected override async Task ExecuteAsync(CancellationToken stoppingToken)
   {
+    using var scope = this.serviceScopeFactory.CreateScope();
+    this.RabbitMqProducer = scope.ServiceProvider.GetRequiredService<RabbitMQClient>();
+    var rabbitMqChanel = await this.RabbitMqProducer.Channel();
     this.Logger.LogInformation("MetricsCalculatorService running at: {time}", DateTimeOffset.Now);
-    this.RabbitMqProducer = await RabbitMQClient.CreateAsync(this.Config.GetConnectionString("RabbitMQ"));
-    var rabbitMQConsumer = new AsyncEventingBasicConsumer(this.RabbitMqProducer.channel);
+    var rabbitMQConsumer = new AsyncEventingBasicConsumer(rabbitMqChanel);
     
     var maxConcurrentMessages  = Environment.ProcessorCount - 1;
     var messageSemaphore = new SemaphoreSlim(maxConcurrentMessages);
     
-    await this.RabbitMqProducer.channel.BasicQosAsync(
+    await rabbitMqChanel.BasicQosAsync(
       prefetchSize: 0, 
       prefetchCount: (ushort)maxConcurrentMessages, 
       global: false
@@ -78,11 +80,11 @@ public class MetricsCalculatorService : BackgroundService
           messageSemaphore.Release();
         }
         //TODO нужно перенаправлять ошибочные сообщения в другую очередь
-        await this.RabbitMqProducer.channel.BasicAckAsync(ea.DeliveryTag, false);
+        await rabbitMqChanel.BasicAckAsync(ea.DeliveryTag, false);
       });
     };
 
-    this.RabbitMqProducer.channel.BasicConsumeAsync(
+    rabbitMqChanel.BasicConsumeAsync(
       queue: "task_queue",
       consumer: rabbitMQConsumer,
       autoAck: false
@@ -99,17 +101,31 @@ public class MetricsCalculatorService : BackgroundService
       throw new ArgumentException("Invalid message body");
     }
       
-    using var scope = this.serviceScopeFactory.CreateScope();
-    var metricCreator = scope.ServiceProvider.GetRequiredService<MetricCalculator>();
-    metricCreator.Init(messageBody.Team);
-    await metricCreator.ProcessAllMetrics();
-    return string.Empty;
+    IServiceScope scope = this.serviceScopeFactory.CreateScope();
+    try
+    {
+      var metricCreator = scope.ServiceProvider.GetRequiredService<MetricCalculator>();
+      await metricCreator.Init(messageBody.TeamId);
+      await metricCreator.ProcessAllMetrics();
+      return string.Empty;
+    }
+    catch (Exception ex)
+    {
+      this.Logger.LogError(ex, "Error processing message");
+      throw;
+    }
+    finally
+    {
+      await Task.Delay(100);
+      scope.Dispose();
+    }
   }
   
   public MetricsCalculatorService(
     ILogger<MetricsCalculatorService> logger,
     IServiceScopeFactory serviceScopeFactory,
-    IConfiguration configuration)
+    IConfiguration configuration
+    )
   {
     this.Logger = logger;
     this.serviceScopeFactory = serviceScopeFactory;

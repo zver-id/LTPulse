@@ -11,7 +11,9 @@ export const gradeApi = createApi({
   reducerPath: "grade",
   baseQuery: fetchBaseQuery({baseUrl: `${apiUrl}/api/Grade`}),
   tagTypes: ['grades'],
+
   endpoints: (builder) => ({
+
     getGrades: builder.query<GradeResponse, {
       teamId: number,
       date: string | null,
@@ -22,6 +24,7 @@ export const gradeApi = createApi({
         `?teamId=${teamId}&date=${date}&onlyUnresearched=${onlyUnresearched}&onlyNegative=${onlyNegative}`,
       providesTags: ['grades']
     }),
+
     updateGrade: builder.mutation({
       query: (grade: IGrade) => ({
         url: 'Grades',

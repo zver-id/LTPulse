@@ -1,43 +1,24 @@
 using CommonModels.Interfaces;
 using CommonModels.Models;
-using DBCore;
 
 namespace Application;
 
 /// <summary>
-/// Сервис команд.
+///   Сервис команд.
 /// </summary>
-public class TeamService : GenericService
+public class TeamService(IRepository repository) : GenericService(repository)
 {
-
-
   /// <summary>
-  /// Получить список всех команд.
+  ///   Получить список всех команд.
   /// </summary>
   /// <returns>Список всех команд.</returns>
-  public Task<List<Team>> GetAllTeams()
+  public async Task<List<Team>> GetAllTeams()
   {
-    return Task.Run(() =>
-      {
-        return this.repository.Get<Team>(x => true);
-      }
-    );
+    return await this.repository.GetAsync<Team>(x => true);
   }
 
-  public Task<Team> GetTeamById(int id)
+  public async Task<Team> GetTeamById(int id)
   {
-    return Task.Run(() =>
-      {
-        return this.repository.GetById<Team>(id);
-      }
-    );
-  }
-  
-  /// <summary>
-  /// Конструктор.
-  /// </summary>
-  /// <param name="repository">Репозиторий.</param>
-  public TeamService(IRepository repository) : base(repository)
-  {
+    return await this.repository.GetById<Team>(id);
   }
 }
