@@ -4,7 +4,8 @@ import {useGetFilteredMetricsQuery} from "../../storage/services/metrics-api.ts"
 import getAllLines from "../../helpers/getAllLines.ts"
 import loadingOrErrorScreen from "../../helpers/loadingOrErrorScreen.tsx"
 import getMaxValue from "../../helpers/getMaxValue.ts";
-import {Collapse} from "antd";
+import { Collapse, Flex } from "antd";
+import MetricDetails, {type IMetricDetailsItem} from "../metricDetails/metricDetails.tsx";
 
 function LineTicketChart({teamId, dayCount, filter, nameOfChart}: LineChartProps) {
 
@@ -21,6 +22,8 @@ function LineTicketChart({teamId, dayCount, filter, nameOfChart}: LineChartProps
   }
 
   const allMonths = getAllLines(data)
+  const metrics: IMetricDetailsItem[] = allMonths.map((title, teamId) => (
+      {title, teamId}))
   const yAxisMax = data ? Math.ceil(getMaxValue(data) * 1.1) : 0
 
   const colors = ['#E6194B', '#3CB44B', '#4363D8', '#F58231', '#911EB4', '#42D4F4',
@@ -35,6 +38,7 @@ function LineTicketChart({teamId, dayCount, filter, nameOfChart}: LineChartProps
                     <div>{nameOfChart}</div>
                   ),
                   children: (
+                      <Flex>
                     <LineChart
                       style={{width: '80%', aspectRatio: 1.618, maxHeight: '40vh'}}
                       margin={{top: 5, right: 20, bottom: 5, left: 0}}
@@ -72,6 +76,8 @@ function LineTicketChart({teamId, dayCount, filter, nameOfChart}: LineChartProps
                       <Legend/>
                       <Tooltip/>
                     </LineChart>
+                    <MetricDetails items={metrics}/>
+                      </Flex>
                   )
                 }
               ]}>
