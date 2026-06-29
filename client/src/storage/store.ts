@@ -5,6 +5,7 @@ import {ticketsApi} from "./services/tickets-api.ts";
 import {gradeApi} from "./services/grade-api.ts";
 import {metricGroupsApi} from "./services/metricGroups-api.ts";
 import {employeeApi} from "./services/employee-api.ts";
+import {tableSchemaApi} from "./services/tableSchema-api.ts";
 
 export const store = configureStore({
   reducer: {
@@ -13,7 +14,8 @@ export const store = configureStore({
     [ticketsApi.reducerPath]: ticketsApi.reducer,
     [gradeApi.reducerPath]: gradeApi.reducer,
     [metricGroupsApi.reducerPath]: metricGroupsApi.reducer,
-    [employeeApi.reducerPath]: employeeApi.reducer
+    [employeeApi.reducerPath]: employeeApi.reducer,
+    [tableSchemaApi.reducerPath]: tableSchemaApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -23,4 +25,5 @@ export const store = configureStore({
       .concat(gradeApi.middleware)
       .concat(metricGroupsApi.middleware)
       .concat(employeeApi.middleware)
+      .concat(tableSchemaApi.middleware)
 })

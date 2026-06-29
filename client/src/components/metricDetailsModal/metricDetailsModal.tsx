@@ -1,5 +1,6 @@
 import {Modal, Table} from "antd";
 import {useGetTicketByMetricQuery} from "../../storage/services/tickets-api.ts";
+import {useGetTableSchemaQuery} from "../../storage/services/tableSchema-api.ts";
 
 interface metricDetailsModalProps {
   teamId: number;
@@ -11,18 +12,7 @@ interface metricDetailsModalProps {
 
 function MetricDetailsModal({ teamId, date, metric, isOpen, onClose }: metricDetailsModalProps) {
   const {data} = useGetTicketByMetricQuery({teamId, date, metric}, {skip: !isOpen });
-  const columns = [
-    {
-      title: "Номер",
-      dataIndex: "key",
-      key: "key",
-    },
-    {
-      title: "Описание",
-      dataIndex: "name",
-      key: "name",
-    }
-  ]
+  const {data: columns} = useGetTableSchemaQuery({typeOfTable: "tickets"})
   return (
       <Modal
         open={isOpen}
