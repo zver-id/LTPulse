@@ -59,9 +59,9 @@ public class MetricsCalculatorService : BackgroundService
     
     rabbitMQConsumer.ReceivedAsync += async (ch, ea) =>
     {
-      await messageSemaphore.WaitAsync(stoppingToken);
       _ = Task.Run(async () =>
       {
+        await messageSemaphore.WaitAsync(stoppingToken);
         try
         {
           var body = ea.Body.ToArray();
@@ -90,6 +90,7 @@ public class MetricsCalculatorService : BackgroundService
       autoAck: false
     );
     
+    await Task.Delay(Timeout.Infinite, stoppingToken);
     this.Logger.LogDebug("Метод Execute Async завершился в MetricsCalculatorService");
   }
 
