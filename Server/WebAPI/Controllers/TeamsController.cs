@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Application;
@@ -33,8 +32,8 @@ public class TeamsController : ControllerBase
   [HttpGet]
   public async Task<ActionResult<List<TeamDTO>>> GetAllTeams()
   {
-    List<Team> teams = await teamService.GetAllTeams();
-    List<TeamDTO> response = mapper.Map<List<TeamDTO>>(teams);
+    List<Team> teams = await this.teamService.GetAllTeams();
+    List<TeamDTO> response = this.mapper.Map<List<TeamDTO>>(teams);
     return this.Ok(response);
   }
 
@@ -42,6 +41,7 @@ public class TeamsController : ControllerBase
   /// Конструктор.
   /// </summary>
   /// <param name="mapper">Маппер.</param>
+  /// <param name="teamService">Сервис команд.</param>
   public TeamsController(IMapper mapper, TeamService teamService)
   {
     this.mapper = mapper;

@@ -16,7 +16,7 @@ public class Tests
   public void Setup()
   {
     this.repository = new DbRepository();
-    this.team = this.repository.Get<Team>(x => x.Name == "ОГВ").FirstOrDefault();
+    this.team = this.repository.GetAsync<Team>(x => x.Name == "ОГВ").FirstOrDefault();
     //this.metricCreator = new GenericMetricCreator(this.repository, team);
   }
 
@@ -24,7 +24,7 @@ public class Tests
   public void CreateMonthMetrics()
   {
     this.metricCreator.CreateMonthMetrics();
-    var metrics = this.repository.Get<Metric>(x => x.Date == DateTime.Today).FirstOrDefault();
+    var metrics = this.repository.GetAsync<Metric>(x => x.Date == DateTime.Today).FirstOrDefault();
     Assert.NotNull(metrics);
   }
 
@@ -36,7 +36,7 @@ public class Tests
     var result = this.metricCreator.GetAllTicketsWithTime();
     stopwatch.Stop();
     var elapsed = stopwatch.ElapsedMilliseconds;
-    Console.WriteLine("Get all tickets with time: " + elapsed);
+    Console.WriteLine("GetAsync all tickets with time: " + elapsed);
     Assert.Less(elapsed, 60000);
   }
   

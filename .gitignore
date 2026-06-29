@@ -11,3 +11,5 @@ Server/DBCore/settings.json
 *.xlsx
 
 client/.env
+
+Backups/

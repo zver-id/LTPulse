@@ -11,6 +11,8 @@ namespace TechKasConnector.DataCalculators;
 /// </summary>
 public class GradeListGenerator
 {
+  #region Поля и свойства
+
   /// <summary>
   /// Список оценок.
   /// </summary>
@@ -25,10 +27,6 @@ public class GradeListGenerator
   /// Репозиторий.
   /// </summary>
   private IRepository Repository { get; }
-  /// <summary>
-  /// Календарь рабочего времени.
-  /// </summary>
-  private CalendarCalculator Calendar { get; }
   
   /// <summary>
   /// Логгер.
@@ -36,13 +34,22 @@ public class GradeListGenerator
   private readonly ILogger<GradeListGenerator> logger;
   
   /// <summary>
+  /// Календарь.
+  /// </summary>
+  private CalendarCalculator Calendar {get; init;}
+  
+  #endregion
+
+  #region Методы
+  
+  /// <summary>
   /// Рассчитать список оценок.
   /// </summary>
-  private void CalculateGrades()
+  private async Task CalculateGrades()
   {
     this.logger.LogInformation("Расчет оценок");
     var gradesReference = new TechKasReference("REQUEST_SOLUTION_MARKS", false);
-    var currentDate = this.Calendar.GetPreviousDates(0);
+    var currentDate = await this.Calendar.GetPreviousDates(0);
     
     using var filter = new ReferenceFilterManager(gradesReference);
     filter.AddFilter(TechKasRequisites.ClosedDate, currentDate);
@@ -53,15 +60,14 @@ public class GradeListGenerator
     {
       try
       {
-        Grade newGrade = this.GetOrCreateGrade(grade);
-        this.Repository.AddOrUpdate(newGrade);
+        Grade newGrade = await this.GetOrCreateGrade(grade);
+        await this.Repository.AddOrUpdate(newGrade);
         if (listOfEmployeeNames.Contains(newGrade.Ticket.Employee))
           this.Grades.Add(newGrade);
       }
       catch (ArgumentNullException e)
       {
         this.logger.LogError(e, "Не найдено связанное с оценкой обращение. Оценка пропущена");
-        continue;
       }
     }
   }
@@ -71,10 +77,10 @@ public class GradeListGenerator
   /// </summary>
   /// <param name="element">Элемент ТехКас.</param>
   /// <returns>Оценка.</returns>
-  private Grade GetOrCreateGrade(TechKasElement element)
+  private async Task<Grade> GetOrCreateGrade(TechKasElement element)
   {
     var id = int.Parse(element.GetRequisite(TechKasRequisites.GradeTicketNum, RequisitesMode.AsString).Trim());
-    var grade = this.Repository.GetById<Grade>(id);
+    var grade = await this.Repository.GetById<Grade>(id);
     if (grade != null)
       return grade;
     return new Grade
@@ -84,7 +90,7 @@ public class GradeListGenerator
       Text = element.GetRequisiteWithOpen(TechKasRequisites.GradeText, RequisitesMode.AsString),
       Date = DateTime.ParseExact(element.GetRequisite(TechKasRequisites.GradeDate, RequisitesMode.AsString),
         "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture),
-      Ticket = this.GetRelatedTicket(id),
+      Ticket = await this.GetRelatedTicket(id),
       isResearched = false
     };
   }
@@ -95,11 +101,11 @@ public class GradeListGenerator
   /// <param name="ticketNumber">Номер обращения.</param>
   /// <returns>Связанное обращение.</returns>
   /// <exception cref="ArgumentNullException">Возникает, когда не удается найти обращение по указанному ИД.</exception>
-  private Ticket GetRelatedTicket(int ticketNumber)
+  private async Task<Ticket> GetRelatedTicket(int ticketNumber)
   {
-    var ticket = this.Repository.GetById<Ticket>(ticketNumber);
-    if (ticket != null)
-      return ticket;
+    var ticket = await this.Repository.GetById<Ticket>(ticketNumber);
+    if (ticket == null)
+      ticket = new Ticket();
     var ticketReference = new TechKasReference("ПДД", false);
     using var filter = new ReferenceFilterManager(ticketReference);
     // В ТехКас все номера обращений имеют 4 пробела в начале. Без этого не фильтруется.
@@ -110,25 +116,24 @@ public class GradeListGenerator
       this.logger.LogError($"Переданный ИД {ticketNumber} обращения не существует в ТехКас");
       throw new ArgumentNullException($"Переданный ИД {ticketNumber} обращения не существует в ТехКас");
     }
-    ticket = new Ticket
-    {
-      Id = int.Parse(ticketElement.GetRequisite(TechKasRequisites.Id, RequisitesMode.AsString).Trim()),
-      Name = ticketElement.GetRequisite(TechKasRequisites.Name, RequisitesMode.AsString),
-      Type = ticketElement.GetRequisite(TechKasRequisites.TicketType, RequisitesMode.AsString),
-      Organization = ticketElement.GetRequisite(TechKasRequisites.Organization, RequisitesMode.DisplayText),
-      Employee = ticketElement.GetRequisite(TechKasRequisites.Employee, RequisitesMode.DisplayText),
-      Priority = this.Repository
-        .Get<Priority>(x =>
-          x.Name == ticketElement.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString)).First(),
-      IncomingDate = DateTime.ParseExact(
-        ticketElement.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString),
-        "dd.MM.yyyy", CultureInfo.InvariantCulture),
-      State = this.Repository.Get<TicketState>(s =>
-        s.State == ticketElement.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString)).First(),
-      TimeInWork = 0,
-      Hyperlink = ticketElement.Hyperlink
-    };
-    this.Repository.Add(ticket);
+
+    ticket.Id = int.Parse(ticketElement.GetRequisite(TechKasRequisites.Id, RequisitesMode.AsString).Trim());
+    ticket.Name = ticketElement.GetRequisite(TechKasRequisites.Name, RequisitesMode.AsString);
+    ticket.Type = ticketElement.GetRequisite(TechKasRequisites.TicketType, RequisitesMode.AsString);
+    ticket.Organization = ticketElement.GetRequisite(TechKasRequisites.Organization, RequisitesMode.DisplayText);
+    ticket.Employee = ticketElement.GetRequisite(TechKasRequisites.Employee, RequisitesMode.DisplayText);
+    ticket.Priority = await this.Repository
+      .GetFirstAsync<Priority>(x =>
+        x.Name == ticketElement.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString));
+    ticket.IncomingDate = DateTime.ParseExact(
+      ticketElement.GetRequisite(TechKasRequisites.OpenDate, RequisitesMode.AsString),
+      "dd.MM.yyyy", CultureInfo.InvariantCulture);
+    ticket.State = await this.Repository.GetFirstAsync<TicketState>(s =>
+      s.State == ticketElement.GetRequisite(TechKasRequisites.TicketStatus, RequisitesMode.AsString));
+    ticket.TimeInWork = 0;
+    ticket.Hyperlink = ticketElement.Hyperlink;
+
+    await this.Repository.AddOrUpdate(ticket);
     return ticket;
   }
 
@@ -137,12 +142,16 @@ public class GradeListGenerator
   /// </summary>
   /// <param name="team">Команда.</param>
   /// <returns>Список оценок.</returns>
-  public List<Grade> GenerateForTeam(Team team)
+  public async Task<List<Grade>> GenerateForTeam(Team team)
   {
     this.Team = team;
-    this.CalculateGrades();
+    await this.CalculateGrades();
     return this.Grades;
   }
+  
+  #endregion
+
+  #region Конструкторы
 
   /// <summary>
   /// Конструктор.
@@ -156,4 +165,6 @@ public class GradeListGenerator
     this.Repository = repository;
     this.Calendar = calendar;
   }
+  
+  #endregion
 }

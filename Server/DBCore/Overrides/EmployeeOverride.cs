@@ -16,5 +16,10 @@ public class EmployeeOverride : IAutoMappingOverride<Employee>
     
     mapping.Map(x => x.TechKASNumber)
       .Unique();
+    
+    mapping.HasManyToMany(x => x.Teams)
+      .Table("Employee_Teams")
+      .Cascade.SaveUpdate()
+      .AsBag();
   }
 }

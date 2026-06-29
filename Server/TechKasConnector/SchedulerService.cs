@@ -19,13 +19,11 @@ public class SchedulerService : BackgroundService
     this.logger.LogInformation("Scheduler Service is starting.");
     using var scope = this.serviceScopeFactory.CreateScope();
     var scheduler = scope.ServiceProvider.GetRequiredService<JobScheduler>();
-    scheduler.CreateJobsForNewTeams();
+    await scheduler.CreateJobsForNewTeams();
 
     while (!stoppingToken.IsCancellationRequested)
     {
-      this.logger.LogInformation("Inspect job to start.");
       await scheduler.StartJobs();
-      await Task.Delay(TimeSpan.FromMinutes(5));
     }
   }
 

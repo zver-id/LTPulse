@@ -41,7 +41,6 @@ function Navigation(props: INavigationProps) {
         value={days}
         onChange={handleChangeDays}
         placeholder="Количество дней"
-        className="input-style" // добавьте свои стили
       />
     </nav>
   )
