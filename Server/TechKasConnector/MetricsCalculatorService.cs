@@ -89,6 +89,8 @@ public class MetricsCalculatorService : BackgroundService
       consumer: rabbitMQConsumer,
       autoAck: false
     );
+    
+    this.Logger.LogDebug("Метод Execute Async завершился в MetricsCalculatorService");
   }
 
   private async Task<string> ProcessMessage(string message)
