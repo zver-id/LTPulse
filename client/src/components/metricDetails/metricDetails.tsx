@@ -13,27 +13,34 @@ interface IMetricDetailsItems {
 }
 
 function MetricDetails({items}: IMetricDetailsItems) {
-  const [isOpenModal, setOpenModal] = useState(false);
-  const onClickHandle = () => {setOpenModal(true)}
-  const onClose = () => {setOpenModal(false)}
+  const [openModal, setOpenModal] = useState<number | null>(null);
+  const onClickHandle = (index: number) => {
+    setOpenModal(index)
+  }
+  const onClose = () => {
+    setOpenModal(null)
+  }
   const today = new Date().toISOString().split('T')[0];
 
   return (
       <Flex className="ant-flex-vertical">
-        { items.map((item, index) => {
+        {items.map((item, index) => {
+          const isOpen = openModal === index
           return (
               <>
-              <Button
-                  className={styles.button}
-                  onClick={onClickHandle}
-                  key={index}
-              >{item.title}</Button>
-              <MetricDetailsModal
-                  teamId={item.teamId}
-                  date={today}
-                  metric={item.title}
-                  isOpen={isOpenModal}
-                  onClose={onClose}/>
+                <Button
+                    className={styles.button}
+                    onClick={()=>onClickHandle(index)}
+                    key={index}
+                >{item.title}</Button>
+                {isOpen && (
+                    <MetricDetailsModal
+                        teamId={item.teamId}
+                        date={today}
+                        metric={item.title}
+                        isOpen={isOpen}
+                        onClose={onClose}/>
+                )}
               </>
           )
         })}
