@@ -16,7 +16,7 @@ export const ticketsApi = createApi({
 
     getTicketByMetric: builder.query<ITicket[], {teamId: number, date: string, metric: string}>({
       query: ({teamId, date, metric}) =>
-        `?teamId=${teamId}&date=${date}&metric=${metric}`,
+        `byMetric?teamId=${teamId}&date=${date}&metric=${metric}`,
       providesTags: ['ticketsByMetric']
     }),
 

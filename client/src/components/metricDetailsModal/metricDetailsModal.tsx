@@ -19,6 +19,12 @@ function MetricDetailsModal({ teamId, date, metric, isOpen, onClose }: metricDet
         onCancel={onClose}
         cancelText="Закрыть"
         okButtonProps={{ style: { display: 'none' } }}
+        width="auto" //TODO убрать в стили
+        style={{ maxWidth: '90vw' }}
+        bodyStyle={{
+          padding: 0, 
+          overflow: 'auto'
+        }}
       >
         <Table dataSource={data} columns={columns} />
       </Modal>

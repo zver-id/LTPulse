@@ -14,7 +14,7 @@ export const tableSchemaApi = createApi({
 
   endpoints: (builder) => ({
     getTableSchema: builder.query<ITableSchemaElement[], { typeOfTable: string }>({
-      query: ({typeOfTable}) => `tableSchema=${typeOfTable}`,
+      query: ({typeOfTable}) => `?tableName=${typeOfTable}`,
       providesTags: ["tableSchema"]
     })
   }),
