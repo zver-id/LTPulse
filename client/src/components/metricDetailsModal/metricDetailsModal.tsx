@@ -12,7 +12,7 @@ interface metricDetailsModalProps {
 
 function MetricDetailsModal({ teamId, date, metric, isOpen, onClose }: metricDetailsModalProps) {
   const {data} = useGetTicketByMetricQuery({teamId, date, metric}, {skip: !isOpen });
-  const {data: columns} = useGetTableSchemaQuery({typeOfTable: "tickets"})
+  const {data: columns} = useGetTableSchemaQuery({typeOfTable: "ticket"})
   return (
       <Modal
         open={isOpen}

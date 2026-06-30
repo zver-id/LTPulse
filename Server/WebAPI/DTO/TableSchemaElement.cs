@@ -1,4 +1,4 @@
-namespace WebAPI.DTO;
+namespace Application;
 
 public class TableSchemaElement
 {

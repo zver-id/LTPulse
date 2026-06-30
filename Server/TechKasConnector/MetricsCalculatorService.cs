@@ -39,6 +39,7 @@ public class MetricsCalculatorService : BackgroundService
   /// Конфигурация.
   /// </summary>
   private IConfiguration Config { get; init; }
+  private IHostApplicationLifetime ApplicationLifetime { get; init; }
 
   protected override async Task ExecuteAsync(CancellationToken stoppingToken)
   {
@@ -73,7 +74,7 @@ public class MetricsCalculatorService : BackgroundService
         catch (Exception e)
         {
           this.Logger.LogError(e, "Error processing message");
-          throw;
+          this.ApplicationLifetime.StopApplication();
         }
         finally
         {
