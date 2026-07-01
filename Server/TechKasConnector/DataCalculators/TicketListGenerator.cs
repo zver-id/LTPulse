@@ -94,7 +94,7 @@ internal class TicketListGenerator
   private async Task<int> GetSpentTimeByMinutes(TechKasElement ticket)
   {
     Autoclicker.ClickYes();
-    var detail = ticket.GetDetail(4);
+    using TechKasElementDetail detail = ticket.GetDetail(4);
     var record = detail.First();
       
     DateTime startOfIteration = DateTime.Now;
@@ -148,7 +148,7 @@ internal class TicketListGenerator
     var employeeNames = this.Team.Employees.Select(e => e.Name).ToList();
     
     Autoclicker.ClickYes();
-    var detail = ticket.GetDetail(2);
+    using TechKasElementDetail detail = ticket.GetDetail(2);
     foreach (TechKasElement record in detail)
     {
       bool isActualDate = record.GetRequisite(TechKasRequisites.DateDetail, RequisitesMode.AsString)
