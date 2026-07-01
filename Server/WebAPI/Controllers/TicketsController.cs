@@ -31,6 +31,22 @@ public class TicketsController(IRepository repository, IMapper mapper, ILogger<T
         return this.NoContent();
     }
   }
+  
+    [HttpGet("byMetric")]
+    public async Task<ActionResult<List<TicketDTO>>> GetTicketsByMetric(DateTime date, string metricType, int teamId)
+    {
+      try
+      {
+        var service = new TicketService(repository);
+        List<Ticket> ticketList = await service.GetTicketsByMetric(teamId, date, metricType);
+        var result = mapper.Map<List<TicketDTO>>(ticketList);
+        return this.Ok(result);
+      }
+      catch (InvalidOperationException ex)
+      {
+          return this.NoContent();
+      }
+    }
 
   [HttpPost]
   public async Task<ActionResult<TicketDTO>> UpdateTicket(TicketDTO ticketDTO)
