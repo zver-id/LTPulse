@@ -1,4 +1,4 @@
-import {Modal, Table} from "antd";
+import {Modal, Table, Typography } from "antd";
 import {useGetTicketByMetricQuery} from "../../storage/services/tickets-api.ts";
 import {useGetTableSchemaQuery} from "../../storage/services/tableSchema-api.ts";
 
@@ -24,6 +24,8 @@ function MetricDetailsModal({ teamId, date, metric, isOpen, onClose }: metricDet
         width="auto" //TODO убрать в стили
         style={{ maxWidth: '90vw' }}
       >
+        <h2>{`Обращения по метрике ${metric}`}</h2>
+        <Typography>Дата метрики: </Typography>
         <Table dataSource={data} columns={columns} />
       </Modal>
   )

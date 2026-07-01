@@ -49,8 +49,8 @@ public class TableSchemaController(IMapper mapper, IRepository repository, ILogg
         schema.Add(new TableSchemaElement
         {
           Title = display.Name,
-          dataIndex = property.Name.ToLower(),
-          key = property.Name.ToLower(),
+          dataIndex = char.ToLower(property.Name[0]) + property.Name.Substring(1),
+          key = char.ToLower(property.Name[0]) + property.Name.Substring(1)
         });
       }
     }

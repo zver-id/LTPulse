@@ -38,7 +38,7 @@ public class TicketsController(IRepository repository, IMapper mapper, ILogger<T
       try
       {
         var service = new TicketService(repository);
-        var ticketList = await service.GetTicketsByMetric(teamId, date, metricType);
+        List<Ticket> ticketList = await service.GetTicketsByMetric(teamId, date, metricType);
         var result = mapper.Map<List<TicketDTO>>(ticketList);
         return this.Ok(result);
       }
