@@ -39,6 +39,7 @@ public class Program
         builder.Services.AddScoped<MetricsService>();
         builder.Services.AddScoped<TeamService>();
         builder.Services.AddScoped<EmployeeService>();
+        builder.Services.AddScoped<GenerateReportService>();
         
         
         ILoggerFactory loggerFactory = LoggerFactory.Create(logBuilder => logBuilder.AddJsonConsole());
