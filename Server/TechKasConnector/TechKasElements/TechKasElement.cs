@@ -25,7 +25,7 @@ internal class TechKasElement : TechKasReferenceRecord
     if (this.IsSimple)
       throw new InvalidOperationException("Element has no details");
     this.Element.OpenRecord();
-    return new TechKasElementDetail(this.Element.DetailDataSet(detailNumber));
+    return new TechKasElementDetail(this.Element.DetailDataSet(detailNumber), this.Element);
   }
   
   /// <summary>
