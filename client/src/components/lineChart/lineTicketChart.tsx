@@ -22,7 +22,7 @@ function LineTicketChart({teamId, dayCount, filter, nameOfChart}: LineChartProps
   }
 
   const allMonths = getAllLines(data)
-  const metrics: IMetricDetailsItem[] = allMonths.map((title, teamId) => (
+  const metrics: IMetricDetailsItem[] = allMonths.map((title) => (
       {title, teamId}))
   const yAxisMax = data ? Math.ceil(getMaxValue(data) * 1.1) : 0
 
