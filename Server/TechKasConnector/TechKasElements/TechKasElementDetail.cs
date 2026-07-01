@@ -4,10 +4,13 @@ namespace TechKasConnector;
 
 internal class TechKasElementDetail : TechKasReferenceRecord, IEnumerable<TechKasElement>, IDisposable
 {
-  public TechKasElementDetail(dynamic detail)
+  public TechKasElementDetail(dynamic detail, dynamic parentElement)
   {
     this.Element = detail;
+    this.ParentElement = parentElement;
   }
+  
+  private dynamic ParentElement { get; }
   
   /// <summary>
   /// Достигнут конец списка.
@@ -54,5 +57,6 @@ internal class TechKasElementDetail : TechKasReferenceRecord, IEnumerable<TechKa
   public void Dispose()
   {
     this.Element.CloseRecord();
+    this.ParentElement.CloseRecord();
   }
 }
