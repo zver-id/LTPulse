@@ -29,4 +29,9 @@ public class Job : IHasId
   /// Команда, для которой рассчитывается процесс.
   /// </summary>
   public virtual Team Team { get; set; }
+  
+  /// <summary>
+  /// Признак, что процесс запущен.
+  /// </summary>
+  public virtual bool InProgress { get; set; }
 }

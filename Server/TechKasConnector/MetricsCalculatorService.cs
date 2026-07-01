@@ -7,6 +7,7 @@ using CommonModels.Interfaces;
 using CommonModels.Models;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using TechKasConnector.Calendar;
 using TechKasConnector.DataCalculators;
 
 namespace TechKasConnectService;
@@ -31,6 +32,16 @@ public class MetricsCalculatorService : BackgroundService
   /// Точка получения Scope.
   /// </summary>
   private IServiceScopeFactory serviceScopeFactory;
+  
+  /// <summary>
+  /// Репозиторий.
+  /// </summary>
+  private IRepository Repository {get;}
+  
+  /// <summary>
+  /// Календарь.
+  /// </summary>
+  private CalendarCalculator Calendar { get; }
   
   #endregion
 
@@ -111,6 +122,11 @@ public class MetricsCalculatorService : BackgroundService
       var metricCreator = scope.ServiceProvider.GetRequiredService<MetricCalculator>();
       await metricCreator.Init(messageBody.TeamId);
       await metricCreator.ProcessAllMetrics();
+      var generateReportJob = await this.Repository.GetFirstAsync<Job>(j => j.Team.Id == messageBody.TeamId);
+      generateReportJob.InProgress = false;
+      generateReportJob.StartProcess = await this.Calendar.AddTimeSpanWithHolidays(
+        DateTime.Now, generateReportJob.RepeatInterval);
+      await this.Repository.AddOrUpdate(generateReportJob);
       return string.Empty;
     }
     catch (Exception ex)
@@ -128,11 +144,15 @@ public class MetricsCalculatorService : BackgroundService
   public MetricsCalculatorService(
     ILogger<MetricsCalculatorService> logger,
     IServiceScopeFactory serviceScopeFactory,
-    IConfiguration configuration
+    IConfiguration configuration,
+    IRepository repository,
+    CalendarCalculator calendar
     )
   {
     this.Logger = logger;
     this.serviceScopeFactory = serviceScopeFactory;
     this.Config = configuration;
+    this.Repository = repository;
+    this.Calendar = calendar;
   }
 }

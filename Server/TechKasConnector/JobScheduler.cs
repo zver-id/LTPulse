@@ -65,7 +65,7 @@ public class JobScheduler
       await this.CreateJobsForNewTeams();
     foreach (var job in this.Jobs)
     {
-      if (job.StartProcess == null || job.StartProcess < DateTime.Now)
+      if ((job.StartProcess == null || job.StartProcess < DateTime.Now) && !job.InProgress)
       {
         var message = new GenerateTeamReportRequest
         {
@@ -73,7 +73,8 @@ public class JobScheduler
           TeamId = job.Team.Id,
         };
         await this.RabbitMQClient.SendMessage(message);
-        job.StartProcess = await this.Calendar.AddTimeSpanWithHolidays(DateTime.Now, job.RepeatInterval);
+        job.InProgress = true;
+        //job.StartProcess = await this.Calendar.AddTimeSpanWithHolidays(DateTime.Now, job.RepeatInterval);
         await this.Repository.AddOrUpdate(job);
         this.Logger.LogInformation($"Push message for start job for team {job.Team.Name}");
       }
