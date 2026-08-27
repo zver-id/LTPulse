@@ -121,6 +121,7 @@ public class MetricCalculator
   /// </summary>
   private async Task CreateMonthMetrics()
   {
+    this.logger.LogInformation($"Рассчет метрик по месяцам для команды {this.team.Name}");
     var currentMonthMetrics = await this.repository.GetAsync<Metric>(m => m.MetricType.MetricGroup.Name.Equals("Month") &&
                                                                m.Team == this.team &&
                                                                m.Date.Date == DateTime.Now.Date);
@@ -138,8 +139,9 @@ public class MetricCalculator
       var metric = await this.GetOrCreateMetric(DateTime.Today, await this.GetOrCreateMonthMetricType(monthGroup.Key));
       metric.Value = monthGroup.Value.Count;
       metric.Tickets = monthGroup.Value;
-      await this.repository.AddOrUpdate(metric);
+      await this.repository.AddOrUpdate(metric);      
     }
+    this.logger.LogInformation($"Метрики по месяцам для команды {this.team.Name} рассчитаны");
   }
 
   /// <summary>
@@ -161,12 +163,13 @@ public class MetricCalculator
   }
 
   /// <summary>
-  /// Рассчитать метрику.
+  /// Рассчитать метрику по затраченному времени.
   /// </summary>
   /// <param name="nameOfMetricType">Название метрики.</param>
   /// <param name="predicate">Условие по которому отбираются обращения для метрики.</param>
   private async Task CreateSpentTimeMetric(string nameOfMetricType, Predicate<Ticket> predicate)
   {
+    this.logger.LogInformation($"Расчет метрики отмеченного времени для команды {this.team.Name}");
     var metricType = await this.repository.GetFirstAsync<MetricType>(mt => mt.Name == nameOfMetricType);
     Metric metric = await this.GetOrCreateMetric(DateTime.Today, metricType);
     List<Ticket> relatedTickets = this.TicketListGenerator.Tickets
@@ -177,6 +180,7 @@ public class MetricCalculator
     metric.Tickets = relatedTickets;
  
     await this.repository.AddOrUpdate(metric);
+    this.logger.LogInformation($"Метрика отмеченного времени для команды {this.team.Name} рассчитана");
   }
   
   /// <summary>
@@ -286,12 +290,21 @@ public class MetricCalculator
   {
     this.team = await this.repository.GetById<Team>(teamId);
     this.logger.LogInformation($"Initializing metric calculator for team: {this.team.Name}");
-    this.tickets = new TechKasReference("ПДД");
-    await this.SetInitFilters();
-    this.SetEmployeeFilters();
-    this.TicketListGenerator = new TicketListGenerator(this.repository, this.tickets, this.Calendar, this.team);
-    await this.TicketListGenerator.InitTicketList();
-    await this.GradeListGenerator.GenerateForTeam(this.team);
+    using (var tickets = new TechKasReference("ПДД"))
+    {
+      this.tickets = tickets;
+      await this.SetInitFilters();
+      this.logger.LogInformation($"Установлены начальные фильтры для команды {this.team.Name}");
+      this.SetEmployeeFilters();
+      this.logger.LogInformation($"Установлены фильтры по сотрудникам для команды {this.team.Name}");
+      this.TicketListGenerator = new TicketListGenerator(this.repository, this.tickets, this.Calendar, this.team);
+      this.logger.LogDebug($"Call TicketListGenerator.InitTicketList {this.team.Name} ");
+      await this.TicketListGenerator.InitTicketList();
+      this.logger.LogDebug($"Finish TicketListGenerator.InitTicketLis {this.team.Name}");
+      this.logger.LogDebug($"Call GradeListGenerator.GenerateForTeam {this.team.Name}");
+      await this.GradeListGenerator.GenerateForTeam(this.team);
+      this.logger.LogDebug($"Finish GradeListGenerator.GenerateForTeam {this.team.Name}");
+    }
     this.logger.LogInformation($"Finish initialize metric calculator for team: {team.Name}");
   }
 

@@ -57,6 +57,7 @@ internal class TechKasElementDetail : TechKasReferenceRecord, IEnumerable<TechKa
   public void Dispose()
   {
     this.Element.CloseRecord();
+    this.ParentElement.Cancel();
     this.ParentElement.CloseRecord();
   }
 }
