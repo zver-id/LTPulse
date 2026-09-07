@@ -117,6 +117,188 @@ public class MetricCalculator
   }
 
   /// <summary>
+  /// Рассчитать метрики для каждого сотрудника команды.
+  /// </summary>
+  public async Task ProcessEmployeeMetrics()
+  {
+    this.logger.LogInformation($"Начало расчета метрик для сотрудников команды {this.team.Name}");
+    foreach (var employee in this.team.Employees)
+    {
+      await this.ProcessEmployeeMetricsFor(employee);
+    }
+    this.logger.LogInformation($"Метрики для сотрудников команды {this.team.Name} рассчитаны");
+  }
+
+  /// <summary>
+  /// Рассчитать метрики для одного сотрудника.
+  /// </summary>
+  /// <param name="employee">Сотрудник.</param>
+  private async Task ProcessEmployeeMetricsFor(Employee employee)
+  {
+    this.logger.LogInformation($"Расчет метрик для сотрудника {employee.Name}");
+    var tickets = this.TicketListGenerator.Tickets
+      .Where(t => t.Employee == employee.Name)
+      .ToList();
+    var grades = this.GradeListGenerator.Grades
+      .Where(g => g.Ticket?.Employee == employee.Name)
+      .ToList();
+
+    await this.CreateEmployeeMonthMetrics(employee, tickets);
+    await this.CreateEmployeeMetric(employee, tickets, "Старше 2 недель",
+      t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(2 * 7) &&
+           t.State.State == TicketStatus.InWorkFullString &&
+           !t.Type.Equals(TicketType.ProblemFull));
+    await this.CreateEmployeeMetric(employee, tickets, "Старше 3 недель",
+      t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(3 * 7) &&
+           t.State.State == TicketStatus.InWorkFullString &&
+           !t.Type.Equals(TicketType.ProblemFull));
+    await this.CreateEmployeeMetric(employee, tickets, "Старше 4 недель",
+      t => DateTime.Now - t.IncomingDate > TimeSpan.FromDays(4 * 7) &&
+           !string.Equals(t.State.State, TicketStatus.ClosedFullString) &&
+           !t.Type.Equals(TicketType.ProblemFull));
+    await this.CreateEmployeeMetric(employee, tickets, "Хвост",
+      t => !string.Equals(t.State.State, TicketStatus.ClosedFullString));
+    await this.CreateEmployeeMetric(employee, tickets, "0-8",
+      t => t.TimeInWork <= 8 && TicketType.IncidentFull.Equals(t.Type) &&
+           !string.Equals(t.State.State, TicketStatus.ClosedFullString));
+    await this.CreateEmployeeMetric(employee, tickets, "8-16",
+      t => t.TimeInWork is > 8 and <= 16 && TicketType.IncidentFull.Equals(t.Type) &&
+           !string.Equals(t.State.State, TicketStatus.ClosedFullString));
+    await this.CreateEmployeeMetric(employee, tickets, "16-24",
+      t => t.TimeInWork > 16 && t.TimeInWork < 24 && TicketType.IncidentFull.Equals(t.Type) &&
+           !string.Equals(t.State.State, TicketStatus.ClosedFullString));
+    await this.CreateEmployeeMetric(employee, tickets, ">24",
+      t => t.TimeInWork > 24 && TicketType.IncidentFull.Equals(t.Type) &&
+           !string.Equals(t.State.State, TicketStatus.ClosedFullString));
+    await this.CreateEmployeeMetric(employee, tickets, "<0.25",
+      t => t.TimeInWork / t.Priority.TimeToSolve <= 0.25 && TicketType.IncidentFull.Equals(t.Type) &&
+           !string.Equals(t.State.State, TicketStatus.ClosedFullString));
+    await this.CreateEmployeeMetric(employee, tickets, "0.25-0.5",
+      t => t.TimeInWork / t.Priority.TimeToSolve >= 0.25 && t.TimeInWork / t.Priority.TimeToSolve < 0.5 &&
+           TicketType.IncidentFull.Equals(t.Type) &&
+           !string.Equals(t.State.State, TicketStatus.ClosedFullString));
+    await this.CreateEmployeeMetric(employee, tickets, "0.5-0.75",
+      t => t.TimeInWork / t.Priority.TimeToSolve >= 0.5 && t.TimeInWork / t.Priority.TimeToSolve < 0.75 &&
+           TicketType.IncidentFull.Equals(t.Type) &&
+           !string.Equals(t.State.State, TicketStatus.ClosedFullString));
+    await this.CreateEmployeeMetric(employee, tickets, ">0.75",
+      t => t.TimeInWork / t.Priority.TimeToSolve >= 0.75 && TicketType.IncidentFull.Equals(t.Type) &&
+           !string.Equals(t.State.State, TicketStatus.ClosedFullString));
+    await this.CreateEmployeeMetric(employee, tickets, "Инциденты",
+      t => t.Type == TicketType.IncidentFull && t.IncomingDate.Date == DateTime.Now.Date);
+    await this.CreateEmployeeMetric(employee, tickets, "Консультации",
+      t => t.Type == TicketType.ConsultationFull && t.IncomingDate.Date == DateTime.Now.Date);
+    await this.CreateEmployeeMetric(employee, tickets, "Запросы",
+      t => t.Type == TicketType.RequestFull && t.IncomingDate.Date == DateTime.Now.Date);
+    await this.CreateEmployeeMetric(employee, tickets, "Проблемы",
+      t => t.Type == TicketType.ProblemFull && t.IncomingDate.Date == DateTime.Now.Date);
+    await this.CreateEmployeeMetric(employee, tickets, "Поступило всего",
+      t => t.IncomingDate.Date == DateTime.Now.Date);
+    await this.CreateEmployeeMetric(employee, tickets, "Всего в работе",
+      t => t.State.State.Equals(TicketStatus.InWorkFullString));
+    await this.CreateEmployeeGradeMetric(employee, grades, "Поступившие",
+      g => g.Date.Date == DateTime.Now.Date && g.Score == 2);
+    await this.CreateEmployeeSpentTimeMetric(employee, tickets, "Затрачено в часах",
+      t => t.Type == TicketType.RequestFull);
+    await this.CreateEmployeeExternalMessageMetric(employee);
+    this.logger.LogInformation($"Метрики для сотрудника {employee.Name} рассчитаны");
+  }
+
+  private async Task CreateEmployeeMonthMetrics(Employee employee, List<Ticket> tickets)
+  {
+    var currentMonthMetrics = await this.repository.GetAsync<Metric>(m =>
+      m.MetricType.MetricGroup.Name.Equals("Month") &&
+      m.Team == this.team &&
+      m.Employee == employee &&
+      m.Date.Date == DateTime.Now.Date);
+    foreach (var metric in currentMonthMetrics)
+      await this.repository.Delete(metric);
+
+    var culture = new CultureInfo("ru-RU");
+    var monthGroupedTickets = tickets
+      .Where(t => t.State.State.Equals(TicketStatus.InWorkFullString))
+      .GroupBy(t => culture.TextInfo.ToTitleCase(t.IncomingDate.ToString("MMMM yyyy", culture)))
+      .ToDictionary(g => g.Key, g => g.ToList());
+    foreach (var monthGroup in monthGroupedTickets)
+    {
+      var metricType = await this.GetOrCreateMonthMetricType(monthGroup.Key);
+      var metric = await this.GetOrCreateEmployeeMetric(DateTime.Today, metricType, employee);
+      metric.Value = monthGroup.Value.Count;
+      metric.Tickets = monthGroup.Value;
+      await this.repository.AddOrUpdate(metric);
+    }
+  }
+
+  private async Task CreateEmployeeMetric(Employee employee, List<Ticket> tickets,
+    string nameOfMetricType, Predicate<Ticket> predicate)
+  {
+    var metricType = await this.repository.GetFirstAsync<MetricType>(mt => mt.Name == nameOfMetricType);
+    var metric = await this.GetOrCreateEmployeeMetric(DateTime.Today, metricType, employee);
+    var relatedTickets = tickets.Where(t => predicate(t)).ToList();
+    metric.Value = relatedTickets.Count;
+    metric.Tickets = relatedTickets;
+    await this.repository.AddOrUpdate(metric);
+  }
+
+  private async Task CreateEmployeeGradeMetric(Employee employee, List<Grade> grades,
+    string nameOfMetricType, Predicate<Grade> predicate)
+  {
+    var metricType = await this.repository.GetFirstAsync<MetricType>(mt => mt.Name == nameOfMetricType);
+    var metric = await this.GetOrCreateEmployeeMetric(DateTime.Today, metricType, employee);
+    var relatedGrades = grades.Where(g => predicate(g)).ToList();
+    metric.Value = relatedGrades.Count;
+    metric.Grades = relatedGrades;
+    await this.repository.AddOrUpdate(metric);
+  }
+
+  private async Task CreateEmployeeSpentTimeMetric(Employee employee, List<Ticket> tickets,
+    string nameOfMetricType, Predicate<Ticket> predicate)
+  {
+    var metricType = await this.repository.GetFirstAsync<MetricType>(mt => mt.Name == nameOfMetricType);
+    var metric = await this.GetOrCreateEmployeeMetric(DateTime.Today, metricType, employee);
+    var relatedTickets = tickets.Where(t => predicate(t)).ToList();
+    metric.Value = relatedTickets.Sum(t => t.TimeStampedOnDay);
+    metric.Tickets = relatedTickets;
+    await this.repository.AddOrUpdate(metric);
+  }
+
+  private async Task CreateEmployeeExternalMessageMetric(Employee employee)
+  {
+    try
+    {
+      var metricType = await this.repository.GetFirstAsync<MetricType>(mt => mt.Name == "Внешние сообщения");
+      var metric = await this.GetOrCreateEmployeeMetric(DateTime.Today, metricType, employee);
+      var scores = await this.ExternalMessages.GetEmployeeScores();
+      var totalScore = scores.TryGetValue(employee.Name, out var score) ? score : 0;
+      metric.Value = totalScore;
+      await this.repository.AddOrUpdate(metric);
+    }
+    catch (Exception ex)
+    {
+      this.logger.LogError(ex, "Error creating employee external message metric for {employee}", employee.Name);
+    }
+  }
+
+  private async Task<Metric> GetOrCreateEmployeeMetric(DateTime date, MetricType metricType, Employee employee)
+  {
+    try
+    {
+      return await this.repository.GetFirstAsync<Metric>(m =>
+        m.Date == date && m.MetricType == metricType && m.Team == this.team && m.Employee == employee);
+    }
+    catch (InvalidOperationException)
+    {
+      return new Metric
+      {
+        Date = date,
+        MetricType = metricType,
+        Team = this.team,
+        Employee = employee
+      };
+    }
+  }
+
+  /// <summary>
   /// Создать метрики "по месяцам".
   /// </summary>
   private async Task CreateMonthMetrics()

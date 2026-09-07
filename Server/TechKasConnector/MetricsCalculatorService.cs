@@ -129,6 +129,7 @@ public class MetricsCalculatorService : BackgroundService
       var metricCreator = scope.ServiceProvider.GetRequiredService<MetricCalculator>();
       await metricCreator.Init(messageBody.TeamId);
       await metricCreator.ProcessAllMetrics();
+      await metricCreator.ProcessEmployeeMetrics();
       return string.Empty;
     }
     catch (Exception ex)

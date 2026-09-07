@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Application;
 using AutoMapper;
@@ -67,6 +68,24 @@ public class MetricsController(
         (x.Date > beginDate) &&
         (x.Team.Equals(team)) &&
         (x.MetricType.MetricGroup.Name.ToLower().Equals(filterSing.ToLower()))));
+    return this.Ok(response);
+  }
+
+  [HttpGet("employee")]
+  public async Task<ActionResult<List<Dictionary<string, object>>>> GetEmployeeMetrics(int teamId, int employeeId, int dayCount)
+  {
+    var team = await this.teamService.GetTeamById(teamId);
+    if (team == null)
+      return this.BadRequest("Team not found");
+    var employee = team.Employees.FirstOrDefault(e => e.Id == employeeId);
+    if (employee == null)
+      return this.BadRequest("Employee not found in team");
+    DateTime beginDate = DateTime.Now - TimeSpan.FromDays(dayCount);
+    List<Dictionary<string, object>> response = await this.metricsService.GetMetrics(
+      x => (
+        (x.Date > beginDate) &&
+        (x.Team.Equals(team)) &&
+        (x.Employee.Equals(employee))));
     return this.Ok(response);
   }
 }
