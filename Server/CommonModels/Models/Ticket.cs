@@ -81,12 +81,12 @@ public class Ticket : IHasId
   public virtual string Comment { get; set; }
   
   /// <summary>
-  /// Эскалации на линию.
+  /// Эскалации на линию (разделитель |).
   /// </summary>
-  public virtual IEnumerable<string> LineEscalations { get; set; }
+  public virtual string LineEscalationsData { get; set; }
   
   /// <summary>
-  /// Эскалации на разработчиков.
+  /// Эскалации на разработчиков (разделитель |).
   /// </summary>
-  public virtual IEnumerable<string> DevsEscalations { get; set; }
+  public virtual string DevsEscalationsData { get; set; }
 }

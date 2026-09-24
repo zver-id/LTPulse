@@ -2,8 +2,10 @@
 using CommonModels.Interfaces;
 using CommonModels.Models;
 using DBCore;
+using Microsoft.Extensions.Options;
 using NHibernate.Infrastructure;
 using TechKasConnector.Calendar;
+using TechKasConnector.Mattermost;
 using TechKasConnector.Requisites;
 
 namespace TechKasConnector.DataCalculators;
@@ -51,6 +53,16 @@ public class MetricCalculator
   /// Календарь рабочего времени.
   /// </summary>
   private CalendarCalculator Calendar {get; init;}
+  
+  /// <summary>
+  /// Клиент Mattermost.
+  /// </summary>
+  private MattermostClient Mattermost { get; }
+  
+  /// <summary>
+  /// Параметры Mattermost (списки каналов).
+  /// </summary>
+  private MattermostOptions MattermostConfig { get; }
   
   #endregion
   
@@ -487,6 +499,7 @@ public class MetricCalculator
       await this.GradeListGenerator.GenerateForTeam(this.team);
       this.logger.LogDebug($"Finish GradeListGenerator.GenerateForTeam {this.team.Name}");
     }
+    await this.PopulateEscalations();
     this.logger.LogInformation($"Finish initialize metric calculator for team: {team.Name}");
   }
 
@@ -546,6 +559,34 @@ public class MetricCalculator
     this.tickets.SetFilter(TechKasRequisites.Employee, techkasNumbers);
   }
   
+  /// <summary>
+  /// Заполнить эскалации для всех обращений через Mattermost.
+  /// </summary>
+  private async Task PopulateEscalations()
+  {
+    var tickets = this.TicketListGenerator.Tickets;
+    if (tickets.Count == 0) return;
+
+    this.logger.LogInformation($"Заполнение эскалаций для {tickets.Count} обращений");
+
+    foreach (var ticket in tickets)
+    {
+      var pattern = ticket.Id.ToString();
+      try
+      {
+        ticket.LineEscalationsData = string.Join('|', await this.Mattermost
+          .SearchChannelsByRegex(this.MattermostConfig.LineChannels, pattern, useRegex: false));
+        ticket.DevsEscalationsData = string.Join('|', await this.Mattermost
+          .SearchChannelsByRegex(this.MattermostConfig.DevChannels, pattern, useRegex: false));
+        await this.repository.AddOrUpdate(ticket);
+      }
+      catch (Exception ex)
+      {
+        this.logger.LogError(ex, "Ошибка при заполнении эскалаций для обращения {id}", ticket.Id);
+      }
+    }
+  }
+  
   #endregion
   
   #region Конструкторы
@@ -554,13 +595,16 @@ public class MetricCalculator
   /// Конструктор.
   /// </summary>
   public MetricCalculator(IRepository repository, ILogger<MetricCalculator> logger, 
-    GradeListGenerator gradeListGenerator, ExternalMessageCalculator externalMessages, CalendarCalculator calendar)
+    GradeListGenerator gradeListGenerator, ExternalMessageCalculator externalMessages, 
+    CalendarCalculator calendar, MattermostClient mattermost, IOptions<MattermostOptions> mattermostOptions)
   {
     this.repository = repository;
     this.logger = logger;
     this.GradeListGenerator = gradeListGenerator;
     this.ExternalMessages = externalMessages;
     this.Calendar = calendar;
+    this.Mattermost = mattermost;
+    this.MattermostConfig = mattermostOptions.Value;
   }
   #endregion
 }

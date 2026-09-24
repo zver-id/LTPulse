@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
@@ -13,6 +14,7 @@ public class MattermostClient
 
   private readonly HttpClient httpClient;
   private readonly ILogger<MattermostClient> logger;
+  private readonly string teamUrl;
 
   #region Методы
 
@@ -73,11 +75,69 @@ public class MattermostClient
   public async Task<IReadOnlyList<MattermostChannel>> GetTeamChannels(
     string teamId, CancellationToken cancellationToken = default)
   {
-    using var response = await this.HttpGetAsync($"/teams/{teamId}/channels", cancellationToken);
+    using var response = await this.HttpGetAsync($"teams/{teamId}/channels", cancellationToken);
     var body = await response.Content.ReadAsStringAsync(cancellationToken);
     var channels = JsonSerializer.Deserialize<List<MattermostChannel>>(body)
       ?? new List<MattermostChannel>();
     return channels;
+  }
+
+  /// <summary>
+  /// Найти сообщения в указанных каналах и вернуть гиперссылки.
+  /// </summary>
+  /// <param name="channelIds">Список ИД каналов.</param>
+  /// <param name="pattern">Искомая строка (подстрока в тексте сообщения).</param>
+  /// <param name="cancellationToken">Токен отмены.</param>
+  /// <returns>Список гиперссылок на найденные сообщения.</returns>
+  public async Task<IReadOnlyList<string>> SearchChannelsByRegex(
+    IEnumerable<string> channelIds, string pattern, bool useRegex = true,
+    CancellationToken cancellationToken = default)
+  {
+    var links = new List<string>();
+    foreach (var channelId in channelIds)
+    {
+      var posts = await this.GetChannelPosts(channelId, cancellationToken);
+      foreach (var post in posts.Where(p => p.Message.Contains(pattern, StringComparison.OrdinalIgnoreCase)))
+        links.Add(this.BuildPostUrl(post));
+    }
+    return links;
+  }
+
+  /// <summary>
+  /// Получить последние сообщения канала.
+  /// </summary>
+  private async Task<IReadOnlyList<MattermostPost>> GetChannelPosts(
+    string channelId, CancellationToken cancellationToken = default)
+  {
+    using var response = await this.HttpGetAsync(
+      $"channels/{channelId}/posts?per_page={PageLimit}", cancellationToken);
+    var body = await response.Content.ReadAsStringAsync(cancellationToken);
+    var doc = System.Text.Json.JsonDocument.Parse(body);
+    var result = new List<MattermostPost>();
+    if (doc.RootElement.TryGetProperty("posts", out var posts))
+    {
+      foreach (var prop in posts.EnumerateObject())
+      {
+        var el = prop.Value;
+        var post = new MattermostPost
+        {
+          Id = prop.Name,
+          ChannelId = el.TryGetProperty("channel_id", out var ch) ? ch.GetString() ?? channelId : channelId,
+          Message = el.TryGetProperty("message", out var msg) ? msg.GetString() ?? string.Empty : string.Empty
+        };
+        result.Add(post);
+      }
+    }
+    return result;
+  }
+
+  /// <summary>
+  /// Собрать гиперссылку на сообщение.
+  /// </summary>
+  private string BuildPostUrl(MattermostPost post)
+  {
+    var prefix = this.teamUrl.TrimEnd('/');
+    return $"{prefix}/pl/{post.Id}";
   }
 
   /// <summary>
@@ -87,7 +147,7 @@ public class MattermostClient
     string? channelId, string pattern, bool useRegex, bool caseSensitive,
     string? teamId = null, CancellationToken cancellationToken = default)
   {
-    var builder = new StringBuilder("/posts/search?");
+    var builder = new StringBuilder("posts/search?");
     builder.Append($"page=0&per_page={PageLimit}");
     builder.Append(useRegex ? "&is_regex=true" : "&is_regex=false");
     builder.Append(caseSensitive ? "&case_sensitive=true" : "&case_sensitive=false");
@@ -96,11 +156,8 @@ public class MattermostClient
     if (!string.IsNullOrEmpty(teamId))
       builder.Append($"&team_id={Uri.EscapeDataString(teamId)}");
 
-    var payload = JsonSerializer.Serialize(new { term = pattern });
-    using var content = new StringContent(payload, Encoding.UTF8, "application/json");
-
     using var response = await this.httpClient
-      .PostAsync(builder.ToString(), content, cancellationToken);
+      .PostAsJsonAsync(builder.ToString(), new { term = pattern }, cancellationToken);
     this.EnsureSuccess(response);
 
     var body = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -137,6 +194,7 @@ public class MattermostClient
   {
     var config = options.Value;
     this.logger = logger;
+    this.teamUrl = config.TeamUrl;
     var client = new HttpClient
     {
       BaseAddress = new Uri(config.Url)
