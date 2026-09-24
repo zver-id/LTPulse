@@ -2,7 +2,6 @@
 using CommonModels.Interfaces;
 using CommonModels.Models;
 using DBCore;
-using Microsoft.Extensions.Options;
 using NHibernate.Infrastructure;
 using TechKasConnector.Calendar;
 using TechKasConnector.Mattermost;
@@ -58,11 +57,6 @@ public class MetricCalculator
   /// Клиент Mattermost.
   /// </summary>
   private MattermostClient Mattermost { get; }
-  
-  /// <summary>
-  /// Параметры Mattermost (списки каналов).
-  /// </summary>
-  private MattermostOptions MattermostConfig { get; }
   
   #endregion
   
@@ -567,6 +561,10 @@ public class MetricCalculator
     var tickets = this.TicketListGenerator.Tickets;
     if (tickets.Count == 0) return;
 
+    var channels = await this.repository.GetAsync<CommonModels.Models.MattermostChannel>(_ => true);
+    var lineChannelIds = channels.Where(c => c.Type == ChannelType.Line).Select(c => c.ChannelId).ToList();
+    var devChannelIds = channels.Where(c => c.Type == ChannelType.Dev).Select(c => c.ChannelId).ToList();
+
     this.logger.LogInformation($"Заполнение эскалаций для {tickets.Count} обращений");
 
     foreach (var ticket in tickets)
@@ -575,9 +573,9 @@ public class MetricCalculator
       try
       {
         ticket.LineEscalationsData = string.Join('|', await this.Mattermost
-          .SearchChannelsByRegex(this.MattermostConfig.LineChannels, pattern, useRegex: false));
+          .SearchChannelsByRegex(lineChannelIds, pattern));
         ticket.DevsEscalationsData = string.Join('|', await this.Mattermost
-          .SearchChannelsByRegex(this.MattermostConfig.DevChannels, pattern, useRegex: false));
+          .SearchChannelsByRegex(devChannelIds, pattern));
         await this.repository.AddOrUpdate(ticket);
       }
       catch (Exception ex)
@@ -596,7 +594,7 @@ public class MetricCalculator
   /// </summary>
   public MetricCalculator(IRepository repository, ILogger<MetricCalculator> logger, 
     GradeListGenerator gradeListGenerator, ExternalMessageCalculator externalMessages, 
-    CalendarCalculator calendar, MattermostClient mattermost, IOptions<MattermostOptions> mattermostOptions)
+    CalendarCalculator calendar, MattermostClient mattermost)
   {
     this.repository = repository;
     this.logger = logger;
@@ -604,7 +602,6 @@ public class MetricCalculator
     this.ExternalMessages = externalMessages;
     this.Calendar = calendar;
     this.Mattermost = mattermost;
-    this.MattermostConfig = mattermostOptions.Value;
   }
   #endregion
 }

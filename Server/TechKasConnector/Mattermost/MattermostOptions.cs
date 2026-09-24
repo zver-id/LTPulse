@@ -19,14 +19,4 @@ public class MattermostOptions
   /// Токен авторизации.
   /// </summary>
   public string Token { get; set; } = string.Empty;
-
-  /// <summary>
-  /// ИД каналов линии для поиска эскалаций.
-  /// </summary>
-  public List<string> LineChannels { get; set; } = new();
-
-  /// <summary>
-  /// ИД каналов разработчиков для поиска эскалаций.
-  /// </summary>
-  public List<string> DevChannels { get; set; } = new();
 }

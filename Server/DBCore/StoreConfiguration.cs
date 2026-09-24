@@ -9,6 +9,6 @@ public class StoreConfiguration : DefaultAutomappingConfiguration
 {
     public override bool ShouldMap(System.Type type)
     {
-        return type.Namespace == "CommonModels.Models";
+        return type.Namespace == "CommonModels.Models" && !type.IsEnum;
     }
 }
