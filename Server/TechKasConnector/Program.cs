@@ -5,6 +5,7 @@ using DBCore;
 using NHibernate.Infrastructure;
 using TechKasConnector.Calendar;
 using TechKasConnector.DataCalculators;
+using TechKasConnector.Mattermost;
 using TechKasConnectService;
 using NLog;
 using NLog.Extensions.Logging;
@@ -51,6 +52,9 @@ public static class Program
     builder.Services.Configure<ClubDetailsOptions>(
       builder.Configuration.GetSection("ClubDetails"));
     builder.Services.AddScoped<ExternalMessageCalculator>();
+    builder.Services.Configure<MattermostOptions>(
+      builder.Configuration.GetSection("Mattermost"));
+    builder.Services.AddScoped<MattermostClient>();
 
     var host = builder.Build();
     host.Run();

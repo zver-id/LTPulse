@@ -24,6 +24,7 @@ public class SchedulerService : BackgroundService
     while (!stoppingToken.IsCancellationRequested)
     {
       await scheduler.StartJobs();
+      await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
     }
   }
 

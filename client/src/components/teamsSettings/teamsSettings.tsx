@@ -2,7 +2,7 @@
 import styles from "./TeamsSettings.module.css";
 import {useLocalStorageState} from "../../storage/useLocalStorageState.ts";
 import {useGetAllTeamsQuery} from "../../storage/services/teams-api.ts";
-import TeamEmployeeSheet from "../teamEmployeeSheet/teamEmployeeSheet.tsx";
+//import TeamEmployeeSheet from "../teamEmployeeSheet/teamEmployeeSheet.tsx";
 
 function TeamsSettings(){
   const [team, setTeam] = useLocalStorageState("team", 1)
@@ -22,7 +22,7 @@ function TeamsSettings(){
       />
     </header>
     <main>
-      <TeamEmployeeSheet teamId={team} />
+      {/*<TeamEmployeeSheet teamId={team}>*/}
     </main>
   </>
 }

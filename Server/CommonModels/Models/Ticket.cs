@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CommonModels.Interfaces;
 using CommonModels.Attributes;
 
@@ -78,4 +79,14 @@ public class Ticket : IHasId
   /// Комментарий.
   /// </summary>
   public virtual string Comment { get; set; }
+  
+  /// <summary>
+  /// Эскалации на линию (разделитель |).
+  /// </summary>
+  public virtual string LineEscalationsData { get; set; }
+  
+  /// <summary>
+  /// Эскалации на разработчиков (разделитель |).
+  /// </summary>
+  public virtual string DevsEscalationsData { get; set; }
 }

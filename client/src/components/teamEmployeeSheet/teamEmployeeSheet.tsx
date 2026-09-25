@@ -1,8 +1,8 @@
-﻿import {useGetEmployeesByTeamQuery} from "../../storage/services/employee-api.ts";
+﻿//import {useGetEmployeesByTeamQuery} from "../../storage/services/employee-api.ts";
 
-function TeamEmployeeSheet(teamId: number){
+function TeamEmployeeSheet(){   //(teamId: number){
 
-  const {data} = useGetEmployeesByTeamQuery(teamId);
+  //const {data} = useGetEmployeesByTeamQuery(teamId);
 
   return(
     <>

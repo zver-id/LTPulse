@@ -58,6 +58,9 @@ public class MetricsCalculatorService : BackgroundService
       global: false
     );
     
+    var errorTcs = new TaskCompletionSource<bool>();
+    var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+    
     rabbitMQConsumer.ReceivedAsync += async (ch, ea) =>
     {
       _ = Task.Run(async () =>
@@ -70,18 +73,20 @@ public class MetricsCalculatorService : BackgroundService
           var correlationId = ea.BasicProperties.CorrelationId;
           var replyTo = ea.BasicProperties.ReplyTo;
           await this.ProcessMessage(message);
+          //TODO нужно перенаправлять ошибочные сообщения в другую очередь
+          await rabbitMqChanel.BasicAckAsync(ea.DeliveryTag, false);
         }
         catch (Exception e)
         {
-          this.Logger.LogError(e, "Error processing message");
-          this.ApplicationLifetime.StopApplication();
+          this.Logger.LogError(e, "Error processing message. The application has stopped.");
+          linkedCts.Cancel();
+          errorTcs.SetException(e);
+          throw;
         }
         finally
         {
           messageSemaphore.Release();
         }
-        //TODO нужно перенаправлять ошибочные сообщения в другую очередь
-        await rabbitMqChanel.BasicAckAsync(ea.DeliveryTag, false);
       });
     };
 
@@ -91,7 +96,20 @@ public class MetricsCalculatorService : BackgroundService
       autoAck: false
     );
     
-    await Task.Delay(Timeout.Infinite, stoppingToken);
+    try
+    {
+      await Task.WhenAny(
+        Task.Delay(Timeout.Infinite, linkedCts.Token),
+        errorTcs.Task
+      );
+      await errorTcs.Task;
+      this.Logger.LogCritical("Critical error occurred in message processing. Stopping application.");
+    }
+    catch (Exception ex)
+    {
+      this.Logger.LogCritical(ex, "Critical error occurred in message processing. Stopping application.");
+      Environment.Exit(1);
+    }
     this.Logger.LogDebug("Метод Execute Async завершился в MetricsCalculatorService");
   }
 
@@ -111,11 +129,12 @@ public class MetricsCalculatorService : BackgroundService
       var metricCreator = scope.ServiceProvider.GetRequiredService<MetricCalculator>();
       await metricCreator.Init(messageBody.TeamId);
       await metricCreator.ProcessAllMetrics();
+      await metricCreator.ProcessEmployeeMetrics();
       return string.Empty;
     }
     catch (Exception ex)
     {
-      this.Logger.LogError(ex, "Error processing message");
+      this.Logger.LogError(ex, "Error processing message.");
       throw;
     }
     finally
