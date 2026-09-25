@@ -576,7 +576,7 @@ public class MetricCalculator
           .SearchChannelsByRegex(lineChannelIds, pattern));
         ticket.DevsEscalationsData = string.Join('|', await this.Mattermost
           .SearchChannelsByRegex(devChannelIds, pattern));
-        await this.repository.AddOrUpdate(ticket);
+        await this.repository.Update(ticket);
       }
       catch (Exception ex)
       {
