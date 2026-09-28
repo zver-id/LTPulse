@@ -1,12 +1,25 @@
-﻿.siteTitle {
-    font-family: Arial, serif;
-    font-size: 30px;
-    font-weight: 500;
-    font-style: italic;
-    margin: 10px;
+﻿header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 28px;
+}
+
+.siteTitle {
+    font-family: inherit;
+    font-size: 24px;
+    font-weight: 600;
+    font-style: normal;
+    color: var(--text);
+    margin: 0;
 }
 
 .select {
-    width: 200px;
-    margin: 8px 8px 8px 20px;
+    width: 260px;
+}
+
+main {
+    padding: 8px 28px 40px;
+    max-width: 1500px;
+    margin: 0 auto;
 }

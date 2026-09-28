@@ -23,7 +23,7 @@ function MetricDetails({items}: IMetricDetailsItems) {
   const today = new Date().toISOString().split('T')[0];
 
   return (
-      <Flex className="ant-flex-vertical">
+      <Flex vertical className={styles.items}>
         {items.map((item, index) => {
           const isOpen = openModal === index
           return (

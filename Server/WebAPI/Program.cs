@@ -36,6 +36,13 @@ public class Program
         builder.Services.AddSingleton<NhibernateHelper>(service => new NhibernateHelper(dataBaseConnectionString));
         builder.Services.AddScoped<IRepository, DbRepository>();
 
+        var rabbitMqConnectionString = builder.Configuration.GetConnectionString("RabbitMQ");
+        if (string.IsNullOrEmpty(rabbitMqConnectionString))
+            throw new ConfigurationErrorsException("RabbitMQ connection string not found");
+        builder.Services.AddSingleton<RabbitMqConnection>(service =>
+            RabbitMqConnection.CreateAsync(rabbitMqConnectionString).GetAwaiter().GetResult());
+        builder.Services.AddScoped<RabbitMQClient>();
+
         builder.Services.AddScoped<MetricsService>();
         builder.Services.AddScoped<TeamService>();
         builder.Services.AddScoped<EmployeeService>();

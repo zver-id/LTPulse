@@ -1,5 +1,5 @@
 ﻿.chart {
     width: 80%;
-    aspectRatio: 1.618;
-    maxHeight: '40vh'
+    aspect-ratio: 1.618;
+    max-height: 40vh;
 }

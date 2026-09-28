@@ -128,37 +128,40 @@ function EmployeeStats() {
   const dataWithTotal = stats && stats.length > 0 ? [...stats, computeTotals(stats)] : [];
 
   return (
-    <div>
-      <Flex gap="middle" style={{marginBottom: 16}}>
-        <Select
-          placeholder="Выберите команду"
-          style={{width: 250}}
-          value={teamId}
-          onChange={setTeamId}
-          options={teams?.map(t => ({value: t.id, label: t.name}))}
-        />
-        <ConfigProvider locale={ruLocale}>
-          <RangePicker
-            value={range}
-            onChange={(value) => setRange(value as [Dayjs, Dayjs] | null)}
-            format="DD-MM-YYYY"
+    <div style={{maxWidth: 1500, margin: '0 auto', padding: '24px 28px 40px'}}>
+      <h1 style={{fontSize: 24, fontWeight: 600, marginBottom: 18}}>Статистика по сотрудникам</h1>
+      <Card>
+        <Flex gap="middle" wrap style={{marginBottom: 16}}>
+          <Select
+            placeholder="Выберите команду"
+            style={{width: 250}}
+            value={teamId}
+            onChange={setTeamId}
+            options={teams?.map(t => ({value: t.id, label: t.name}))}
           />
-        </ConfigProvider>
-      </Flex>
-      {isLoading && <Typography>Загрузка...</Typography>}
-      {!isLoading && stats && stats.length === 0 && (
-        <Card><Typography>Нет данных.</Typography></Card>
-      )}
-      {!isLoading && stats && stats.length > 0 && (
-        <Table
-          dataSource={dataWithTotal.map((r, i) => ({...r, key: i}))}
-          columns={employeeStatsColumns}
-          scroll={{x: 2200}}
-          pagination={false}
-          size="small"
-          summary={() => null}
-        />
-      )}
+          <ConfigProvider locale={ruLocale}>
+            <RangePicker
+              value={range}
+              onChange={(value) => setRange(value as [Dayjs, Dayjs] | null)}
+              format="DD-MM-YYYY"
+            />
+          </ConfigProvider>
+        </Flex>
+        {isLoading && <Typography>Загрузка...</Typography>}
+        {!isLoading && stats && stats.length === 0 && (
+          <Typography>Нет данных.</Typography>
+        )}
+        {!isLoading && stats && stats.length > 0 && (
+          <Table
+            dataSource={dataWithTotal.map((r, i) => ({...r, key: i}))}
+            columns={employeeStatsColumns}
+            scroll={{x: 2200}}
+            pagination={false}
+            size="small"
+            summary={() => null}
+          />
+        )}
+      </Card>
     </div>
   );
 }

@@ -35,17 +35,17 @@ function MetricBarChart({teamId, dayCount, filter, nameOfChart}: IBarChartProps)
                     <div>{nameOfChart}</div>
                   ),
                   children: (
-                    <BarChart
-                      style={{width: '80%', aspectRatio: 1.618, maxHeight: '40vh'}}
-                      responsive
-                      data={data}
-                      margin={{
-                        top: 5,
-                        right: 0,
-                        left: 0,
-                        bottom: 5,
-                      }}
-                    >
+                      <BarChart
+                       style={{width: '100%', minWidth: 0, aspectRatio: 2.4, maxHeight: '55vh'}}
+                       responsive
+                       data={data}
+                       margin={{
+                         top: 5,
+                         right: 0,
+                         left: 0,
+                         bottom: 5,
+                       }}
+                     >
                       <CartesianGrid strokeDasharray="3 3"/>
                       <XAxis dataKey="day"/>
                       <YAxis width="auto"
