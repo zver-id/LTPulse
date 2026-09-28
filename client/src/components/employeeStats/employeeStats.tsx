@@ -1,9 +1,25 @@
-import {Card, DatePicker, Flex, Select, Table, Typography} from 'antd';
+import {Card, ConfigProvider, DatePicker, Flex, Select, Table, Typography} from 'antd';
+import ruRU from 'antd/locale/ru_RU';
 import type {ColumnsType} from 'antd/es/table';
 import {useState} from 'react';
 import dayjs, {Dayjs} from 'dayjs';
 import {useGetEmployeeStatsQuery} from '../../storage/services/employee-stats-api.ts';
 import {useGetAllTeamsQuery} from '../../storage/services/teams-api.ts';
+
+import type {Locale} from 'antd/es/locale';
+const {RangePicker} = DatePicker;
+
+const ruLocale: Locale = {
+  ...ruRU,
+  weekStartOnMonday: true,
+  DatePicker: {
+    ...ruRU.DatePicker,
+    lang: {
+      ...ruRU.DatePicker?.lang,
+      shortWeekDays: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+    },
+  },
+} as Locale;
 
 export interface IEmployeeStats {
   employee: string;
@@ -99,11 +115,13 @@ function computeTotals(rows: IEmployeeStats[]) {
 function EmployeeStats() {
   const {data: teams} = useGetAllTeamsQuery();
   const [teamId, setTeamId] = useState<number | undefined>(undefined);
-  const [dateJs, setDateJs] = useState<Dayjs | null>(dayjs());
-  const dayCount = dateJs ? dayjs().diff(dateJs, 'day') + 1 : 1;
+  const [range, setRange] = useState<[Dayjs, Dayjs] | null>([dayjs().startOf('month'), dayjs()]);
+
+  const beginDate = range?.[0]?.format('YYYY-MM-DD') ?? dayjs().startOf('month').format('YYYY-MM-DD');
+  const endDate = range?.[1]?.format('YYYY-MM-DD') ?? dayjs().format('YYYY-MM-DD');
 
   const {data: stats, isLoading} = useGetEmployeeStatsQuery(
-    {teamId: teamId ?? 0, dayCount},
+    {teamId: teamId ?? 0, beginDate, endDate},
     {skip: teamId === undefined}
   );
 
@@ -119,12 +137,13 @@ function EmployeeStats() {
           onChange={setTeamId}
           options={teams?.map(t => ({value: t.id, label: t.name}))}
         />
-        <DatePicker
-          value={dateJs}
-          onChange={setDateJs}
-          format="DD-MM-YYYY"
-          style={{width: 200}}
-        />
+        <ConfigProvider locale={ruLocale}>
+          <RangePicker
+            value={range}
+            onChange={(value) => setRange(value as [Dayjs, Dayjs] | null)}
+            format="DD-MM-YYYY"
+          />
+        </ConfigProvider>
       </Flex>
       {isLoading && <Typography>Загрузка...</Typography>}
       {!isLoading && stats && stats.length === 0 && (

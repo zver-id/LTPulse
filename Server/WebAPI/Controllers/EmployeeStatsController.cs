@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Application;
@@ -37,16 +38,17 @@ public class EmployeeStatsController(
   /// Получить статистику по сотрудникам команды за период.
   /// </summary>
   /// <param name="teamId">Идентификатор команды.</param>
-  /// <param name="dayCount">Длина периода в днях.</param>
+  /// <param name="beginDate">Начало периода (включительно).</param>
+  /// <param name="endDate">Конец периода (включительно).</param>
   /// <returns>Список статистики по сотрудникам.</returns>
   [HttpGet]
-  public async Task<ActionResult<List<EmployeeStatsDTO>>> Get(int teamId, int dayCount)
+  public async Task<ActionResult<List<EmployeeStatsDTO>>> Get(int teamId, DateTime beginDate, DateTime endDate)
   {
     var team = await this.teamService.GetTeamById(teamId);
     if (team == null)
       return this.BadRequest("Команда не найдена");
 
-    var stats = await this.statsService.GetStats(teamId, dayCount);
+    var stats = await this.statsService.GetStats(teamId, beginDate, endDate);
     return this.Ok(this.mapper.Map<List<EmployeeStatsDTO>>(stats));
   }
 }

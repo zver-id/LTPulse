@@ -7,9 +7,9 @@ export const employeeStatsApi = createApi({
   baseQuery: fetchBaseQuery({baseUrl: `${apiUrl}/api/EmployeeStats`}),
   tagTypes: ['employeeStats'],
   endpoints: (builder) => ({
-    getEmployeeStats: builder.query<IEmployeeStats[], { teamId: number, dayCount: number }>({
-      query: ({teamId, dayCount}) =>
-        `?teamId=${teamId}&dayCount=${dayCount}`,
+    getEmployeeStats: builder.query<IEmployeeStats[], { teamId: number, beginDate: string, endDate: string }>({
+      query: ({teamId, beginDate, endDate}) =>
+        `?teamId=${teamId}&beginDate=${beginDate}&endDate=${endDate}`,
       providesTags: ['employeeStats']
     })
   })

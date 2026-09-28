@@ -66,17 +66,17 @@ public class EmployeeStatsService(IRepository repository, TeamService teamServic
   /// Рассчитать статистику по каждому сотруднику команды за период.
   /// </summary>
   /// <param name="teamId">Идентификатор команды.</param>
-  /// <param name="dayCount">Длина периода в днях.</param>
+  /// <param name="beginDate">Начало периода (включительно).</param>
+  /// <param name="endDate">Конец периода (включительно).</param>
   /// <returns>Список статистики по сотрудникам. Пустой список, если команда не найдена.</returns>
-  public async Task<List<EmployeeStats>> GetStats(int teamId, int dayCount)
+  public async Task<List<EmployeeStats>> GetStats(int teamId, DateTime beginDate, DateTime endDate)
   {
     var team = await this.teamService.GetTeamById(teamId);
     if (team == null)
       return new List<EmployeeStats>();
 
-    var beginDate = DateTime.Now - TimeSpan.FromDays(dayCount);
-    var tickets = await this.repository.GetAsync<Ticket>(t => t.IncomingDate >= beginDate);
-    var grades = await this.repository.GetAsync<Grade>(g => g.Date >= beginDate);
+    var tickets = await this.repository.GetAsync<Ticket>(t => t.IncomingDate >= beginDate && t.IncomingDate < endDate.AddDays(1));
+    var grades = await this.repository.GetAsync<Grade>(g => g.Date >= beginDate && g.Date < endDate.AddDays(1));
 
     var teamEmployeeNames = team.Employees.Select(e => e.Name).ToHashSet();
     var teamTickets = tickets.Where(t => teamEmployeeNames.Contains(t.Employee)).ToList();
