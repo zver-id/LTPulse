@@ -178,6 +178,12 @@ internal class TicketListGenerator
     var type = element.GetRequisite(TechKasRequisites.TicketType, RequisitesMode.AsString);
     var organization = element.GetRequisite(TechKasRequisites.Organization, RequisitesMode.DisplayText);
     var employee = element.GetRequisite(TechKasRequisites.Employee, RequisitesMode.DisplayText);
+    var techKasClosingDate = element.GetRequisite(TechKasRequisites.ClosedDate, RequisitesMode.AsString);
+    DateTime? closingDate = null;
+    if (techKasClosingDate is not null) 
+    {
+      closingDate = DateTime.ParseExact(techKasClosingDate, "dd.MM.yyyy", CultureInfo.InvariantCulture);
+    };
     var priority = await this.repository
       .GetFirstAsync<Priority>(x =>
         x.Name == element.GetRequisite(TechKasRequisites.Priority, RequisitesMode.AsString));
@@ -200,6 +206,7 @@ internal class TicketListGenerator
     ticket.State = state;
     ticket.TimeInWork = timeInWork;
     ticket.Hyperlink = hyperlink;
+    ticket.ClosingDate = closingDate;
     return ticket;
   }
 

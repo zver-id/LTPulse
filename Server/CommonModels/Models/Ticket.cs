@@ -53,6 +53,11 @@ public class Ticket : IHasId
   public virtual DateTime IncomingDate { get; set; }
   
   /// <summary>
+  /// Дата закрытия.
+  /// </summary>
+  public virtual DateTime? ClosingDate  { get; set; }
+  
+  /// <summary>
   /// Состояние.
   /// </summary>
   [DisplayName("Состояние")]
