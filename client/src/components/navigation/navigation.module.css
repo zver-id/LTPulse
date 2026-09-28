@@ -6,7 +6,21 @@
     border-radius: 10px;
 }
 
+.lastCalc {
+    margin-left: 15px;
+    margin-top: 8px;
+    color: #555;
+    font-size: 14px;
+}
+
+.row {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+}
+
 nav {
     display: flex;
+    flex-direction: column;
     justify-content: left;
 }

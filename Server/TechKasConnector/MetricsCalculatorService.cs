@@ -126,10 +126,16 @@ public class MetricsCalculatorService : BackgroundService
     IServiceScope scope = this.serviceScopeFactory.CreateScope();
     try
     {
+      var repository = scope.ServiceProvider.GetRequiredService<IRepository>();
       var metricCreator = scope.ServiceProvider.GetRequiredService<MetricCalculator>();
       await metricCreator.Init(messageBody.TeamId);
       await metricCreator.ProcessAllMetrics();
       await metricCreator.ProcessEmployeeMetrics();
+
+      var team = await repository.GetById<Team>(messageBody.TeamId);
+      team.LastMetricsCalculated = DateTime.Now;
+      await repository.Update(team);
+
       return string.Empty;
     }
     catch (Exception ex)

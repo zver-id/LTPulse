@@ -1,3 +1,5 @@
+using System;
+
 namespace WebAPI.DTO;
 
 /// <summary>
@@ -14,5 +16,10 @@ public class TeamDTO
   /// Имя команды.
   /// </summary>
   public string Name { get; set; }
+
+  /// <summary>
+  /// Время последнего успешного расчёта метрик. Null, если расчёт ещё не выполнялся.
+  /// </summary>
+  public DateTime? LastMetricsCalculated { get; set; }
   
 }
