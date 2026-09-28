@@ -85,7 +85,8 @@ public class EmployeeStatsService(IRepository repository, TeamService teamServic
     return team.Employees
       .Select(e => BuildStats(e.Name,
         teamTickets.Where(t => t.Employee == e.Name).ToList(),
-        teamGrades.Where(g => g.Ticket?.Employee == e.Name).ToList()))
+        teamGrades.Where(g => g.Ticket?.Employee == e.Name).ToList(),
+        DateTime.Now))
       .ToList();
   }
 
@@ -95,13 +96,16 @@ public class EmployeeStatsService(IRepository repository, TeamService teamServic
   /// <param name="name">Имя сотрудника.</param>
   /// <param name="tickets">Обращения сотрудника за период.</param>
   /// <param name="grades">Оценки по обращениям сотрудника за период.</param>
+  /// <param name="asOf">Отсчётная дата, от которой считается возраст обращения (для открытых обращений — текущая дата).</param>
   /// <returns>Статистика сотрудника.</returns>
-  private static EmployeeStats BuildStats(string name, List<Ticket> tickets, List<Grade> grades)
+  private static EmployeeStats BuildStats(string name, List<Ticket> tickets, List<Grade> grades, DateTime asOf)
   {
     var closed = tickets.Where(t => string.Equals(t.State?.State, ClosedState, StringComparison.Ordinal));
     var open = tickets.Where(t => !string.Equals(t.State?.State, ClosedState, StringComparison.Ordinal));
     var withTime = tickets.Where(t => t.TimeInWork > 0).ToList();
     var withSla = tickets.Where(t => t.Priority != null && t.Priority.TimeToSolve > 0).ToList();
+
+    Func<Ticket, DateTime> endOfTicket = t => t.ClosingDate ?? asOf;
 
     return new EmployeeStats
     {
@@ -123,9 +127,9 @@ public class EmployeeStatsService(IRepository repository, TeamService teamServic
       OrangeZones = tickets.Count(t => t.TimeInWork >= TimeOrange && t.TimeInWork < TimeCritical),
       YellowZones = tickets.Count(t => t.TimeInWork >= TimeYellow && t.TimeInWork < TimeOrange),
       GreenZones = tickets.Count(t => t.TimeInWork < TimeYellow),
-      Older2Weeks = tickets.Count(t => (DateTime.Now - t.IncomingDate).TotalDays >= TwoWeeksDays),
-      Older3Weeks = tickets.Count(t => (DateTime.Now - t.IncomingDate).TotalDays >= ThreeWeeksDays),
-      Older1Month = tickets.Count(t => (DateTime.Now - t.IncomingDate).TotalDays >= OneMonthDays),
+      Older2Weeks = tickets.Count(t => (endOfTicket(t) - t.IncomingDate).TotalDays >= TwoWeeksDays),
+      Older3Weeks = tickets.Count(t => (endOfTicket(t) - t.IncomingDate).TotalDays >= ThreeWeeksDays),
+      Older1Month = tickets.Count(t => (endOfTicket(t) - t.IncomingDate).TotalDays >= OneMonthDays),
       GradeScore = grades.Count > 0
         ? MathF.Round(100f * grades.Count(g => g.Score == GoodScore) / grades.Count, 1)
         : null
