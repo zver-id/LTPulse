@@ -70,6 +70,18 @@ public class Ticket : IHasId
   public virtual float TimeInWork { get; set; }
   
   /// <summary>
+  /// Время реакции.
+  /// </summary>
+  [DisplayName("Время реакции")]
+  public virtual float TimeToFirstResponse { get; set; }
+  
+  /// <summary>
+  /// Количество шагов.
+  /// </summary>
+  [DisplayName("Колчество шагов")]
+  public virtual int AnswerCount { get; set; }
+  
+  /// <summary>
   /// Время отмеченное за день.
   /// </summary>
   [DisplayName("Отметка за день")]

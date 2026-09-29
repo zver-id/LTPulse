@@ -12,7 +12,7 @@ namespace TechKasConnector.DataCalculators;
 internal class TicketListGenerator
 {
   #region  Поля и свойства
-  
+
   /// <summary>
   /// Список обращений.
   /// </summary>
@@ -78,10 +78,15 @@ internal class TicketListGenerator
     {
       var spentTime = await this.GetSpentTimeByMinutes(ticket);
       var stampedTime = this.GetTimeStamp(ticket);
+      var answerCount = await this.GetAnswerCount(ticket);
+      var firstReaction = await this.GetFirstResponseTime(ticket);
       
       var ticketRecord = await this.GetTicket(ticket);
       ticketRecord.TimeInWork = (float)spentTime / 60;
       ticketRecord.TimeStampedOnDay = stampedTime;
+      ticketRecord.AnswerCount = answerCount;
+      if (firstReaction is not null)
+        ticketRecord.TimeToFirstResponse = (float)firstReaction / 60;
       this.AddToTickets(ticketRecord);
     }
   }
@@ -94,46 +99,129 @@ internal class TicketListGenerator
   private async Task<int> GetSpentTimeByMinutes(TechKasElement ticket)
   {
     Autoclicker.ClickYes();
-    using TechKasElementDetail detail = ticket.GetDetail(4);
-    var record = detail.First();
-      
-    DateTime startOfIteration = DateTime.Now;
-    DateTime endOfIteration = DateTime.Now;
-    bool hasStart = false;
-    bool hasEnd = false;
+    var transitions = this.GetStatusTransitions(ticket);
+
+    DateTime? segmentStart = null;
     int spentTime = 0;
-    
-    while (!detail.IsEndOfList())
+
+    foreach (var (status, date) in transitions)
     {
-      if (record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString) == "В работе")
+      if (status == TicketStatus.InWorkFullString)
       {
-        hasStart = true;
-        startOfIteration = DateTime.ParseExact(record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString),
-          "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+        segmentStart = date;
       }
-      else if (hasStart && new[]{"На контроле", "Переадресовано"}
-                 .Contains(record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString)))
+      else if (status == TicketStatus.RedistributedFullString)
       {
-        hasEnd = true;
-        endOfIteration = DateTime.ParseExact(record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString),
-          "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+        if (segmentStart.HasValue)
+          spentTime += await this.Calendar.GetDifferenceInMinutes(segmentStart.Value, date);
+        segmentStart = null;
       }
-      record = detail.Next();
-
-      if (detail.IsEndOfList() && !hasEnd)
+      else if (status == TicketStatus.OnControlFullString)
       {
-        hasEnd = true;
-        endOfIteration = DateTime.Now;
-      }
-
-      if (hasStart && hasEnd)
-      {
-        spentTime += await this.Calendar.GetDifferenceInMinutes(startOfIteration, endOfIteration);
-        hasStart = false;
-        hasEnd = false;
+        if (segmentStart.HasValue)
+          spentTime += await this.Calendar.GetDifferenceInMinutes(segmentStart.Value, date);
+        segmentStart = null;
       }
     }
+
+    if (segmentStart.HasValue)
+      spentTime += await this.Calendar.GetDifferenceInMinutes(segmentStart.Value, DateTime.Now);
+
     return spentTime;
+  }
+
+  /// <summary>
+  /// Рассчитать время первой реакции.
+  /// </summary>
+  /// <param name="ticket">Элемент обращения ТехКас.</param>
+  /// <returns>Затраченное время в минутах. Null, если обращение не перешло в статус "На контроле".</returns>
+  public async Task<int?> GetFirstResponseTime(TechKasElement ticket)
+  {
+    Autoclicker.ClickYes();
+    var transitions = this.GetStatusTransitions(ticket);
+
+    DateTime? segmentStart = null;
+    int spentTime = 0;
+
+    foreach (var (status, date) in transitions)
+    {
+      if (status == TicketStatus.InWorkFullString)
+      {
+        segmentStart = date;
+      }
+      else if (status == TicketStatus.RedistributedFullString)
+      {
+        segmentStart = null;
+      }
+      else if (status == TicketStatus.OnControlFullString)
+      {
+        if (segmentStart.HasValue)
+          spentTime += await this.Calendar.GetDifferenceInMinutes(segmentStart.Value, date);
+        return spentTime;
+      }
+    }
+
+    return null;
+  }
+
+  /// <summary>
+  /// Получить количество ответов по обращению. 
+  /// </summary>
+  /// <param name="ticket">Обращение.</param>
+  /// <returns>Количество ответов по обращению.</returns>
+  public async Task<int> GetAnswerCount(TechKasElement ticket)
+  {
+    Autoclicker.ClickYes();
+    var transitions = this.GetStatusTransitions(ticket);
+    var answers = 0;
+    foreach (var (status, date) in transitions)
+    {
+      if (status == TicketStatus.OnControlFullString)
+        answers++;
+    }
+
+    if (ticket.GetRequisite(TechKasRequisites.TicketType, RequisitesMode.AsString)
+          .Equals(TicketType.ConsultationFull) &&
+        answers > 0)
+      answers--;
+    return answers;
+  }
+
+  /// <summary>
+  /// Прочитать из вкладки журнала историю статусов обращения.
+  /// </summary>
+  /// <param name="ticket">Элемент обращения ТехКас.</param>
+  /// <returns>Последовательность пар (статус, дата) в порядке журнала.</returns>
+  private List<(string Status, DateTime Date)> GetStatusTransitions(TechKasElement ticket)
+  {
+    const int StatusJournalTab = 4;
+    var result = new List<(string, DateTime)>();
+
+    using TechKasElementDetail detail = ticket.GetDetail(StatusJournalTab);
+    var record = detail.First();
+    while (!detail.IsEndOfList())
+    {
+      var status = record.GetRequisite(TechKasRequisites.TicketStatusDetail, RequisitesMode.AsString);
+      var date = ParseStatusDate(record);
+      result.Add((status, date));
+      record = detail.Next();
+    }
+
+    return result;
+  }
+
+  /// <summary>
+  /// Расшифровать дату статуса из записи журнала.
+  /// </summary>
+  /// <param name="record">Запись журнала.</param>
+  /// <returns>Дата статуса. Текущее время, если дату не удалось распознать.</returns>
+  private static DateTime ParseStatusDate(TechKasElement record)
+  {
+    var raw = record.GetRequisite(TechKasRequisites.DateStatusDetail, RequisitesMode.AsString);
+    return DateTime.TryParseExact(
+      raw, "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
+      ? parsed
+      : DateTime.Now;
   }
 
   /// <summary>
