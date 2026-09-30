@@ -22,5 +22,5 @@ public class Priority : IHasId
   /// <summary>
   /// Время на реакцию.
   /// </summary>
-  public virtual int TimeToReaction { get; set; }
+  public virtual float TimeToReaction { get; set; }
 }

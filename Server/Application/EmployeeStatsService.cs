@@ -53,6 +53,11 @@ public class EmployeeStatsService(IRepository repository, TeamService teamServic
   private const int GoodScore = 4;
 
   /// <summary>
+  /// Порог количества ответов обращения, считающегося нормой для метрики "Кол-во ответов_%".
+  /// </summary>
+  private const int AnswerCountLimit = 2;
+
+  /// <summary>
   /// Репозиторий.
   /// </summary>
   private readonly IRepository repository = repository;
@@ -104,6 +109,9 @@ public class EmployeeStatsService(IRepository repository, TeamService teamServic
     var open = tickets.Where(t => !string.Equals(t.State?.State, ClosedState, StringComparison.Ordinal));
     var withTime = tickets.Where(t => t.TimeInWork > 0).ToList();
     var withSla = tickets.Where(t => t.Priority != null && t.Priority.TimeToSolve > 0).ToList();
+    var withReaction = tickets
+      .Where(t => t.Priority != null && t.Priority.TimeToReaction > 0 && t.TimeToFirstResponse > 0)
+      .ToList();
 
     Func<Ticket, DateTime> endOfTicket = t => t.ClosingDate ?? asOf;
 
@@ -116,6 +124,12 @@ public class EmployeeStatsService(IRepository repository, TeamService teamServic
       AvgResolutionTime = withTime.Count > 0 ? MathF.Round(withTime.Average(t => t.TimeInWork), 1) : 0,
       SlaResolution = withSla.Count > 0
         ? MathF.Round(100f * withSla.Count(t => t.TimeInWork / t.Priority.TimeToSolve <= 1f) / withSla.Count, 1)
+        : null,
+      SlaReaction = withReaction.Count > 0
+        ? MathF.Round(100f * withReaction.Count(t => t.TimeToFirstResponse / t.Priority.TimeToReaction <= 1f) / withReaction.Count, 1)
+        : null,
+      ResponseCount = tickets.Count > 0
+        ? MathF.Round(100f * tickets.Count(t => t.AnswerCount <= AnswerCountLimit) / tickets.Count, 1)
         : null,
       EscalationLine = tickets.Count > 0
         ? MathF.Round(100f * tickets.Count(t => !string.IsNullOrEmpty(t.LineEscalationsData)) / tickets.Count, 1)
