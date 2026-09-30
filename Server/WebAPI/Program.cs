@@ -34,7 +34,10 @@ public class Program
         if (string.IsNullOrEmpty(dataBaseConnectionString))
             throw new ConfigurationErrorsException("PostgreSQL connection string not found");
         builder.Services.AddSingleton<NhibernateHelper>(service => new NhibernateHelper(dataBaseConnectionString));
-        builder.Services.AddScoped<IRepository, DbRepository>();
+        builder.Services.AddScoped<IUnitOfWork>(sp =>
+            new UnitOfWork(sp.GetRequiredService<NhibernateHelper>().SessionFactory));
+        builder.Services.AddScoped<IRepository>(sp =>
+            new DbRepository(sp.GetRequiredService<IUnitOfWork>()));
 
         var rabbitMqConnectionString = builder.Configuration.GetConnectionString("RabbitMQ");
         if (string.IsNullOrEmpty(rabbitMqConnectionString))

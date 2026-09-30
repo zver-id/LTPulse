@@ -39,7 +39,10 @@ public static class Program
       return RabbitMqConnection.CreateAsync(rabbitMQconnectionString).GetAwaiter().GetResult();
     });
     
-    builder.Services.AddScoped<IRepository, DbRepository>();
+    builder.Services.AddScoped<IUnitOfWork>(sp =>
+        new UnitOfWork(sp.GetRequiredService<NhibernateHelper>().SessionFactory));
+    builder.Services.AddScoped<IRepository>(sp =>
+        new DbRepository(sp.GetRequiredService<IUnitOfWork>()));
     
     builder.Services.AddHostedService<SchedulerService>();
     builder.Services.AddHostedService<MetricsCalculatorService>();
@@ -49,6 +52,8 @@ public static class Program
     builder.Services.AddScoped<GradeListGenerator>();
     builder.Services.AddScoped<JobScheduler>();
     builder.Services.AddScoped<CalendarCalculator>();
+    builder.Services.AddScoped<TechKasConnector.Queries.JobCalculatingQueryRepository>(
+      sp => new TechKasConnector.Queries.JobCalculatingQueryRepository(sp.GetRequiredService<IUnitOfWork>()));
     builder.Services.Configure<ClubDetailsOptions>(
       builder.Configuration.GetSection("ClubDetails"));
     builder.Services.AddScoped<ExternalMessageCalculator>();

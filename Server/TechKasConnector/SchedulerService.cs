@@ -17,7 +17,7 @@ public class SchedulerService : BackgroundService
   protected override async Task ExecuteAsync(CancellationToken stoppingToken)
   {
     this.logger.LogInformation("Scheduler Service is starting.");
-    using var scope = this.serviceScopeFactory.CreateScope();
+    using var scope = this.serviceScopeFactory.CreateAsyncScope();
     var scheduler = scope.ServiceProvider.GetRequiredService<JobScheduler>();
     await scheduler.CreateJobsForNewTeams();
 
@@ -26,6 +26,7 @@ public class SchedulerService : BackgroundService
       await scheduler.StartJobs();
       await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
     }
+    await scope.DisposeAsync();
   }
 
   /// <summary>

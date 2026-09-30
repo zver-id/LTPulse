@@ -1,81 +1,99 @@
-﻿using System.Linq.Expressions;
-using CommonModels.Attibutes;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using CommonModels.Interfaces;
 using NHibernate;
 using NHibernate.Criterion;
-using NHibernate.Exceptions;
 using NHibernate.Infrastructure;
 using NHibernate.Linq;
-using Npgsql;
 
 namespace DBCore;
 
+/// <summary>
+/// Репозиторий. Тонкая обертка над общей сессией <see cref="IUnitOfWork"/>.
+/// </summary>
 public class DbRepository : IRepository
 {
-  /// <summary>
-  /// Маппинг объектов к сессиям.
-  /// </summary>
-  private Dictionary<string, ISession> Sessions { get; set; } = new ();
-
-  private readonly ISessionFactory sessionFactory;
+  private readonly IUnitOfWork unitOfWork;
 
   /// <summary>
-  /// Добавление в базу данных нового объекта
+  /// Текущая сессия единицы работы (одна на область жизни).
   /// </summary>
-  /// <param name="item">Добавляемый объект</param>
+  private ISession Session => this.unitOfWork.Session;
+
+  /// <summary>
+  /// Единица работы (владелец сессии) для низкоуровневых операций.
+  /// </summary>
+  public IUnitOfWork UnitOfWork => this.unitOfWork;
+
+  /// <summary>
+  /// Добавить новый объект в базу данных.
+  /// </summary>
+  /// <param name="item">Добавляемый объект.</param>
   public void Add(IHasId item)
   {
-    ISession session = this.GetSessionForItem(item);
-    using ITransaction transaction = session.BeginTransaction();
-    session.Save(item);
-    transaction.Commit();
+    this.unitOfWork.ExecuteOnSession(session =>
+    {
+      session.Save(item);
+      session.Flush();
+      return 0;
+    });
   }
 
   /// <summary>
-  /// Обновить свойства объекта в базе данных
+  /// Добавить объект или обновить существующий.
   /// </summary>
-  /// <param name="item">Объект свойства, которого будут обновляться</param>
+  /// <param name="item">Объект.</param>
   public async Task AddOrUpdate(IHasId item)
   {
-    ISession session = this.GetSessionForItem(item);
-    using ITransaction transaction = session.BeginTransaction();
-    await session.SaveOrUpdateAsync(item);
-    await transaction.CommitAsync();
+    await this.unitOfWork.ExecuteOnSessionAsync(async session =>
+    {
+      await session.SaveOrUpdateAsync(item);
+      await session.FlushAsync();
+    });
   }
 
-  
   /// <summary>
-  /// Обновить свойства объекта в базе данных.
+  /// Получить список объектов по условию.
   /// </summary>
-  /// <param name="item">Объект свойства, которого будут обновляться</param>
-  public async Task Update(IHasId item)
+  /// <param name="predicate">Условие.</param>
+  /// <param name="cancellationToken">Токен отмены.</param>
+  /// <typeparam name="T">Тип объекта.</typeparam>
+  /// <returns>Список объектов, удовлетворяющих условию.</returns>
+  public async Task<List<T>> GetAsync<T>(Expression<Func<T, bool>> predicate,
+    CancellationToken cancellationToken = default) where T : class, IHasId
   {
-    ISession session = this.GetSessionForItem(item);
-    using ITransaction transaction = session.BeginTransaction();
-    await session.UpdateAsync(item);
-    await transaction.CommitAsync();
+    return await this.unitOfWork.ExecuteOnSessionAsync(
+      session => session.Query<T>().Where(predicate).ToListAsync(cancellationToken),
+      cancellationToken);
   }
-  
+
   /// <summary>
-  /// Получить объект по ID
+  /// Получить первый объект по условию.
   /// </summary>
-  /// <param name="id">ID объекта</param>
-  /// <typeparam name="T">Тип объекта</typeparam>
-  /// <returns></returns>
-  public async Task<T?> GetById<T>(int id)  where T : IHasId
+  /// <param name="predicate">Условие.</param>
+  /// <param name="cancellationToken">Токен отмены.</param>
+  /// <typeparam name="T">Тип объекта.</typeparam>
+  /// <returns>Первый объект, удовлетворяющий условию.</returns>
+  public async Task<T> GetFirstAsync<T>(Expression<Func<T, bool>> predicate,
+    CancellationToken cancellationToken = default) where T : class, IHasId
   {
-    var session = this.GetSessionForItem(typeof(T), id);
-    var result =  await session.GetAsync<T>(id);
-    if (result != null)
-    {
-      this.AddSessionToList(result, session);
-    }
-    else
-    {
-      session.Close();
-      session.Dispose();
-    }
-    return result;
+    return await this.unitOfWork.ExecuteOnSessionAsync(
+      session => session.Query<T>().Where(predicate).FirstAsync(cancellationToken),
+      cancellationToken);
+  }
+
+  /// <summary>
+  /// Получить объект по ИД.
+  /// </summary>
+  /// <param name="id">Ид объекта.</param>
+  /// <typeparam name="T">Тип объекта.</typeparam>
+  /// <returns>Объект из базы данных. Null, если не найден.</returns>
+  public async Task<T> GetById<T>(int id) where T : IHasId
+  {
+    return await this.unitOfWork.ExecuteOnSessionAsync(session => session.GetAsync<T>(id));
   }
 
   /// <summary>
@@ -84,209 +102,77 @@ public class DbRepository : IRepository
   /// <param name="item">Сущность.</param>
   public async Task Delete(IHasId item)
   {
-    ISession session = this.GetSessionForItem(item);
-    using ITransaction transaction = session.BeginTransaction();
-    await session.DeleteAsync(item);
-    await transaction.CommitAsync();
+    await this.unitOfWork.ExecuteOnSessionAsync(async session =>
+    {
+      await session.DeleteAsync(item);
+      await session.FlushAsync();
+    });
   }
 
   /// <summary>
-  /// Получить объект по свойству и его значению
+  /// Обновить сущность в БД.
   /// </summary>
-  /// <param name="fieldName">Имя свойства</param>
-  /// <param name="value">Значение свойства</param>
-  /// <typeparam name="T">Класс объекта</typeparam>
-  /// <returns></returns>
+  /// <param name="item">Сущность.</param>
+  public async Task Update(IHasId item)
+  {
+    await this.unitOfWork.ExecuteOnSessionAsync(async session =>
+    {
+      await session.UpdateAsync(item);
+      await session.FlushAsync();
+    });
+  }
+
+  /// <summary>
+  /// Получить объект по свойству и его значению.
+  /// </summary>
+  /// <param name="fieldName">Имя свойства.</param>
+  /// <param name="value">Значение свойства.</param>
+  /// <typeparam name="T">Тип объекта.</typeparam>
+  /// <returns>Найденный объект. Null, если не найден.</returns>
   public T GetByField<T>(string fieldName, object value) where T : class, IHasId
   {
-    ISession session = this.sessionFactory.OpenSession();
-    ICriteria criteria = session.CreateCriteria(typeof(T));
-    criteria.Add(Restrictions.Eq(fieldName, value));
-    var result =  (T)criteria.UniqueResult();
-    this.AddSessionToList(result, session);
-    return result;
-  }
-
-  /// <summary>
-  /// Вернуть список сущностей по условию.
-  /// </summary>
-  /// <param name="predicate">Условие в виде предиката.</param>
-  /// <param name="cancellationToken">Токен отмены.</param>
-  /// <typeparam name="T">Класс объекта.</typeparam>
-  /// <returns>Список сущностей, удовлетворяющих критерию.</returns>
-  public async Task<List<T>> GetAsync<T>(Expression<Func<T, bool>> predicate,
-    CancellationToken cancellationToken = default) where T : class, IHasId
-  {
-    var session = this.sessionFactory.OpenSession();
-    var results = await session.Query<T>()
-        .Where(predicate)
-        .ToListAsync(cancellationToken);
-    this.AddSessionToList(results, session);
-    return results;
-  }
-  
-  /// <summary>
-  /// Получить первое значение.
-  /// </summary>
-  /// <param name="predicate">Условие в виде предиката.</param>
-  /// <param name="cancellationToken">Токен отмены.</param>
-  /// <typeparam name="T">Класс объекта.</typeparam>
-  /// <returns>Первая сущность, удовлетворяющее условию.</returns>
-  public async Task<T> GetFirstAsync<T>(Expression<Func<T, bool>> predicate,
-    CancellationToken cancellationToken = default) where T : class, IHasId
-  {
-    ISession? session = this.sessionFactory.OpenSession();
-    T? result = await session.Query<T>()
-      .Where(predicate)
-      .FirstAsync(cancellationToken);
-    this.AddSessionToList(result, session);
-    return result;
-  }
-
-  /// <summary>
-  /// Получить сессию для объекта.
-  /// </summary>
-  /// <param name="item">Объект.</param>
-  /// <returns>Сессия.</returns>
-  private ISession GetSessionForItem(IHasId item)
-  {
-    string id = this.GetIdentifierForSessionByItem(item);
-    if (this.Sessions.TryGetValue(id, out var session))
+    return this.unitOfWork.ExecuteOnSession(session =>
     {
-      if (session.IsOpen)
-        return session;
-    }
-    ISession newSession = this.sessionFactory.OpenSession();
-    this.AddSessionToList(item, newSession);
-    return newSession;
-  }
-  
-  private ISession GetSessionForItem(Type itemType, int id)
-  {
-    string identifier = this.GetIdentifierForSessionByItem(itemType, id);
-    if (this.Sessions.TryGetValue(identifier, out ISession? session))
-    {
-      if (session.IsOpen)
-        return session;
-    }
-    ISession newSession = this.sessionFactory.OpenSession();
-    this.AddSessionToList(itemType, id, newSession);
-    return newSession;
-  }
-
-  /// <summary>
-  /// Получить строковый идентификатор для сессии по объекту.
-  /// </summary>
-  /// <param name="item">Объект.</param>
-  /// <returns>Идентификатор.</returns>
-  private string GetIdentifierForSessionByItem(IHasId item)
-  {
-    return $"{item.GetType()}_{item.Id}";
-  }
-  
-    /// <summary>
-    /// Получить строковый идентификатор для сессии по объекту.
-    /// </summary>
-    /// <param name="item">Объект.</param>
-    /// <returns>Идентификатор.</returns>
-    private string GetIdentifierForSessionByItem(Type itemType, int id)
-    {
-      return $"{itemType.FullName}_{id}";
-    }
-
-  /// <summary>
-  /// Добавить сессию по объектам к списку.
-  /// </summary>
-  /// <param name="items">Список объектов.</param>
-  /// <param name="session">Сессия.</param>
-  private void AddSessionToList(IEnumerable<IHasId> items, ISession session)
-  {
-    foreach (var item in items)
-    {
-      var id = this.GetIdentifierForSessionByItem(item);
-      if (this.Sessions.TryGetValue(id, out var oldSession))
-      {
-        oldSession.SaveOrUpdate(item);
-        oldSession.Evict(item);
-      }
-      this.Sessions[this.GetIdentifierForSessionByItem(item)] = session;
-    } 
-  }
-  private void AddSessionToList(Type itemType, int id, ISession session)
-  {
-    this.Sessions[this.GetIdentifierForSessionByItem(itemType, id)] = session;
-  }
-  
-  private void AddSessionToList(IHasId item, ISession session)
-  {
-    this.Sessions[this.GetIdentifierForSessionByItem(item)] = session;
-  }
-  
-  /// <summary>
-  /// Проверка существования объекта в БД по уникальным полям
-  /// </summary>
-  /// <param name="item"></param>
-  /// <returns>Признак существует ли объект с этими полями в базе данных</returns>
-  private bool IsExist(IHasId item)
-  {
-    var typeOfItem = item.GetType();
-    var uniqueProperties = typeOfItem.GetProperties()
-      .Where(x => x.GetCustomAttributes(typeof(UniqueAttribute), true).Length != 0)
-      .ToList();
-    
-    foreach (var property in uniqueProperties)
-    {
-      var existItem = this.GetByField<IHasId>(property.Name, property.GetValue(item));
-      if (existItem == null)
-        continue;
-      throw new ArgumentException(
-        $"Элемент типа {typeOfItem} c параметром {property.Name} и значением {property.GetValue(item)} уже существует");
-    }
-    return false;
+      var criteria = session.CreateCriteria(typeof(T));
+      criteria.Add(Restrictions.Eq(fieldName, value));
+      return (T)criteria.UniqueResult();
+    });
   }
 
   #region IDisposable
-  
+
+  /// <summary>
+  /// Освобождает ресурсы сессии единицы работы.
+  /// </summary>
   public void Dispose()
   {
-    foreach (var session in this.Sessions.Values)
-    {
-      try
-      {
-        if (session.IsOpen)
-        {
-          var transaction = session.GetCurrentTransaction();
-          if (transaction?.IsActive == true)
-            transaction.Rollback();
-          session.Close();
-        }
-      }
-      finally
-      {
-        session.Dispose();
-      }
-    }
+    if (this.unitOfWork is IDisposable disposable)
+      disposable.Dispose();
     GC.SuppressFinalize(this);
   }
+
   #endregion
-  
+
   #region Конструкторы
-  
+
   /// <summary>
   /// Конструктор.
   /// </summary>
-  public DbRepository(NhibernateHelper nhibernateHelper)
+  /// <param name="unitOfWork">Единица работы (владелец сессии).</param>
+  public DbRepository(IUnitOfWork unitOfWork)
   {
-    this.sessionFactory = nhibernateHelper.SessionFactory;
+    this.unitOfWork = unitOfWork;
   }
 
   /// <summary>
-  /// Деструктор.
+  /// Конструктор для сценариев вне DI (например, консольная инициализация БД).
+  /// Создает собственную единицу работы на переданной фабрике сессий.
   /// </summary>
-  ~DbRepository()
+  /// <param name="nhibernateHelper">Помощник NHibernate с фабрикой сессий.</param>
+  public DbRepository(NhibernateHelper nhibernateHelper)
+    : this(new UnitOfWork(nhibernateHelper.SessionFactory))
   {
-    this.Dispose();
   }
-  #endregion
 
+  #endregion
 }
