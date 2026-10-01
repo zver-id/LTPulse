@@ -4,6 +4,7 @@ using AutoMapper;
 using CommonModels.Interfaces;
 using DBCore;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -34,11 +35,22 @@ public class Program
         if (string.IsNullOrEmpty(dataBaseConnectionString))
             throw new ConfigurationErrorsException("PostgreSQL connection string not found");
         builder.Services.AddSingleton<NhibernateHelper>(service => new NhibernateHelper(dataBaseConnectionString));
-        builder.Services.AddScoped<IRepository, DbRepository>();
+        builder.Services.AddScoped<IUnitOfWork>(sp =>
+            new UnitOfWork(sp.GetRequiredService<NhibernateHelper>().SessionFactory));
+        builder.Services.AddScoped<IRepository>(sp =>
+            new DbRepository(sp.GetRequiredService<IUnitOfWork>()));
+
+        var rabbitMqConnectionString = builder.Configuration.GetConnectionString("RabbitMQ");
+        if (string.IsNullOrEmpty(rabbitMqConnectionString))
+            throw new ConfigurationErrorsException("RabbitMQ connection string not found");
+        builder.Services.AddSingleton<RabbitMqConnection>(service =>
+            RabbitMqConnection.CreateAsync(rabbitMqConnectionString).GetAwaiter().GetResult());
+        builder.Services.AddScoped<RabbitMQClient>();
 
         builder.Services.AddScoped<MetricsService>();
         builder.Services.AddScoped<TeamService>();
         builder.Services.AddScoped<EmployeeService>();
+        builder.Services.AddScoped<EmployeeStatsService>();
         
         
         ILoggerFactory loggerFactory = LoggerFactory.Create(logBuilder => logBuilder.AddJsonConsole());
@@ -51,6 +63,14 @@ public class Program
             loggerFactory);
         var mapper = mappingConfig.CreateMapper();
         builder.Services.AddSingleton(mapper);
+        
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | 
+                                       ForwardedHeaders.XForwardedProto;
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
         
         var corsPolicyName = "CorsPolicy";
         builder.Services.AddCors(options =>
@@ -73,8 +93,12 @@ public class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+
+
+        app.UseForwardedHeaders();
         app.UseCors(corsPolicyName);
-        app.UseHttpsRedirection();
+        // UseHttpsRedirection отключен: HTTPS управляется reverse-proxy,
+        // а не API. Редирект ломает CORS preflight и вызывает Mixed Content.
         
         app.UseRouting();
         app.UseAuthorization();

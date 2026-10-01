@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CommonModels.Interfaces;
 
 namespace CommonModels.Models;
@@ -17,6 +18,11 @@ public class Team : IHasId
   /// Имя команды.
   /// </summary>
   public virtual string Name { get; set; }
+  
+  /// <summary>
+  /// Время последнего успешного расчёта метрик. Null, если расчёт ещё не выполнялся.
+  /// </summary>
+  public virtual DateTime? LastMetricsCalculated { get; set; }
   
   /// <summary>
   /// Участники команды.

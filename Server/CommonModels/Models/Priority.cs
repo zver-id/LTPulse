@@ -18,4 +18,9 @@ public class Priority : IHasId
   /// Время на решение.
   /// </summary>
   public virtual int TimeToSolve { get; set; }
+  
+  /// <summary>
+  /// Время на реакцию.
+  /// </summary>
+  public virtual float TimeToReaction { get; set; }
 }

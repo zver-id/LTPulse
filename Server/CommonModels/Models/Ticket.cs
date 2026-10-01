@@ -53,6 +53,11 @@ public class Ticket : IHasId
   public virtual DateTime IncomingDate { get; set; }
   
   /// <summary>
+  /// Дата закрытия.
+  /// </summary>
+  public virtual DateTime? ClosingDate  { get; set; }
+  
+  /// <summary>
   /// Состояние.
   /// </summary>
   [DisplayName("Состояние")]
@@ -63,6 +68,18 @@ public class Ticket : IHasId
   /// </summary>
   [DisplayName("Время в работе")]
   public virtual float TimeInWork { get; set; }
+  
+  /// <summary>
+  /// Время реакции.
+  /// </summary>
+  [DisplayName("Время реакции")]
+  public virtual float TimeToFirstResponse { get; set; }
+  
+  /// <summary>
+  /// Количество шагов.
+  /// </summary>
+  [DisplayName("Колчество шагов")]
+  public virtual int AnswerCount { get; set; }
   
   /// <summary>
   /// Время отмеченное за день.

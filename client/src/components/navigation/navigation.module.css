@@ -1,12 +1,68 @@
 .selectBar {
-    padding: 5px;
-    border: 10px;
-    left: 10%;
-    margin-left: 15px;
-    border-radius: 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    min-width: 200px;
+}
+
+.dayInput {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    width: 140px;
+}
+
+.lastCalc {
+    color: var(--text-secondary);
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.recalcButton {
+    padding: 8px 18px;
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: #fff;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.18s ease;
+}
+
+.recalcButton:disabled {
+    background: #a9c6ef;
+    border-color: #a9c6ef;
+    cursor: not-allowed;
+}
+
+.recalcButton:hover:not(:disabled) {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
 }
 
 nav {
     display: flex;
-    justify-content: left;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 12px;
+    margin-top: 4px;
+    min-width: 0;
+    overflow-x: hidden;
 }

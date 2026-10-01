@@ -52,13 +52,13 @@ function ZonesChart({teamId, dayCount, filter, nameOfChart}: ZonesChartProps) {
                     <div>{nameOfChart}</div>
                   ),
                   children:(
-                    <Flex>
+                      <Flex vertical align="stretch" gap="middle">
                     <AreaChart
-                      style={{width: '80%', aspectRatio: 1.618, maxHeight: '40vh'}}
-                      responsive
-                      data={visualData}
-                      stackOffset="expand"
-                      margin={{top: 10, right: 20, left: 0, bottom: 0}}
+                       style={{width: '100%', minWidth: 0, aspectRatio: 2.4, maxHeight: '55vh'}}
+                       responsive
+                       data={visualData}
+                       stackOffset="expand"
+                       margin={{top: 10, right: 20, left: 0, bottom: 0}}
                     >
                       <CartesianGrid strokeDasharray="3 3"/>
                       <XAxis dataKey="day" orientation="bottom"/>

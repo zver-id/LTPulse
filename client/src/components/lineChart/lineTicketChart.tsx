@@ -38,12 +38,12 @@ function LineTicketChart({teamId, dayCount, filter, nameOfChart}: LineChartProps
                         <div>{nameOfChart}</div>
                     ),
                     children: (
-                        <Flex>
+                        <Flex vertical align="stretch" gap="middle">
                           <LineChart
-                              style={{width: '80%', aspectRatio: 1.618, maxHeight: '40vh'}}
-                              margin={{top: 5, right: 20, bottom: 5, left: 0}}
-                              responsive
-                              data={data}>
+                               style={{width: '100%', minWidth: 0, aspectRatio: 2.4, maxHeight: '55vh'}}
+                               margin={{top: 5, right: 20, bottom: 5, left: 0}}
+                               responsive
+                               data={data}>
 
                             <XAxis dataKey="day"/>
                             <YAxis width="auto"

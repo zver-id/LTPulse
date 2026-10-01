@@ -44,4 +44,14 @@ public static class TicketStatus
   /// Закрыто.
   /// </summary>
   public static readonly string ClosedFullString = "Закрыто";
+  
+  /// <summary>
+  /// Статус обращения, означающий приостановку периода работы.
+  /// </summary>
+  public static readonly string RedistributedFullString = "Переадресовано";
+
+  /// <summary>
+  /// Статус обращения, означающий завершение отсчета (контроль).
+  /// </summary>
+  public static readonly string OnControlFullString = "На контроле";
 }

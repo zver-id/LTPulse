@@ -4,15 +4,15 @@ import {useLocalStorageState} from "../../storage/useLocalStorageState.ts"
 import ViewRouter from "../viewRouter/viewRouter.tsx";
 
 function Main() {
-  const [team, setTeam] = useLocalStorageState("team", 1)
-  const [dayCount, setDayCount] = useLocalStorageState("dayCount", 140)
+  const [team, setTeam] = useLocalStorageState<number>("team", 1)
+  const [dayCount, setDayCount] = useLocalStorageState<number>("dayCount", 140)
 
   return (<>
-      <header>
+      <header className="mainPageHeader">
         <h1 className={styles.siteTitle}>Статистика</h1>
         <Navigation onChangeTeam={setTeam} days={dayCount} onChangeDays={setDayCount} teamId={team}/>
       </header>
-      <main>
+      <main className="mainPageContent">
         <ViewRouter team={team} dayCount={dayCount}/>
       </main>
     </>
