@@ -7,7 +7,7 @@ namespace TechKasConnector;
 /// <summary>
 /// Справочник ТехКас.
 /// </summary>
-internal class TechKasReference : IEnumerable<TechKasElement>
+internal class TechKasReference : IEnumerable<TechKasElement>, IDisposable
 {
   private IEnumerable<TechKasElement> enumerableImplementation;
 
@@ -177,16 +177,61 @@ internal class TechKasReference : IEnumerable<TechKasElement>
   public IEnumerator<TechKasElement> GetEnumerator()
   {
     this.OpenReference();
-    while (!this.Reference.EOF)
+    try
     {
-      yield return new TechKasElement(this.Reference);
-      this.NextRecord();
+      while (!this.Reference.EOF)
+      {
+        yield return new TechKasElement(this.Reference);
+        this.NextRecord();
+      }
+    }
+    finally
+    {
+      try
+      {
+        this.Reference.Cancel();
+        this.Reference.CloseRecord();
+      }
+      catch
+      {
+        // ignore
+      }
     }
   }
   
   IEnumerator IEnumerable.GetEnumerator()
   {
     return this.GetEnumerator();
+  }
+  
+  #endregion
+  
+  #region IDisposable
+
+  public void Dispose()
+  {
+    try
+    {
+      this.Reference.Cancel();
+      this.Reference.CloseRecord();
+    }
+    catch
+    {
+      // ignore
+    }
+    finally
+    {
+      try
+      {
+        this.Reference.Close();
+      }
+      catch
+      {
+        // ignore
+      }
+    }
+
+    CoUninitialize();
   }
   
   #endregion

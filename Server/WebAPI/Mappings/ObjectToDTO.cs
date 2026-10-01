@@ -1,3 +1,4 @@
+using Application;
 using AutoMapper;
 using CommonModels.Models;
 using WebAPI.DTO;
@@ -37,6 +38,8 @@ public class ObjectToDTO : Profile
       .ReverseMap();
 
     this.CreateMap<MetricGroup, MetricGroupDTO>();
+
+    this.CreateMap<EmployeeStats, EmployeeStatsDTO>();
 
     this.CreateMap<EmployeeDTO, Employee>()
       .ForMember(dest => dest.PersonnelNumber, opt => opt.Ignore())

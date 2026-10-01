@@ -60,10 +60,18 @@ public class GradeListGenerator
     {
       try
       {
-        Grade newGrade = await this.GetOrCreateGrade(grade);
-        await this.Repository.AddOrUpdate(newGrade);
-        if (listOfEmployeeNames.Contains(newGrade.Ticket.Employee))
-          this.Grades.Add(newGrade);
+        var result = await this.GetOrCreateGrade(grade);
+        if (result.IsExisting)
+        {
+          await this.Repository.Update(result.Grade);
+        }
+        else
+        {
+          await this.Repository.AddOrUpdate(result.Grade);
+        }
+
+        if (listOfEmployeeNames.Contains(result.Grade.Ticket.Employee))
+          this.Grades.Add(result.Grade);
       }
       catch (ArgumentNullException e)
       {
@@ -76,14 +84,14 @@ public class GradeListGenerator
   /// Создать или получить существующую оценку.
   /// </summary>
   /// <param name="element">Элемент ТехКас.</param>
-  /// <returns>Оценка.</returns>
-  private async Task<Grade> GetOrCreateGrade(TechKasElement element)
+  /// <returns>Оценка и признак того, что она уже существовала в БД.</returns>
+  private async Task<(Grade Grade, bool IsExisting)> GetOrCreateGrade(TechKasElement element)
   {
     var id = int.Parse(element.GetRequisite(TechKasRequisites.GradeTicketNum, RequisitesMode.AsString).Trim());
     var grade = await this.Repository.GetById<Grade>(id);
     if (grade != null)
-      return grade;
-    return new Grade
+      return (grade, true);
+    return (new Grade
     {
       Id = id,
       Score = int.Parse(element.GetRequisite(TechKasRequisites.GradeScore, RequisitesMode.AsString)),
@@ -92,7 +100,7 @@ public class GradeListGenerator
         "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture),
       Ticket = await this.GetRelatedTicket(id),
       isResearched = false
-    };
+    }, false);
   }
 
   /// <summary>

@@ -25,6 +25,11 @@ public class Metric : IHasId
   public virtual Team Team { get; set; }
   
   /// <summary>
+  /// Сотрудник, для которого рассчитана метрика. Null для командных метрик.
+  /// </summary>
+  public virtual Employee Employee { get; set; }
+  
+  /// <summary>
   /// Тип метрики.
   /// </summary>
   public virtual MetricType MetricType { get; set; }

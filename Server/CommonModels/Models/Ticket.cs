@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CommonModels.Interfaces;
 using CommonModels.Attributes;
 
@@ -52,6 +53,11 @@ public class Ticket : IHasId
   public virtual DateTime IncomingDate { get; set; }
   
   /// <summary>
+  /// Дата закрытия.
+  /// </summary>
+  public virtual DateTime? ClosingDate  { get; set; }
+  
+  /// <summary>
   /// Состояние.
   /// </summary>
   [DisplayName("Состояние")]
@@ -62,6 +68,18 @@ public class Ticket : IHasId
   /// </summary>
   [DisplayName("Время в работе")]
   public virtual float TimeInWork { get; set; }
+  
+  /// <summary>
+  /// Время реакции.
+  /// </summary>
+  [DisplayName("Время реакции")]
+  public virtual float TimeToFirstResponse { get; set; }
+  
+  /// <summary>
+  /// Количество шагов.
+  /// </summary>
+  [DisplayName("Колчество шагов")]
+  public virtual int AnswerCount { get; set; }
   
   /// <summary>
   /// Время отмеченное за день.
@@ -78,4 +96,14 @@ public class Ticket : IHasId
   /// Комментарий.
   /// </summary>
   public virtual string Comment { get; set; }
+  
+  /// <summary>
+  /// Эскалации на линию (разделитель |).
+  /// </summary>
+  public virtual string LineEscalationsData { get; set; }
+  
+  /// <summary>
+  /// Эскалации на разработчиков (разделитель |).
+  /// </summary>
+  public virtual string DevsEscalationsData { get; set; }
 }

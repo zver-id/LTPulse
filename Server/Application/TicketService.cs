@@ -40,6 +40,15 @@ public class TicketService(IRepository repository) : GenericService(repository)
     }
   }
 
+  public async Task<List<Ticket>> GetTicketsByMetric(int teamId, DateTime date, string metricType)
+  {
+    var metric = await this.repository
+      .GetFirstAsync<Metric>(metric => metric.Team.Id == teamId &&
+                                       metric.Date.Date == date.Date &&
+                                       metric.MetricType.Name == metricType);
+    return metric.Tickets.ToList();
+  }
+
   /// <summary>
   /// Добавить или обновить обращение.
   /// </summary>

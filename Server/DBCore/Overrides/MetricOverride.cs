@@ -25,6 +25,9 @@ public class MetricOverride : IAutoMappingOverride<Metric>
       .Not.Nullable()
       .UniqueKey("Key_Date_MetricType_Team");
 
+    mapping.References(x => x.Employee)
+      .Nullable();
+
     mapping.HasManyToMany(x => x.Tickets)
       .Table("Ticket_Metric")
       .ParentKeyColumn("MetricId")

@@ -3,7 +3,8 @@ import {Area, AreaChart, CartesianGrid, LabelList, Legend, Tooltip, XAxis, YAxis
 import type {ZonesChartProps, zonesColor} from "../../types/zones-chart-props.ts";
 import {useGetFilteredMetricsQuery} from "../../storage/services/metrics-api.ts"
 import calculateVisualDataForZoneChart from "../../helpers/calculateVisualDataForZoneChart.ts";
-import {Collapse} from "antd";
+import {Collapse, Flex} from "antd";
+import MetricDetails, {type IMetricDetailsItem} from "../metricDetails/metricDetails.tsx";
 
 function ZonesChart({teamId, dayCount, filter, nameOfChart}: ZonesChartProps) {
 
@@ -37,6 +38,11 @@ function ZonesChart({teamId, dayCount, filter, nameOfChart}: ZonesChartProps) {
 
   const visualData = calculateVisualDataForZoneChart(data ?? [], zoneColor);
 
+  const metrics: string[] = filter === 'ColorZones' ? zoneColorSimple.map((item) => item.name)
+    : zoneColorPriority.map(item => item.name);
+  const metricsDetail: IMetricDetailsItem[] = metrics.map((title) => (
+    {title, teamId}))
+
   return (
     <Collapse defaultActiveKey={isHidden} key={1}
               items={[
@@ -46,12 +52,13 @@ function ZonesChart({teamId, dayCount, filter, nameOfChart}: ZonesChartProps) {
                     <div>{nameOfChart}</div>
                   ),
                   children:(
+                      <Flex vertical align="stretch" gap="middle">
                     <AreaChart
-                      style={{width: '80%', aspectRatio: 1.618, maxHeight: '40vh'}}
-                      responsive
-                      data={visualData}
-                      stackOffset="expand"
-                      margin={{top: 10, right: 20, left: 0, bottom: 0}}
+                       style={{width: '100%', minWidth: 0, aspectRatio: 2.4, maxHeight: '55vh'}}
+                       responsive
+                       data={visualData}
+                       stackOffset="expand"
+                       margin={{top: 10, right: 20, left: 0, bottom: 0}}
                     >
                       <CartesianGrid strokeDasharray="3 3"/>
                       <XAxis dataKey="day" orientation="bottom"/>
@@ -94,6 +101,8 @@ function ZonesChart({teamId, dayCount, filter, nameOfChart}: ZonesChartProps) {
                         wrapperStyle={{paddingLeft: 10}}
                       />
                     </AreaChart>
+                      <MetricDetails items={metricsDetail}/>
+                    </Flex>
                   )
                 }
               ]}>

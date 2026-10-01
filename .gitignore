@@ -13,3 +13,5 @@ Server/DBCore/settings.json
 client/.env
 
 Backups/
+/Server/TechKasConnector/appsettings.json
+/Server/WebAPI/appsettings.json
