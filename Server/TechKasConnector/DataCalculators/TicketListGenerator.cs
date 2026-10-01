@@ -151,16 +151,16 @@ internal class TicketListGenerator
       }
       else if (status == TicketStatus.RedistributedFullString)
       {
+        spentTime += await this.Calendar.GetDifferenceInMinutes(segmentStart.Value, date);
         segmentStart = null;
       }
-      else if (status == TicketStatus.OnControlFullString)
+      else if (status == TicketStatus.OnControlFullString || status == TicketStatus.ClosedFullString)
       {
         if (segmentStart.HasValue)
           spentTime += await this.Calendar.GetDifferenceInMinutes(segmentStart.Value, date);
         return spentTime;
       }
     }
-
     return null;
   }
 

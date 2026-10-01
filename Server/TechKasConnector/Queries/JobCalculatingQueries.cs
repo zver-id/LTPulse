@@ -12,18 +12,18 @@ public static class JobCalculatingQueries
   /// (0 — задача уже занята, 1 — успешно занята).
   /// </summary>
   public const string ClaimJob =
-    "UPDATE \"Job\" SET \"IsCalculating\" = true WHERE \"Team_id\" = :teamId AND \"IsCalculating\" = false";
+    "UPDATE \"Job\" SET \"iscalculating\" = true WHERE team_id = :teamId AND \"iscalculating\" = false";
 
   /// <summary>
   /// Сбрасывает флаг <c>IsCalculating</c> у задачи команды после окончания расчета.
   /// </summary>
   public const string ResetJob =
-    "UPDATE \"Job\" SET \"IsCalculating\" = false WHERE \"Team_id\" = :teamId";
+    "UPDATE \"Job\" SET \"iscalculating\" = false WHERE team_id = :teamId";
 
   /// <summary>
   /// Сбрасывает флаг <c>IsCalculating</c> у всех задач (вызывается при старте сервиса,
   /// чтобы после аварийного завершения не отбрасывались все сообщения).
   /// </summary>
   public const string ResetAll =
-    "UPDATE \"Job\" SET \"IsCalculating\" = false";
+    "UPDATE \"Job\" SET \"iscalculating\" = false";
 }

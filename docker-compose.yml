@@ -23,13 +23,15 @@ services:
       - app-network
 
   haproxy:
-    image: haproxy:latest
+    image: quay.io/opendevmirror/haproxy:lts
     container_name: haproxy
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - /srv/SSL:/srv/SSL:ro
     networks:
       - app-network
     depends_on:

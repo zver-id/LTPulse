@@ -4,6 +4,7 @@ using AutoMapper;
 using CommonModels.Interfaces;
 using DBCore;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -63,6 +64,14 @@ public class Program
         var mapper = mappingConfig.CreateMapper();
         builder.Services.AddSingleton(mapper);
         
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | 
+                                       ForwardedHeaders.XForwardedProto;
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+        
         var corsPolicyName = "CorsPolicy";
         builder.Services.AddCors(options =>
         {
@@ -84,8 +93,12 @@ public class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+
+
+        app.UseForwardedHeaders();
         app.UseCors(corsPolicyName);
-        app.UseHttpsRedirection();
+        // UseHttpsRedirection отключен: HTTPS управляется reverse-proxy,
+        // а не API. Редирект ломает CORS preflight и вызывает Mixed Content.
         
         app.UseRouting();
         app.UseAuthorization();

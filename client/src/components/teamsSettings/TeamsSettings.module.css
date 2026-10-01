@@ -1,4 +1,4 @@
-﻿header {
+﻿header:global(.teamsSettingsHeader) {
     display: flex;
     align-items: center;
     gap: 20px;
@@ -18,7 +18,12 @@
     width: 260px;
 }
 
-main {
+.employeeLink {
+    margin-left: auto;
+    font-size: 14px;
+}
+
+main:global(.teamsSettingsMain) {
     padding: 8px 28px 40px;
     max-width: 1500px;
     margin: 0 auto;

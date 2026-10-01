@@ -1,4 +1,4 @@
-header {
+header:global(.mainPageHeader) {
     position: fixed;
     top: 0;
     left: 0;
@@ -10,7 +10,7 @@ header {
     padding: 14px 28px 16px;
 }
 
-main {
+main:global(.mainPageContent) {
     margin-top: 150px;
     padding: 20px 0 40px;
     max-width: 96vw;

@@ -33,6 +33,25 @@ public class EmployeeController : GenericController
     }
   }
 
+  /// <summary>
+  /// Получить всех сотрудников (для админского выбора при включении в команду).
+  /// </summary>
+  /// <returns>Список всех сотрудников.</returns>
+  [HttpGet("all")]
+  public async Task<ActionResult<List<EmployeeDTO>>> GetAllEmployees()
+  {
+    try
+    {
+      var employees = await this.employeeService.GetAllEmployees();
+      return this.Ok(this.Mapper.Map<List<EmployeeDTO>>(employees));
+    }
+    catch (Exception ex)
+    {
+      this.logger.LogError(ex, "Error retrieving all employees");
+      return this.BadRequest("При получении списка сотрудников произошла ошибка.");
+    }
+  }
+
   [HttpPost]
   public async Task<ActionResult> AddEmployeeToTeam(EmployeeDTO employeeDTO, int teamId)
   {
@@ -45,6 +64,32 @@ public class EmployeeController : GenericController
     catch (Exception ex)
     {
       this.logger.LogError(ex, "Error updating employee");
+      return this.BadRequest();
+    }
+  }
+
+  /// <summary>
+  /// Исключить сотрудника из команды.
+  /// </summary>
+  /// <param name="employeeId">Идентификатор сотрудника.</param>
+  /// <param name="teamId">Идентификатор команды.</param>
+  /// <returns>Ok, если сотрудник исключен.</returns>
+  [HttpPost("remove/{teamId:int}")]
+  public async Task<ActionResult> RemoveEmployeeFromTeam(int employeeId, int teamId)
+  {
+    try
+    {
+      await this.employeeService.RemoveEmployeeFromTeam(employeeId, teamId);
+      return this.Ok();
+    }
+    catch (ArgumentException ex)
+    {
+      this.logger.LogError(ex, "Error removing employee from team");
+      return this.BadRequest("Сотрудника нет в указанной команде или команда не найдена.");
+    }
+    catch (Exception ex)
+    {
+      this.logger.LogError(ex, "Error removing employee from team");
       return this.BadRequest();
     }
   }
